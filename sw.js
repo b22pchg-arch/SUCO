@@ -1,5 +1,5 @@
-/* COMTRADE Offline Reader Pro V7 Sidebar Clear Charts - Service Worker */
-const CACHE_VERSION = 'v7.0.0-sidebar-clear-charts-20260609';
+/* COMTRADE Offline Reader Pro V8 Row Annotations - Service Worker */
+const CACHE_VERSION = 'v8.0.0-row-annotations-20260609';
 const CACHE_NAME = 'comtrade-reader-' + CACHE_VERSION;
 const APP_SHELL = [
   './',

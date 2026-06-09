@@ -1,6 +1,6 @@
 {
-  "name": "COMTRADE Offline Reader Pro V7",
-  "short_name": "COMTRADE V7",
+  "name": "COMTRADE Offline Reader Pro V8",
+  "short_name": "COMTRADE V8",
   "description": "Đọc, phân tích sự cố, tự phóng biểu đồ vùng sự cố, ẩn/hiện thanh bên, biểu đồ rõ chú thích, xuất báo cáo HTML/TXT/PDF với ảnh sóng lớn và chuyển đổi COMTRADE offline.",
   "id": "comtrade-offline-reader-pro",
   "start_url": "./index.html",
