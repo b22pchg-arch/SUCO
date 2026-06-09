@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>COMTRADE Offline Reader Pro V5 PWA - Fault Analysis Report</title>
+<meta name="theme-color" content="#0b1020">
+<meta name="application-name" content="COMTRADE Reader Pro">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="COMTRADE Reader">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<style>
+:root{
+  --bg:#0b1020;--panel:#111a2f;--panel2:#17223b;--ink:#edf3ff;--muted:#a9b8d6;--line:#2d3d62;
+  --accent:#59d0ff;--good:#5ee392;--warn:#ffd166;--bad:#ff6b6b;--btn:#243455;--btn2:#315078;
+  --shadow:0 12px 36px rgba(0,0,0,.32);--radius:16px;
+}
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;background:radial-gradient(circle at top left,#16213d 0,#0b1020 42%,#070a13 100%);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45}
+button,input,select,textarea{font:inherit} button{border:0;border-radius:12px;background:linear-gradient(180deg,var(--btn2),var(--btn));color:var(--ink);padding:10px 13px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+button:hover{filter:brightness(1.09)} button:disabled{opacity:.5;cursor:not-allowed} input[type="file"]{display:none}
+input[type="number"],input[type="text"],select,textarea{width:100%;background:#081123;color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:9px 10px;outline:none} input[type="range"]{width:100%}
+textarea{min-height:180px;resize:vertical;white-space:pre;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}
+label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}.tiny{font-size:12px;color:var(--muted)}.small{font-size:13px;color:var(--muted)}
+.app{min-height:100%;display:grid;grid-template-columns:372px 1fr;gap:14px;padding:14px}.side,.main{background:rgba(17,26,47,.92);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}.side{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);display:flex;flex-direction:column}.side-head{padding:16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#17223b,#111a2f)}
+h1{margin:0;font-size:20px;letter-spacing:.2px}.sub{margin:6px 0 0;color:var(--muted);font-size:13px}.side-body{padding:14px;overflow:auto}.main{min-width:0}.topbar{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:rgba(23,34,59,.85)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{padding:9px 12px;border-radius:999px;background:#0b1529;color:var(--muted);border:1px solid var(--line);cursor:pointer;font-weight:700}.tab.active{background:linear-gradient(180deg,#2e6c96,#24466d);color:#fff;border-color:#4f86b2}.content{padding:14px}.page{display:none}.page.active{display:block}.card{background:rgba(11,21,41,.92);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}.card h2,.card h3{margin:0 0 10px}.grid{display:grid;gap:12px}.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:repeat(3,1fr)}.grid.four{grid-template-columns:repeat(4,1fr)}
+.drop{border:2px dashed #365d88;background:rgba(13,30,57,.7);border-radius:18px;padding:16px;text-align:center;transition:.15s}.drop.drag{border-color:var(--accent);background:rgba(41,91,134,.6)}.drop strong{display:block;font-size:16px}.drop p{margin:.4em 0;color:var(--muted);font-size:13px}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;background:#0e1a31;border:1px solid var(--line);color:var(--muted);font-size:12px;margin:3px}.status{border-left:4px solid var(--accent);padding:10px 12px;background:#0b1529;border-radius:12px;color:var(--muted);white-space:pre-wrap}.status.good{border-left-color:var(--good)}.status.warn{border-left-color:var(--warn)}.status.bad{border-left-color:var(--bad)}
+.file-group{border:1px solid var(--line);background:#0c172d;border-radius:13px;padding:10px;margin:8px 0}.file-group.active{border-color:var(--accent);box-shadow:0 0 0 1px rgba(89,208,255,.35)}.file-group b{display:block;margin-bottom:5px}.file-row{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px;border-top:1px dashed rgba(255,255,255,.08);padding-top:5px;margin-top:5px}.metric{background:#0c172d;border:1px solid var(--line);border-radius:14px;padding:12px}.metric small{display:block;color:var(--muted);font-size:12px}.metric b{font-size:18px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;max-height:55vh}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid rgba(255,255,255,.08);padding:8px 9px;text-align:left;white-space:nowrap}th{position:sticky;top:0;background:#16213d;z-index:1}tr:hover td{background:rgba(255,255,255,.035)}
+.canvas-wrap{position:relative;background:#061020;border:1px solid var(--line);border-radius:16px;padding:10px;overflow:hidden}canvas{display:block;width:100%;height:420px;background:#071427;border-radius:12px;cursor:crosshair}.digital-canvas{height:300px}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}.legend-item{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}.swatch{width:14px;height:4px;border-radius:4px;background:var(--accent)}.channel-list{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:14px;padding:8px;background:#081123}.checkrow{display:flex;gap:8px;align-items:center;border-bottom:1px solid rgba(255,255,255,.06);padding:6px 4px;color:var(--muted);font-size:13px}.checkrow input{width:auto}.checkrow span{overflow:hidden;text-overflow:ellipsis}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.kbd{border:1px solid var(--line);background:#061020;border-radius:8px;padding:2px 6px;color:#d6e5ff;font-family:ui-monospace,monospace;font-size:12px}.logbox{white-space:pre-wrap;background:#061020;border:1px solid var(--line);border-radius:14px;padding:12px;min-height:260px;max-height:65vh;overflow:auto;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}.hidden{display:none!important}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.warn-text{color:var(--warn)}.bad-text{color:var(--bad)}.good-text{color:var(--good)}
+.cursor-panel{background:#071427;border:1px solid var(--line);border-radius:16px;padding:12px}.cursor-readout{font-weight:800;color:#fff}.split{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}.note{border-left:4px solid var(--warn);background:#0b1529;border-radius:12px;padding:10px 12px;color:var(--muted);font-size:12px}
+@media(max-width:1100px){.app{grid-template-columns:1fr}.side{position:relative;top:0;max-height:none}.grid.two,.grid.three,.grid.four,.split{grid-template-columns:1fr}canvas{height:330px}.digital-canvas{height:250px}.topbar{position:sticky;top:0;z-index:5}}
+@media print{body{background:#fff;color:#111}.side,.topbar button,.toolbar,.tabs{display:none}.app{display:block;padding:0}.main,.card{border:0;box-shadow:none;background:#fff;color:#111}th{background:#eee;color:#111}.metric,.table-wrap{border-color:#ddd}canvas{border:1px solid #ddd}}
+
+.pwa-box{border:1px solid var(--line);background:linear-gradient(180deg,#0d1a32,#081123);border-radius:16px;padding:12px;margin-bottom:12px}
+.pwa-box h3{font-size:14px;margin:0 0 8px;color:#fff}.pwa-row{display:flex;gap:8px;flex-wrap:wrap}.pwa-row button{flex:1;min-width:135px}.pwa-led{display:inline-block;width:9px;height:9px;border-radius:99px;background:var(--warn);margin-right:6px}.pwa-led.on{background:var(--good)}.pwa-led.off{background:var(--bad)}
+.toast-pwa{position:fixed;right:14px;bottom:14px;z-index:9999;max-width:min(420px,calc(100vw - 28px));background:#081123;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);color:var(--ink);display:none;white-space:pre-wrap}.toast-pwa.show{display:block}
+@media(max-width:700px){.pwa-row button{min-width:100%;}.toast-pwa{left:14px;right:14px}}
+
+
+/* V5: ép chế độ xem và báo cáo */
+.view-box{border:1px solid var(--line);background:linear-gradient(180deg,#0d1a32,#081123);border-radius:16px;padding:12px;margin-bottom:12px}
+.view-box h3{font-size:14px;margin:0 0 8px;color:#fff}.view-mode-active{outline:2px solid var(--accent);box-shadow:0 0 0 3px rgba(89,208,255,.18)}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.report-actions button{min-width:150px}
+body.view-mobile .app{grid-template-columns:1fr;max-width:760px;margin:0 auto;padding:10px}
+body.view-mobile .side{position:relative;top:0;max-height:none}
+body.view-mobile .grid.two,body.view-mobile .grid.three,body.view-mobile .grid.four,body.view-mobile .split{grid-template-columns:1fr}
+body.view-mobile .topbar{position:sticky;top:0;z-index:5}
+body.view-mobile canvas{height:330px} body.view-mobile .digital-canvas{height:250px}
+body.view-desktop{min-width:1220px}
+body.view-desktop .app{grid-template-columns:372px minmax(820px,1fr);max-width:none}
+body.view-desktop .side{position:sticky;top:14px;max-height:calc(100vh - 28px)}
+body.view-desktop canvas{height:460px} body.view-desktop .digital-canvas{height:320px}
+@media(max-width:700px){.report-actions button{min-width:100%}}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="side-head">
+      <h1>COMTRADE Offline Reader Pro V5</h1>
+      <p class="sub">Đọc dữ liệu sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
+    </div>
+    <div class="side-body">
+      <div class="pwa-box" id="pwaBox">
+        <h3>📦 PWA Offline</h3>
+        <div class="small" id="pwaStatus"><span class="pwa-led" id="pwaLed"></span>Đang kiểm tra khả năng cài đặt...</div>
+        <div class="pwa-row" style="margin-top:10px">
+          <button id="btnPwaInstall" type="button">Cài PWA</button>
+          <button id="btnPwaUpdate" type="button">Cập nhật cache</button>
+        </div>
+        <div class="pwa-row" style="margin-top:8px">
+          <button id="btnPwaClear" type="button">Xóa cache cũ</button>
+          <button id="btnPwaReload" type="button">Tải lại</button>
+        </div>
+        <div class="pwa-row" style="margin-top:8px">
+          <button id="btnPwaCheck" type="button">Kiểm tra bản mới</button>
+          <button id="btnPwaForceUpdate" type="button">Ép cập nhật phiên bản</button>
+        </div>
+        <div class="pwa-row" style="margin-top:8px">
+          <button id="btnPwaHardReload" type="button">Tải lại bỏ cache</button>
+        </div>
+        <div class="tiny" style="margin-top:8px">Muốn cài PWA cần mở qua <b>localhost</b> hoặc <b>HTTPS</b>; mở trực tiếp file vẫn dùng được nhưng trình duyệt không cho cài PWA.</div>
+      </div>
+
+      <div class="view-box" id="viewBox">
+        <h3>🖥️ Chế độ xem</h3>
+        <div class="pwa-row">
+          <button id="btnViewAuto" type="button">Tự động</button>
+          <button id="btnViewMobile" type="button">Điện thoại</button>
+          <button id="btnViewDesktop" type="button">Máy tính</button>
+        </div>
+        <div class="tiny" id="viewModeStatus" style="margin-top:8px">Đang dùng chế độ tự động.</div>
+      </div>
+
+      <div id="drop" class="drop">
+        <strong>Thả bộ file COMTRADE vào đây</strong>
+        <p>Chọn .cfg + .dat, hoặc file một-gói .cff, kèm .log/.hdr/.inf nếu có.</p>
+        <div class="toolbar" style="justify-content:center;margin-top:10px">
+          <button id="btnPickFiles">Chọn file</button>
+          <button id="btnPickFolder">Chọn thư mục</button>
+        </div>
+        <input id="fileInput" type="file" multiple accept=".cfg,.dat,.cff,.log,.hdr,.inf,.txt,.CFG,.DAT,.CFF,.LOG,.HDR,.INF,.TXT">
+        <input id="folderInput" type="file" webkitdirectory directory multiple>
+      </div>
+      <div style="height:12px"></div>
+      <div id="status" class="status">Chưa nạp file. Hãy chọn bộ .CFG + .DAT cùng tên hoặc một file .CFF.</div>
+      <div class="card" style="margin-top:12px">
+        <h3>Bộ file đã nhận</h3>
+        <div id="groups"></div>
+      </div>
+      <div class="card">
+        <h3>Tùy chọn đọc DAT</h3>
+        <label>Chế độ tương thích hãng / biến thể</label>
+        <select id="datProfile">
+          <option value="auto" selected>Tự nhận dạng an toàn</option>
+          <option value="standard">COMTRADE chuẩn theo CFG</option>
+          <option value="vendor">Vendor tolerant: thử endian/padding/kiểu DAT</option>
+          <option value="asciiPacked">ASCII có digital gói dạng word/hex</option>
+          <option value="little">Ép Binary little-endian</option>
+          <option value="big">Ép Binary big-endian</option>
+          <option value="crlf">Binary có CR/LF hoặc byte đệm giữa bản ghi</option>
+        </select>
+        <div class="grid two" style="margin-top:8px">
+          <div>
+            <label>Endian binary</label>
+            <select id="endianMode"><option value="auto" selected>Auto</option><option value="le">Little</option><option value="be">Big</option></select>
+          </div>
+          <div>
+            <label>Thứ tự bit Digital</label>
+            <select id="bitOrder"><option value="lsb" selected>LSB bit 0 trước</option><option value="msb">MSB bit 15 trước</option></select>
+          </div>
+        </div>
+        <div class="grid two" style="margin-top:8px">
+          <div>
+            <label>Đơn vị timestamp trong DAT</label>
+            <select id="timestampUnit"><option value="auto" selected>Auto theo sample rate</option><option value="micro">Micro giây</option><option value="nano">Nano giây</option><option value="milli">Milli giây</option><option value="second">Giây</option></select>
+          </div>
+          <div>
+            <label>Loại DAT nếu muốn ép</label>
+            <select id="datTypeOverride"><option value="cfg" selected>Theo CFG</option><option value="ASCII">ASCII</option><option value="BINARY">BINARY 16-bit</option><option value="BINARY32">BINARY32</option><option value="FLOAT32">FLOAT32</option></select>
+          </div>
+        </div>
+        <label style="margin-top:8px"><input id="preferTimestamp" type="checkbox" checked> Ưu tiên thời gian trong DAT nếu hợp lệ</label>
+        <label><input id="normalizePlot" type="checkbox" checked> Chuẩn hóa từng kênh khi vẽ</label>
+        <label><input id="autoDraw" type="checkbox" checked> Tự vẽ lại khi chọn kênh/con trỏ</label>
+        <div class="tiny">Bộ giải mã đã thêm các chế độ thử endian, byte đệm/CRLF, BINARY/BINARY32/FLOAT32 bị khai báo sai, digital gói theo word/hex. Những biến thể mã hóa độc quyền/nén riêng vẫn cần mẫu file thực tế để bổ sung chữ ký.</div>
+      </div>
+      <div class="card">
+        <h3>Hướng dẫn nhanh</h3>
+        <div class="tiny">
+          1) Chọn bộ <span class="kbd">ten.cfg</span> + <span class="kbd">ten.dat</span> hoặc <span class="kbd">ten.cff</span>.<br>
+          2) Nếu DAT không đọc đúng, thử <b>Vendor tolerant</b>, đổi endian hoặc timestamp.<br>
+          3) Vào tab <b>Biểu đồ</b>, kéo thanh trượt A/B để đo thời gian và xem giá trị tức thời.<br>
+          4) Vào tab <b>Phân tích sự cố</b> để nhận dạng dạng sự cố, pha sự cố, giá trị và thời gian tác động.<br>
+          5) Xuất CSV/JSON nếu cần đưa sang Excel/phần mềm khác.
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="tabs">
+        <div class="tab active" data-tab="overview">Tổng quan</div>
+        <div class="tab" data-tab="plot">Biểu đồ</div>
+        <div class="tab" data-tab="channels">Kênh</div>
+        <div class="tab" data-tab="events">Sự kiện số</div>
+        <div class="tab" data-tab="fault">Phân tích sự cố</div>
+        <div class="tab" data-tab="log">Log/HDR/INF</div>
+        <div class="tab" data-tab="convert">Chuyển đổi</div>
+        <div class="tab" data-tab="export">Xuất dữ liệu</div>
+      </div>
+      <div class="toolbar">
+        <button id="btnDemo">Tạo dữ liệu mẫu</button>
+        <button id="btnDemoCff">Tạo CFF mẫu</button>
+        <button id="btnPrint">In/Báo cáo PDF</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <section id="page-overview" class="page active">
+        <div class="grid four" id="metrics"></div>
+        <div class="card">
+          <h2>Thông tin cấu hình</h2>
+          <div id="cfgInfo" class="table-wrap"></div>
+        </div>
+        <div class="card">
+          <h2>Thống kê analog</h2>
+          <div id="analogSummary" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <section id="page-plot" class="page">
+        <div class="grid three">
+          <div class="card">
+            <h3>Chọn kênh Analog</h3>
+            <div class="toolbar" style="margin-bottom:8px"><button id="btnAFirst6">6 kênh đầu</button><button id="btnAAll">Tất cả</button><button id="btnAClear">Bỏ chọn</button></div>
+            <div id="analogChecks" class="channel-list"></div>
+          </div>
+          <div class="card">
+            <h3>Chọn kênh Digital</h3>
+            <div class="toolbar" style="margin-bottom:8px"><button id="btnDFirst12">12 kênh đầu</button><button id="btnDAll">Tất cả</button><button id="btnDClear">Bỏ chọn</button></div>
+            <div id="digitalChecks" class="channel-list"></div>
+          </div>
+          <div class="card">
+            <h3>Khoảng thời gian</h3>
+            <div class="grid two"><div><label>Từ giây</label><input id="tStart" type="number" step="0.000001" value="0"></div><div><label>Đến giây</label><input id="tEnd" type="number" step="0.000001" value="0"></div></div>
+            <div class="toolbar" style="margin-top:10px"><button id="btnFullRange">Toàn bộ</button><button id="btnWindowCursor">Cửa sổ quanh con trỏ</button><button id="btnDraw">Vẽ lại</button></div>
+            <div id="plotHint" class="tiny" style="margin-top:8px">Chưa có dữ liệu để vẽ.</div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Hai con trỏ thời gian A/B</h2>
+          <div class="cursor-panel">
+            <div class="grid two">
+              <div>
+                <label>Con trỏ A</label>
+                <input id="cursorRangeA" type="range" min="0" max="0" step="1" value="0">
+                <div id="cursorReadoutA" class="cursor-readout">A: chưa có dữ liệu</div>
+                <label style="margin-top:10px">Con trỏ B</label>
+                <input id="cursorRangeB" type="range" min="0" max="0" step="1" value="0">
+                <div id="cursorReadoutB" class="cursor-readout">B: chưa có dữ liệu</div>
+                <div class="toolbar" style="margin-top:8px">
+                  <button id="btnActiveA">Chọn A</button>
+                  <button id="btnActiveB">Chọn B</button>
+                  <button id="btnCursorPrev">◀ Mẫu trước</button>
+                  <button id="btnCursorNext">Mẫu sau ▶</button>
+                  <button id="btnSwapCursors">Đảo A/B</button>
+                  <button id="btnCursorToRange">Đưa khoảng xem tới A/B</button>
+                </div>
+              </div>
+              <div>
+                <label>Khoảng cách giữa hai con trỏ</label>
+                <div id="cursorDeltaReadout" class="cursor-readout">Δt: chưa có dữ liệu</div>
+                <div class="tiny" style="margin-top:8px">Bấm lên biểu đồ sẽ đặt con trỏ đang chọn. Dùng A/B để đo thời gian cắt máy cắt, thời gian tác động bảo vệ, độ lệch pha hoặc chu kỳ sóng.</div>
+                <label style="margin-top:10px"><input id="cursorSelectedOnly" type="checkbox" checked> Bảng chỉ hiện kênh đang chọn</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="split">
+          <div>
+            <div class="card"><h2>Analog waveform</h2><div class="canvas-wrap"><canvas id="analogCanvas"></canvas></div><div id="analogLegend" class="legend"></div></div>
+            <div class="card"><h2>Digital/status</h2><div class="canvas-wrap"><canvas id="digitalCanvas" class="digital-canvas"></canvas></div><div id="digitalLegend" class="legend"></div></div>
+          </div>
+          <div class="card">
+            <h2>Bảng giá trị tại A/B và Δ</h2>
+            <div id="cursorTable" class="table-wrap"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-channels" class="page">
+        <div class="card"><h2>Danh sách kênh Analog</h2><div id="analogTable" class="table-wrap"></div></div>
+        <div class="card"><h2>Danh sách kênh Digital</h2><div id="digitalTable" class="table-wrap"></div></div>
+      </section>
+
+      <section id="page-events" class="page">
+        <div class="card"><h2>Chuyển trạng thái Digital</h2><div class="tiny">Bảng này giúp kiểm tra thời điểm rơ le/tiếp điểm/cờ trạng thái đổi 0/1 trong bản ghi.</div><div id="digitalEvents" class="table-wrap" style="margin-top:10px"></div></div>
+      </section>
+
+      <section id="page-fault" class="page">
+        <div class="card">
+          <h2>Công cụ phân tích sự cố</h2>
+          <p class="tiny">Công cụ này phân tích offline từ dữ liệu đã giải mã: tự nhận dạng kênh dòng/áp theo tên kênh và đơn vị, tính RMS trượt theo 1 chu kỳ, xác định thời điểm bắt đầu/kết thúc sự cố, pha sự cố, dòng/áp trong sự cố và các mốc digital như Pickup/Trip/Máy cắt.</p>
+          <div class="grid four">
+            <div><label>Ngưỡng tăng dòng RMS × trước sự cố</label><input id="faultCurrentFactor" type="number" step="0.1" value="2.0"></div>
+            <div><label>Ngưỡng dòng tuyệt đối, 0 = tự động</label><input id="faultCurrentAbs" type="number" step="0.001" value="0"></div>
+            <div><label>Ngưỡng sụt áp còn lại (%)</label><input id="faultVoltageDrop" type="number" step="1" value="70"></div>
+            <div><label>Thời gian tối thiểu sự cố (ms)</label><input id="faultMinMs" type="number" step="0.1" value="4"></div>
+          </div>
+          <div class="grid four" style="margin-top:10px">
+            <div><label>Cửa sổ trước sự cố (ms)</label><input id="faultPreMs" type="number" step="1" value="200"></div>
+            <div><label>Cửa sổ sau sự cố (ms)</label><input id="faultPostMs" type="number" step="1" value="200"></div>
+            <div><label>Từ khóa Pickup/Start</label><input id="faultDigitalPickup" type="text" value="PICKUP,START,50,51,67,21"></div>
+            <div><label>Từ khóa Trip/Máy cắt</label><input id="faultDigitalTrip" type="text" value="TRIP,OPERATE,SHOT,CUT"></div>
+          </div>
+          <div class="grid two" style="margin-top:10px">
+            <div><label>Từ khóa máy cắt mở</label><input id="faultDigitalBreaker" type="text" value="52A,52B,CB,MC,MAY CAT,MÁY CẮT,BREAKER,OPEN"></div>
+            <div><label>Gợi ý</label><div class="tiny" style="padding-top:9px">Nếu file dùng tên kênh khác thường, hãy sửa các từ khóa rồi bấm phân tích lại. Có thể đặt con trỏ A/B vào vùng nghi ngờ để kiểm tra chéo.</div></div>
+          </div>
+          <div class="toolbar" style="margin-top:12px">
+            <button id="btnFaultAnalyze">Phân tích sự cố</button>
+            <button id="btnFaultSetCursors">Đưa A/B tới đầu/cuối sự cố</button>
+            <button id="btnFaultZoom">Phóng khoảng sự cố</button>
+            <button id="btnFaultExportJson">Xuất báo cáo JSON</button>
+            <button id="btnFaultExportCsv">Xuất bảng CSV</button>
+            <button id="btnFaultExportHtml">Xuất báo cáo HTML</button>
+            <button id="btnFaultOpenHtml">Mở báo cáo HTML</button>
+            <button id="btnFaultExportTxt">Xuất báo cáo TXT</button>
+          </div>
+          <div id="faultResultStatus" class="status" style="margin-top:12px">Chưa phân tích.</div>
+        </div>
+        <div class="grid four" id="faultMetrics"></div>
+        <div class="card"><h2>Kết luận nhanh</h2><div id="faultSummary" class="table-wrap"></div></div>
+        <div class="card"><h2>Giá trị các phần tử sự cố</h2><div id="faultValueTable" class="table-wrap"></div></div>
+        <div class="card"><h2>Dòng thời gian tác động</h2><div id="faultTimeline" class="table-wrap"></div></div>
+        <div class="card"><h2>Ghi chú phân tích</h2><div id="faultNotes" class="logbox">Chưa có ghi chú.</div></div>
+      </section>
+
+      <section id="page-log" class="page">
+        <div class="card"><h2>Log / Header / Info / CFF sections</h2><div class="grid two"><div><label>Lọc nội dung</label><input id="logSearch" type="text" placeholder="Nhập từ khóa: Trip, Fault, Pickup, 374..."></div><div><label>Chọn file văn bản</label><select id="logSelect"></select></div></div><div id="logView" class="logbox" style="margin-top:12px">Chưa có file log/hdr/inf.</div></div>
+      </section>
+
+      <section id="page-convert" class="page">
+        <div class="card">
+          <h2>Chuyển đổi phiên bản COMTRADE</h2>
+          <p class="tiny">Lõi chuyển đổi xuất lại từ dữ liệu đã giải mã. Có thể đổi revision, kiểu DAT và kiểu đóng gói file. Với bản ghi rất lớn, nên ưu tiên BINARY/BINARY32 để giảm dung lượng.</p>
+          <div class="grid four">
+            <div>
+              <label>Phiên bản đích</label>
+              <select id="targetRevision">
+                <option value="1991">IEEE C37.111-1991</option>
+                <option value="1999">IEEE C37.111-1999</option>
+                <option value="2013" selected>IEEE/IEC C37.111-2013</option>
+              </select>
+            </div>
+            <div>
+              <label>Kiểu DAT đích</label>
+              <select id="targetDatType">
+                <option value="ASCII">ASCII</option>
+                <option value="BINARY" selected>BINARY 16-bit</option>
+                <option value="BINARY32">BINARY32</option>
+                <option value="FLOAT32">FLOAT32</option>
+              </select>
+            </div>
+            <div>
+              <label>Đóng gói tải về</label>
+              <select id="targetPackage">
+                <option value="zip" selected>ZIP gồm CFG + DAT + HDR/INF</option>
+                <option value="cff">CFF một-file</option>
+                <option value="separate">Tải từng file rời</option>
+              </select>
+            </div>
+            <div>
+              <label>Endian DAT nhị phân</label>
+              <select id="targetEndian"><option value="le" selected>Little-endian</option><option value="be">Big-endian</option></select>
+            </div>
+          </div>
+          <div class="grid four" style="margin-top:10px">
+            <div>
+              <label>Đơn vị timestamp xuất</label>
+              <select id="targetTsUnit"><option value="micro" selected>Micro giây</option><option value="nano">Nano giây</option><option value="milli">Milli giây</option><option value="second">Giây</option></select>
+            </div>
+            <div>
+              <label>Digital trong ASCII</label>
+              <select id="targetDigitalAscii"><option value="columns" selected>Từng cột 0/1</option><option value="packed">Gói word 16-bit</option></select>
+            </div>
+            <div>
+              <label>Sample rate CFG</label>
+              <select id="targetRateMode"><option value="auto" selected>Tự tính từ thời gian</option><option value="keep">Giữ theo CFG gốc</option></select>
+            </div>
+            <div>
+              <label>Tên file xuất</label>
+              <input id="targetBaseName" type="text" placeholder="Tự lấy theo tên bộ đang đọc">
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top:12px">
+            <button id="btnConvertDownload">Chuyển đổi và tải về</button>
+            <button id="btnPreviewCfg">Xem CFG đích</button>
+            <button id="btnDownloadConvertedDat">Tải riêng DAT vừa chuyển</button>
+          </div>
+          <div id="convertStatus" class="status" style="margin-top:12px">Chưa chuyển đổi.</div>
+        </div>
+        <div class="card">
+          <h2>Xem trước CFG đích</h2>
+          <textarea id="convertedCfgPreview" readonly placeholder="Bấm Xem CFG đích hoặc Chuyển đổi để xem nội dung CFG sẽ xuất."></textarea>
+        </div>
+        <div class="card">
+          <h2>Nguyên tắc chuyển đổi</h2>
+          <ul class="tiny">
+            <li>1991: ép về ASCII và file rời vì phiên bản cũ không dùng CFF/BINARY32/FLOAT32.</li>
+            <li>1999: cho phép ASCII hoặc BINARY 16-bit; nếu chọn kiểu 2013 sẽ tự hạ xuống BINARY.</li>
+            <li>2013: cho phép ASCII, BINARY, BINARY32, FLOAT32 và CFF một-file.</li>
+            <li>Analog BINARY/BINARY32 được nghịch scale theo CFG: <span class="mono">raw = (giá trị - b) / a</span>. FLOAT32 xuất trực tiếp giá trị thực và đặt hệ số kênh về a=1, b=0 để đọc lại đúng.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="page-export" class="page">
+        <div class="card"><h2>Xuất dữ liệu</h2><p class="tiny">CSV có thể mở bằng Excel. Với bản ghi rất lớn, chỉ nên xuất kênh cần thiết hoặc khoảng thời gian đã chọn.</p><div class="toolbar"><button id="btnCsvSelected">Xuất CSV kênh đang chọn</button><button id="btnCsvAllAnalog">Xuất CSV toàn bộ Analog</button><button id="btnCsvCursor">Xuất CSV mẫu tại con trỏ</button><button id="btnJsonSummary">Xuất JSON tóm tắt</button><button id="btnExportFaultHtml2">Xuất báo cáo sự cố HTML</button><button id="btnOpenFaultHtml2">Mở báo cáo sự cố</button></div></div>
+        <div class="card"><h2>Ghi chú kỹ thuật</h2><ul class="tiny"><li>Hỗ trợ file rời .CFG/.DAT và file một-gói .CFF có các section CFG/INF/HDR/DAT.</li><li>Có lõi chuyển đổi xuất lại COMTRADE 1991/1999/2013, DAT ASCII/BINARY/BINARY32/FLOAT32 và đóng gói ZIP/CFF.</li><li>Có công cụ phân tích sự cố: nhận dạng pha sự cố, dạng sự cố, thời gian bắt đầu/kết thúc, mốc Pickup/Trip/Máy cắt và giá trị RMS trước/trong/sau sự cố.</li><li>Hỗ trợ DAT: ASCII, BINARY 16-bit, BINARY32, FLOAT32; có cơ chế thử endian, byte đệm/CRLF, timestamp µs/ns/ms, digital packed word/hex.</li><li>Công thức scale analog: <span class="mono">giá trị = a × raw + b</span>. FLOAT32 được coi là giá trị thực, không nhân a/b.</li><li>Biến thể mã hóa độc quyền hoặc DAT nén của từng hãng chưa thể bảo đảm nếu không có mẫu file thật để nhận diện chữ ký.</li></ul><div id="decoderNotes" class="note"></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const state = {groups:new Map(), activeBase:null, cfg:null, logs:[], data:null, selectedAnalog:new Set(), selectedDigital:new Set(), summary:[], errors:[], cursorA:0, cursorB:0, activeCursor:'A', lastPlot:{i0:0,i1:0}, decoderNotes:[], converted:null, faultAnalysis:null};
+const COLORS=['#59d0ff','#5ee392','#ffd166','#ff6b6b','#b892ff','#ff9f1c','#2ec4b6','#e71d36','#a6e22e','#f92672','#66d9ef','#fd971f','#ae81ff','#e6db74'];
+function setStatus(msg, cls='') { const el=$('status'); el.className='status '+cls; el.textContent=msg; }
+function esc(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c));}
+function num(v, d=0){const n=Number(String(v??'').trim());return Number.isFinite(n)?n:d}
+function fmt(v, d=6){ if(v===undefined||v===null||Number.isNaN(v)) return ''; const av=Math.abs(v); if(av!==0&&(av<1e-4||av>=1e6)) return Number(v).toExponential(4); return Number(v).toLocaleString('vi-VN',{maximumFractionDigits:d}); }
+function baseName(name){ const p=String(name||'').split('/').pop(); return p.replace(/\.[^.]+$/,'').toLowerCase(); }
+function extName(name){ const m=String(name||'').toLowerCase().match(/\.([^.]+)$/); return m?m[1]:''; }
+function fileSize(n){ if(!Number.isFinite(n)) return ''; if(n<1024) return n+' B'; if(n<1048576) return (n/1024).toFixed(1)+' KB'; return (n/1048576).toFixed(1)+' MB'; }
+function option(id){ const e=$(id); return e?e.value:''; }
+function checked(id){ const e=$(id); return !!(e&&e.checked); }
+function textDecode(bytes){ try{return new TextDecoder('utf-8',{fatal:false}).decode(bytes).replace(/^\uFEFF/,'');}catch(e){ let s=''; for(const b of bytes)s+=String.fromCharCode(b); return s.replace(/^\uFEFF/,''); } }
+function makeVirtualFile(chunks, name, type){ const blob=new Blob(chunks,{type:type||'application/octet-stream'}); blob.name=name; blob.lastModified=Date.now(); return blob; }
+function csvSplit(line){
+  line=String(line??'').replace(/;(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/g, ',');
+  const out=[]; let cur='', q=false;
+  for(let i=0;i<line.length;i++){ const ch=line[i]; if(ch==='\"'){ q=!q; continue; } if(ch===','&&!q){ out.push(cur.trim()); cur=''; } else cur+=ch; }
+  out.push(cur.trim()); return out;
+}
+function cleanLines(text){ return String(text||'').replace(/^\uFEFF/,'').split(/\r?\n/).map(x=>x.trim()).filter(x=>x.length>0); }
+function parseCountToken(tok){ const m=String(tok||'').trim().match(/(-?\d+)/); return m?parseInt(m[1],10):0; }
+function median(arr){ const a=arr.filter(Number.isFinite).sort((x,y)=>x-y); if(!a.length)return NaN; return a[Math.floor(a.length/2)]; }
+function nearestIndexByTime(times,t){ let lo=0,hi=times.length-1; while(lo<hi){ const mid=(lo+hi)>>1; if(times[mid]<t)lo=mid+1; else hi=mid; } if(lo>0&&Math.abs(times[lo-1]-t)<Math.abs(times[lo]-t))return lo-1; return lo; }
+
+function parseCfg(text){
+  const lines=cleanLines(text); if(lines.length<8) throw new Error('CFG quá ngắn hoặc không đúng định dạng.');
+  let i=0; const first=csvSplit(lines[i++]);
+  const cfg={rawLines:lines, station:first[0]||'', device:first[1]||'', rev:first[2]||'', analog:[], digital:[], sampleRates:[], warnings:[], extra2013:{}};
+  const counts=csvSplit(lines[i++]||''); cfg.totalChannels=parseCountToken(counts[0]); cfg.analogCount=parseCountToken(counts[1]); cfg.digitalCount=parseCountToken(counts[2]);
+  if(!cfg.totalChannels) cfg.totalChannels=cfg.analogCount+cfg.digitalCount;
+  for(let a=0;a<cfg.analogCount && i<lines.length;a++,i++){
+    const p=csvSplit(lines[i]); cfg.analog.push({index:parseInt(p[0],10)||a+1, id:p[1]||('A'+(a+1)), phase:p[2]||'', ccbm:p[3]||'', unit:p[4]||'', a:num(p[5],1), b:num(p[6],0), skew:num(p[7],0), min:num(p[8],NaN), max:num(p[9],NaN), primary:num(p[10],NaN), secondary:num(p[11],NaN), ps:p[12]||'', raw:p});
+  }
+  for(let d=0;d<cfg.digitalCount && i<lines.length;d++,i++){
+    const p=csvSplit(lines[i]); cfg.digital.push({ index:parseInt(p[0],10)||d+1, id:p[1]||('D'+(d+1)), phase:p[2]||'', ccbm:p[3]||'', normal:num(p[4],0), raw:p });
+  }
+  cfg.frequency=num(lines[i++],50);
+  cfg.nRates=parseInt((lines[i++]||'1').split(',')[0],10); if(!Number.isFinite(cfg.nRates)||cfg.nRates<0) cfg.nRates=1;
+  for(let r=0;r<cfg.nRates && i<lines.length;r++,i++){ const p=csvSplit(lines[i]); cfg.sampleRates.push({rate:num(p[0],0), end:parseInt(p[1],10)||0}); }
+  cfg.startTime=lines[i++]||''; cfg.triggerTime=lines[i++]||''; cfg.datType=(lines[i++]||'ASCII').trim().toUpperCase();
+  cfg.timeMult=1;
+  if(i<lines.length){ const maybe=Number(String(lines[i]).split(',')[0]); if(Number.isFinite(maybe)&&maybe!==0){ cfg.timeMult=maybe; i++; } }
+  if(i<lines.length && /[+-]?\d{0,2}h?\d{0,2}|x/i.test(lines[i])){ const p=csvSplit(lines[i]); cfg.extra2013.timeCode=p[0]||''; cfg.extra2013.localCode=p[1]||''; i++; }
+  if(i<lines.length && /^[0-9A-Fa-fxX]/.test(lines[i])){ const p=csvSplit(lines[i]); if(p.length<=3){ cfg.extra2013.tmqCode=p[0]||''; cfg.extra2013.leapSec=p[1]||''; i++; } }
+  cfg.extraLines=lines.slice(i);
+  cfg.expectedSamples=cfg.sampleRates.length ? Math.max(...cfg.sampleRates.map(r=>r.end||0)) : 0;
+  if(cfg.analog.length!==cfg.analogCount) cfg.warnings.push('Số dòng analog đọc được khác khai báo.');
+  if(cfg.digital.length!==cfg.digitalCount) cfg.warnings.push('Số dòng digital đọc được khác khai báo.');
+  if(!['ASCII','BINARY','BINARY32','FLOAT32'].includes(cfg.datType)) cfg.warnings.push('Kiểu DAT '+cfg.datType+' chưa chuẩn; sẽ thử chế độ tương thích.');
+  return cfg;
+}
+function timeBySample(cfg, sampleNo, idx){
+  if(!cfg.sampleRates.length || cfg.sampleRates[0].rate<=0) return idx;
+  let prevEnd=0, acc=0;
+  for(const seg of cfg.sampleRates){ const rate=seg.rate||cfg.sampleRates[0].rate; const end=seg.end||sampleNo; if(sampleNo<=end) return acc + Math.max(0, sampleNo-prevEnd-1)/rate; acc += Math.max(0,end-prevEnd)/rate; prevEnd=end; }
+  const last=cfg.sampleRates[cfg.sampleRates.length-1]; return acc + Math.max(0,sampleNo-prevEnd-1)/(last.rate||1);
+}
+function scaleAnalog(ch, raw, isFloat){ return isFloat ? raw : ch.a*raw + ch.b; }
+function chooseTimestampDivisor(rawTimes, cfg){
+  const mode=option('timestampUnit'); if(mode==='micro')return 1e6; if(mode==='nano')return 1e9; if(mode==='milli')return 1e3; if(mode==='second')return 1;
+  const del=[]; for(let i=1;i<Math.min(rawTimes.length,2000);i++){ const d=rawTimes[i]-rawTimes[i-1]; if(d>0) del.push(d); }
+  const md=median(del); const rate=(cfg.sampleRates[0]&&cfg.sampleRates[0].rate)||0; if(!Number.isFinite(md)||!rate) return 1e6;
+  const expected=1/rate; const candidates=[1e3,1e6,1e9,1]; let best=1e6, bestErr=Infinity;
+  for(const div of candidates){ const sec=md*cfg.timeMult/div; const err=Math.abs(Math.log((sec||1e-12)/expected)); if(err<bestErr){bestErr=err;best=div;} }
+  return best;
+}
+function applyTimes(rawTimes, sampleNos, cfg){
+  const n=rawTimes.length; const times=new Float64Array(n); const useTs=checked('preferTimestamp'); const div=chooseTimestampDivisor(rawTimes,cfg);
+  for(let r=0;r<n;r++){ const ts=rawTimes[r]; times[r]=(useTs && Number.isFinite(ts) && ts>0) ? ts*cfg.timeMult/div : timeBySample(cfg, sampleNos[r]||r+1, r); }
+  return {times, divisor:div};
+}
+function detectDelimiter(line){ if(line.includes(','))return ','; if(line.includes(';'))return ';'; if(line.includes('\t'))return '\t'; return /\s+/.test(line.trim())?'space':','; }
+function splitDatLine(line, delim){ if(delim==='space') return line.trim().split(/\s+/); if(delim==='\t') return line.split('\t').map(x=>x.trim()); if(delim===';') return line.split(';').map(x=>x.trim()); return csvSplit(line); }
+function parseDigitalToken(tok){ tok=String(tok??'').trim(); if(!tok)return 0; if(/^0x[0-9a-f]+$/i.test(tok))return parseInt(tok,16); if(/^[0-9a-f]+h$/i.test(tok))return parseInt(tok.slice(0,-1),16); if(/^[01]{2,}$/.test(tok))return parseInt(tok,2); const n=parseInt(tok,10); return Number.isFinite(n)?n:0; }
+async function parseDat(file, cfg){
+  const override=option('datTypeOverride'); const type=(override&&override!=='cfg')?override:cfg.datType;
+  if(type==='ASCII' || !['BINARY','BINARY32','FLOAT32'].includes(type)){ return parseDatAscii(await file.text(), cfg, type); }
+  const buf=await file.arrayBuffer(); return parseDatBinary(buf, cfg, type);
+}
+function parseDatAscii(text, cfg, forcedType){
+  const lines=String(text).replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim().length>0); const n=lines.length, A=cfg.analogCount, D=cfg.digitalCount;
+  const timesRaw=new Float64Array(n), sampleNos=new Uint32Array(n); const analog=Array.from({length:A},()=>new Float64Array(n)); const digital=Array.from({length:D},()=>new Int8Array(n)); let bad=0, packedRows=0; const delim=detectDelimiter(lines[0]||'');
+  for(let r=0;r<n;r++){
+    const p=splitDatLine(lines[r],delim); if(p.length<2){bad++; continue;} const sample=parseInt(p[0],10)||r+1; sampleNos[r]=sample; timesRaw[r]=Number(p[1]); let k=2;
+    for(let a=0;a<A;a++,k++){ const raw=Number(p[k]); analog[a][r]=scaleAnalog(cfg.analog[a], Number.isFinite(raw)?raw:NaN, false); }
+    const remain=p.slice(k).filter(x=>String(x).trim()!=='');
+    if(remain.length>=D){ for(let d=0;d<D;d++){ const v=parseInt(remain[d],10); digital[d][r]=Number.isFinite(v)?(v?1:0):0; } }
+    else { packedRows++; let bit=0; for(const tok of remain){ const word=parseDigitalToken(tok); for(let b=0;b<16;b++){ const di=bit++; if(di<D) digital[di][r]=(word>>b)&1; } } }
+  }
+  const t=applyTimes(timesRaw,sampleNos,cfg); const notes=[`ASCII delimiter: ${delim}`, packedRows?`Đã bung digital packed word/hex ở ${packedRows} dòng.`:'Digital dạng cột 0/1.', `Timestamp divisor: ${t.divisor}`];
+  return {format:'ASCII', samples:n, times:t.times, analog, digital, badRows:bad, parserNotes:notes};
+}
+function bytesPerAnalog(type){ return type==='BINARY'?2:4; }
+function candidateTypes(cfgType){ const override=option('datTypeOverride'); if(override&&override!=='cfg')return [override]; const profile=option('datProfile'); if(profile==='vendor'||profile==='auto') return [...new Set([cfgType,'BINARY','BINARY32','FLOAT32'].filter(t=>['BINARY','BINARY32','FLOAT32'].includes(t)))]; return [cfgType]; }
+function candidateEndians(){ const em=option('endianMode'); const profile=option('datProfile'); if(profile==='little')return [true]; if(profile==='big')return [false]; if(em==='le')return [true]; if(em==='be')return [false]; return [true,false]; }
+function candidatePads(){ const profile=option('datProfile'); if(profile==='crlf'||profile==='vendor'||profile==='auto') return [0,1,2,4]; return [0]; }
+function parseBinaryCandidate(buf, cfg, type, le, padBytes, bitOrder, dry=false){
+  const dv=new DataView(buf); const A=cfg.analogCount, D=cfg.digitalCount, words=Math.ceil(D/16); const analogBytes=bytesPerAnalog(type)*A; const recordBytes=4+4+analogBytes+2*words+padBytes; if(recordBytes<=8||buf.byteLength<recordBytes) return null;
+  const n=Math.floor(buf.byteLength/recordBytes), rem=buf.byteLength%recordBytes; if(n<=0)return null;
+  const inspect=Math.min(n,2000); let monotonic=0, validTs=0, lastSample=0, finiteScore=0; const sampleNosDry=[], rawTimesDry=[];
+  for(let r=0,off=0;r<inspect;r++,off+=recordBytes){
+    const sample=dv.getUint32(off,le); const ts=dv.getInt32(off+4,le); sampleNosDry.push(sample); rawTimesDry.push(ts); if(r>0 && sample>lastSample) monotonic++; lastSample=sample; if(ts>=0) validTs++;
+    let k=off+8; for(let a=0;a<Math.min(A,4);a++){ let raw; if(type==='BINARY'){raw=dv.getInt16(k,le); k+=2;} else if(type==='BINARY32'){raw=dv.getInt32(k,le); k+=4;} else {raw=dv.getFloat32(k,le); k+=4;} if(Number.isFinite(raw)&&Math.abs(raw)<1e12) finiteScore++; }
+  }
+  const score = monotonic*8 + validTs + finiteScore - rem*10 - padBytes*0.1 + (type===cfg.datType?5:0) + (le?1:0);
+  if(dry) return {type, le, padBytes, bitOrder, recordBytes, n, rem, score};
+  const timesRaw=new Float64Array(n), sampleNos=new Uint32Array(n); const analog=Array.from({length:A},()=>new Float64Array(n)); const digital=Array.from({length:D},()=>new Int8Array(n));
+  for(let r=0,off=0;r<n;r++,off+=recordBytes){
+    const sample=dv.getUint32(off,le); const ts=dv.getInt32(off+4,le); sampleNos[r]=sample||r+1; timesRaw[r]=ts; let k=off+8;
+    for(let a=0;a<A;a++){ let raw; if(type==='BINARY'){ raw=dv.getInt16(k,le); k+=2; analog[a][r]=scaleAnalog(cfg.analog[a],raw,false); } else if(type==='BINARY32'){ raw=dv.getInt32(k,le); k+=4; analog[a][r]=scaleAnalog(cfg.analog[a],raw,false); } else { raw=dv.getFloat32(k,le); k+=4; analog[a][r]=scaleAnalog(cfg.analog[a],raw,true); } }
+    for(let w=0;w<words;w++){ const word=dv.getUint16(k,le); k+=2; for(let b=0;b<16;b++){ const d=w*16+b; if(d<D){ const bit=bitOrder==='msb' ? (15-b) : b; digital[d][r]=(word>>bit)&1; } } }
+  }
+  const t=applyTimes(timesRaw,sampleNos,cfg); const notes=[`Parser: ${type} · ${le?'little':'big'}-endian · recordBytes=${recordBytes} · pad=${padBytes} · bit=${bitOrder}`,`Số mẫu=${n}, byte dư=${rem}`,`Timestamp divisor: ${t.divisor}`];
+  return {format:type, samples:n, times:t.times, analog, digital, badRows:rem?1:0, trailingBytes:rem, recordBytes, parserNotes:notes, endian:le?'little':'big', padBytes, bitOrder};
+}
+function parseDatBinary(buf, cfg, forcedType){
+  const bitOrder=option('bitOrder')||'lsb'; const types=candidateTypes(forcedType||cfg.datType); const endians=candidateEndians(); const pads=candidatePads(); const candidates=[];
+  for(const type of types){ if(!['BINARY','BINARY32','FLOAT32'].includes(type))continue; for(const le of endians){ for(const pad of pads){ const c=parseBinaryCandidate(buf,cfg,type,le,pad,bitOrder,true); if(c)candidates.push(c); } } }
+  if(!candidates.length) throw new Error('Không tìm được layout binary phù hợp với số kênh trong CFG.');
+  candidates.sort((a,b)=>b.score-a.score); const best=candidates[0]; const out=parseBinaryCandidate(buf,cfg,best.type,best.le,best.padBytes,bitOrder,false);
+  out.candidateTop=candidates.slice(0,6).map(c=>`${c.type}/${c.le?'LE':'BE'}/pad${c.padBytes}: score ${fmt(c.score,2)}, n=${c.n}, rem=${c.rem}`).join(' | ');
+  out.parserNotes.push('Top layout thử: '+out.candidateTop);
+  return out;
+}
+
+async function extractCff(file){
+  const bytes=new Uint8Array(await file.arrayBuffer()); const ascii=new TextDecoder('latin1').decode(bytes); const re=/---\s*file\s+type:\s*([A-Z0-9]+)(?:\s+([A-Z0-9]+))?(?:\s*:\s*(\d+))?\s*---/ig; const matches=[]; let m;
+  while((m=re.exec(ascii))!==null){ matches.push({kind:m[1].toUpperCase(), sub:(m[2]||'').toUpperCase(), len:m[3]?parseInt(m[3],10):null, start:m.index, headerEnd:m.index+m[0].length, header:m[0]}); }
+  if(!matches.length) throw new Error('Không thấy marker section CFF dạng --- file type: CFG ---');
+  const sections=[];
+  for(let i=0;i<matches.length;i++){
+    let start=matches[i].headerEnd; while(start<bytes.length && (bytes[start]===13||bytes[start]===10)) start++;
+    let end=(i+1<matches.length)?matches[i+1].start:bytes.length; if(matches[i].kind==='DAT' && matches[i].len && start+matches[i].len<=bytes.length) end=start+matches[i].len;
+    sections.push({...matches[i], contentBytes:bytes.slice(start,end)});
+  }
+  const cfgSec=sections.find(s=>s.kind==='CFG'); const datSec=sections.find(s=>s.kind==='DAT'); if(!cfgSec||!datSec) throw new Error('CFF thiếu section CFG hoặc DAT.');
+  const logs=[]; for(const s of sections){ if(['INF','HDR','LOG'].includes(s.kind)){ logs.push({name:baseName(file.name)+'.'+s.kind.toLowerCase(), text:textDecode(s.contentBytes)}); } }
+  const cfgText=textDecode(cfgSec.contentBytes); const datName=baseName(file.name)+'.dat'; const datFile=makeVirtualFile([datSec.contentBytes], datName, datSec.sub==='ASCII'?'text/plain':'application/octet-stream');
+  return {base:baseName(file.name), cfg:makeVirtualFile([cfgText], baseName(file.name)+'.cfg','text/plain'), dat:datFile, logs, meta:{sections:sections.map(s=>`${s.kind}${s.sub?' '+s.sub:''}${s.len?': '+s.len:''}`), datHeader:datSec.header, datSub:datSec.sub, datBytes:datSec.contentBytes.length}};
+}
+
+function buildSummary(){ const data=state.data,cfg=state.cfg; if(!data||!cfg) return []; const out=[]; const n=data.samples; for(let a=0;a<cfg.analogCount;a++){ const arr=data.analog[a]; let min=Infinity,max=-Infinity,sum=0,sum2=0,count=0; for(let i=0;i<n;i++){ const v=arr[i]; if(!Number.isFinite(v)) continue; if(v<min)min=v;if(v>max)max=v;sum+=v;sum2+=v*v;count++; } out.push({idx:a+1,id:cfg.analog[a].id,unit:cfg.analog[a].unit,min,max,avg:count?sum/count:NaN,rms:count?Math.sqrt(sum2/count):NaN,peakAbs:Math.max(Math.abs(min),Math.abs(max))}); } return out; }
+function table(headers, rows){ return `<table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
+function renderAll(){ renderGroups(); renderMetrics(); renderCfgInfo(); renderChannelTables(); renderSummary(); renderChecks(); renderDigitalEvents(); renderLogs(); setupCursor(); drawAll(); renderCursorTable(); renderDecoderNotes(); renderFaultAnalysis(); }
+function renderGroups(){ const box=$('groups'); if(!state.groups.size){box.innerHTML='<div class="tiny">Chưa có file.</div>';return;} let html=''; for(const [base,g] of state.groups){ const active=base===state.activeBase?'active':''; html+=`<div class="file-group ${active}"><b>${esc(base)}</b>`; html+=`<div class="file-row"><span>Nguồn</span><span>${g.cff?'<b>CFF một-file</b>':'file rời'}</span></div>`; html+=`<div class="file-row"><span>CFG</span><span>${g.cfg?esc(g.cfg.name)+' · '+fileSize(g.cfg.size):'<span class="bad-text">thiếu</span>'}</span></div>`; html+=`<div class="file-row"><span>DAT</span><span>${g.dat?esc(g.dat.name)+' · '+fileSize(g.dat.size):'<span class="bad-text">thiếu</span>'}</span></div>`; html+=`<div class="file-row"><span>LOG/HDR/INF</span><span>${g.logs.length?g.logs.map(f=>esc(f.name)).join('<br>'):'không có'}</span></div>`; if(g.cffMeta) html+=`<div class="file-row"><span>CFF</span><span>${esc(g.cffMeta.sections.join(' | '))}</span></div>`; html+=`<div class="toolbar" style="margin-top:8px"><button onclick="loadGroup('${base.replace(/'/g,"\\'")}')">Đọc bộ này</button></div></div>`; } box.innerHTML=html; }
+function renderMetrics(){ const cfg=state.cfg,data=state.data; const m=$('metrics'); if(!cfg){m.innerHTML='';return;} const duration=data&&data.samples?data.times[data.samples-1]-data.times[0]:0; const items=[['Trạm',cfg.station||''],['Thiết bị',cfg.device||''],['Kênh',`${cfg.analogCount}A / ${cfg.digitalCount}D`],['DAT',data?data.format:cfg.datType],['Mẫu',data?data.samples:cfg.expectedSamples||''],['Thời lượng',data?fmt(duration,6)+' s':''],['Tần số lưới',fmt(cfg.frequency,3)+' Hz'],['Sample rate',cfg.sampleRates.map(r=>fmt(r.rate,3)+' Hz đến '+r.end).join('; ')]]; m.innerHTML=items.map(([k,v])=>`<div class="metric"><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join(''); }
+function renderCfgInfo(){ const cfg=state.cfg; if(!cfg){$('cfgInfo').innerHTML='';return;} const rows=[['Station',esc(cfg.station)],['Recording device',esc(cfg.device)],['Revision',esc(cfg.rev)],['Total channels',cfg.totalChannels],['Analog',cfg.analogCount],['Digital',cfg.digitalCount],['Nominal frequency',fmt(cfg.frequency)+' Hz'],['Sample rates',esc(cfg.sampleRates.map(r=>`${r.rate}, ${r.end}`).join(' | '))],['Start time',esc(cfg.startTime)],['Trigger time',esc(cfg.triggerTime)],['DAT type CFG',esc(cfg.datType)],['Time multiplier',fmt(cfg.timeMult,9)],['2013 time_code/local_code',esc([cfg.extra2013.timeCode,cfg.extra2013.localCode].filter(Boolean).join(', '))],['2013 tmq/leapsec',esc([cfg.extra2013.tmqCode,cfg.extra2013.leapSec].filter(Boolean).join(', '))],['Extra CFG lines',esc((cfg.extraLines||[]).join(' | '))],['Cảnh báo',cfg.warnings.length?`<span class="warn-text">${esc(cfg.warnings.join('; '))}</span>`:'']]; $('cfgInfo').innerHTML=table(['Mục','Giá trị'], rows); }
+function renderChannelTables(){ const cfg=state.cfg; if(!cfg){$('analogTable').innerHTML='';$('digitalTable').innerHTML='';return;} $('analogTable').innerHTML=table(['#','Tên kênh','Pha','Đơn vị','a','b','skew','min raw','max raw','Primary','Secondary','P/S'], cfg.analog.map(ch=>[ch.index,esc(ch.id),esc(ch.phase),esc(ch.unit),fmt(ch.a,9),fmt(ch.b,9),fmt(ch.skew,9),fmt(ch.min),fmt(ch.max),fmt(ch.primary),fmt(ch.secondary),esc(ch.ps)])); $('digitalTable').innerHTML=table(['#','Tên kênh','Pha','CCBM','Normal'], cfg.digital.map(ch=>[ch.index,esc(ch.id),esc(ch.phase),esc(ch.ccbm),ch.normal])); }
+function renderSummary(){ const rows=state.summary.map(s=>[s.idx,esc(s.id),esc(s.unit),fmt(s.min),fmt(s.max),fmt(s.avg),fmt(s.rms),fmt(s.peakAbs)]); $('analogSummary').innerHTML=rows.length?table(['#','Kênh','Đơn vị','Min','Max','Trung bình','RMS','|Peak|'], rows):'<div class="tiny" style="padding:12px">Chưa có dữ liệu.</div>'; }
+function renderChecks(){ const cfg=state.cfg; if(!cfg){$('analogChecks').innerHTML='';$('digitalChecks').innerHTML='';return;} $('analogChecks').innerHTML=cfg.analog.map((ch,i)=>`<label class="checkrow"><input type="checkbox" data-a="${i}" ${state.selectedAnalog.has(i)?'checked':''}><span>${i+1}. ${esc(ch.id)} ${ch.unit?'('+esc(ch.unit)+')':''}</span></label>`).join(''); $('digitalChecks').innerHTML=cfg.digital.map((ch,i)=>`<label class="checkrow"><input type="checkbox" data-d="${i}" ${state.selectedDigital.has(i)?'checked':''}><span>${i+1}. ${esc(ch.id)}</span></label>`).join(''); document.querySelectorAll('[data-a]').forEach(cb=>cb.onchange=e=>{ const i=+e.target.dataset.a; e.target.checked?state.selectedAnalog.add(i):state.selectedAnalog.delete(i); if(checked('autoDraw')) drawAll(); renderCursorTable(); }); document.querySelectorAll('[data-d]').forEach(cb=>cb.onchange=e=>{ const i=+e.target.dataset.d; e.target.checked?state.selectedDigital.add(i):state.selectedDigital.delete(i); if(checked('autoDraw')) drawAll(); renderCursorTable(); }); }
+function setFullTimeInputs(){ const data=state.data; if(!data||!data.samples) return; $('tStart').value=Number(data.times[0]).toFixed(6); $('tEnd').value=Number(data.times[data.samples-1]).toFixed(6); }
+function findRange(){ const data=state.data; if(!data) return [0,0]; let a=Number($('tStart').value), b=Number($('tEnd').value); if(!Number.isFinite(a)) a=data.times[0]; if(!Number.isFinite(b)) b=data.times[data.samples-1]; if(b<a){const t=a;a=b;b=t;} let i0=0,i1=data.samples-1; while(i0<data.samples&&data.times[i0]<a)i0++; while(i1>i0&&data.times[i1]>b)i1--; state.lastPlot={i0,i1}; return [i0,i1]; }
+function prepCanvas(canvas){ const dpr=window.devicePixelRatio||1; const rect=canvas.getBoundingClientRect(); canvas.width=Math.max(300,Math.floor(rect.width*dpr)); canvas.height=Math.max(180,Math.floor(rect.height*dpr)); const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w:rect.width,h:rect.height}; }
+function drawGrid(ctx,w,h,pad){ ctx.clearRect(0,0,w,h); ctx.fillStyle='#071427'; ctx.fillRect(0,0,w,h); ctx.strokeStyle='rgba(255,255,255,.10)'; ctx.lineWidth=1; for(let i=0;i<=10;i++){ const x=pad.l+(w-pad.l-pad.r)*i/10; ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,h-pad.b);ctx.stroke(); } for(let i=0;i<=8;i++){ const y=pad.t+(h-pad.t-pad.b)*i/8; ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke(); } ctx.strokeStyle='rgba(255,255,255,.30)'; ctx.strokeRect(pad.l,pad.t,w-pad.l-pad.r,h-pad.t-pad.b); }
+function drawOneCursor(ctx,w,h,pad,t0,t1,idx,label,color){
+  const data=state.data; if(!data||!data.samples||t1<=t0)return; idx=Math.max(0,Math.min(data.samples-1,idx));
+  const t=data.times[idx]; if(t<t0||t>t1)return; const x=pad.l+(t-t0)/(t1-t0)*(w-pad.l-pad.r);
+  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=1.4; ctx.setLineDash([6,4]); ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,h-pad.b);ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle=color; ctx.fillRect(x-4,pad.t,8,10); ctx.font='12px system-ui';
+  const tx=label+' '+fmt(t,6)+'s'; const left=x>(w/2); ctx.fillText(tx, left?Math.max(pad.l+4,x-112):Math.min(x+7,w-122), pad.t+22+(label==='B'?16:0));
+  ctx.restore();
+}
+function drawCursors(ctx,w,h,pad,t0,t1){
+  const data=state.data; if(!data||!data.samples||t1<=t0)return;
+  const ia=Math.max(0,Math.min(data.samples-1,state.cursorA||0)); const ib=Math.max(0,Math.min(data.samples-1,state.cursorB||0));
+  const ta=data.times[ia], tb=data.times[ib]; const W=w-pad.l-pad.r;
+  if(ta>=t0&&ta<=t1&&tb>=t0&&tb<=t1&&ia!==ib){
+    const xa=pad.l+(ta-t0)/(t1-t0)*W, xb=pad.l+(tb-t0)/(t1-t0)*W;
+    ctx.save(); ctx.fillStyle='rgba(89,208,255,.08)'; ctx.fillRect(Math.min(xa,xb),pad.t,Math.abs(xb-xa),h-pad.t-pad.b); ctx.restore();
+  }
+  drawOneCursor(ctx,w,h,pad,t0,t1,ia,'A','rgba(255,209,102,.98)');
+  drawOneCursor(ctx,w,h,pad,t0,t1,ib,'B','rgba(89,208,255,.98)');
+}
+function drawAnalog(){ const canvas=$('analogCanvas'); const {ctx,w,h}=prepCanvas(canvas); const pad={l:55,r:16,t:18,b:32}; drawGrid(ctx,w,h,pad); const data=state.data,cfg=state.cfg, sel=[...state.selectedAnalog]; $('analogLegend').innerHTML=''; if(!data||!sel.length){ctx.fillStyle='#a9b8d6';ctx.fillText('Chưa chọn kênh analog',pad.l+10,pad.t+20);return;} const [i0,i1]=findRange(); if(i1<=i0) return; const t0=data.times[i0], t1=data.times[i1]; const W=w-pad.l-pad.r,H=h-pad.t-pad.b; ctx.font='12px system-ui'; ctx.fillStyle='#a9b8d6'; ctx.fillText(fmt(t0,6)+' s',pad.l,h-10); ctx.fillText(fmt(t1,6)+' s',w-pad.r-95,h-10); const normalize=checked('normalizePlot'); let gmin=Infinity,gmax=-Infinity; if(!normalize){ for(const ci of sel){ const arr=data.analog[ci]; for(let i=i0;i<=i1;i++){const v=arr[i]; if(Number.isFinite(v)){if(v<gmin)gmin=v;if(v>gmax)gmax=v;}} } if(gmax===gmin){gmax+=1;gmin-=1;} }
+  const step=Math.max(1,Math.floor((i1-i0)/Math.max(600,W*1.4))); const legend=[]; sel.forEach((ci,n)=>{ const arr=data.analog[ci]; let min=Infinity,max=-Infinity; for(let i=i0;i<=i1;i+=step){const v=arr[i]; if(Number.isFinite(v)){if(v<min)min=v;if(v>max)max=v;}} if(!Number.isFinite(min)||!Number.isFinite(max)) return; if(max===min){max+=1;min-=1;} const ymin=normalize?min:gmin, ymax=normalize?max:gmax; const color=COLORS[n%COLORS.length]; ctx.strokeStyle=color; ctx.lineWidth=1.4; ctx.beginPath(); let started=false; for(let i=i0;i<=i1;i+=step){ const v=arr[i]; if(!Number.isFinite(v)) continue; const x=pad.l+(data.times[i]-t0)/(t1-t0)*W; const y=pad.t+(1-(v-ymin)/(ymax-ymin))*H; if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y); } ctx.stroke(); legend.push({name:cfg.analog[ci].id, unit:cfg.analog[ci].unit, color, min, max}); }); drawCursors(ctx,w,h,pad,t0,t1); $('analogLegend').innerHTML=legend.map(l=>`<span class="legend-item"><i class="swatch" style="background:${l.color}"></i>${esc(l.name)} ${l.unit?esc(l.unit):''} [${fmt(l.min,3)}..${fmt(l.max,3)}]</span>`).join(''); }
+function drawDigital(){ const canvas=$('digitalCanvas'); const {ctx,w,h}=prepCanvas(canvas); const pad={l:150,r:16,t:14,b:28}; drawGrid(ctx,w,h,pad); const data=state.data,cfg=state.cfg, sel=[...state.selectedDigital]; $('digitalLegend').innerHTML=''; if(!data||!sel.length){ctx.fillStyle='#a9b8d6';ctx.fillText('Chưa chọn kênh digital',pad.l+10,pad.t+20);return;} const [i0,i1]=findRange(); if(i1<=i0)return; const t0=data.times[i0], t1=data.times[i1]; const W=w-pad.l-pad.r,H=h-pad.t-pad.b; const rowH=H/sel.length; const step=Math.max(1,Math.floor((i1-i0)/Math.max(800,W*2))); ctx.font='12px system-ui'; ctx.fillStyle='#a9b8d6'; ctx.fillText(fmt(t0,6)+' s',pad.l,h-9); ctx.fillText(fmt(t1,6)+' s',w-pad.r-95,h-9); sel.forEach((di,n)=>{ const arr=data.digital[di]; const y0=pad.t+n*rowH; const color=COLORS[n%COLORS.length]; ctx.fillStyle='#a9b8d6'; ctx.fillText((di+1)+'. '+cfg.digital[di].id,8,y0+rowH*.65); ctx.strokeStyle=color; ctx.lineWidth=1.4; ctx.beginPath(); let lastX=null,lastY=null; for(let i=i0;i<=i1;i+=step){ const v=arr[i]?1:0; const x=pad.l+(data.times[i]-t0)/(t1-t0)*W; const y=y0+rowH*(v?0.25:0.75); if(lastX===null){ctx.moveTo(x,y);} else {ctx.lineTo(x,lastY);ctx.lineTo(x,y);} lastX=x;lastY=y; } ctx.stroke(); ctx.strokeStyle='rgba(255,255,255,.10)'; ctx.beginPath();ctx.moveTo(pad.l,y0+rowH);ctx.lineTo(w-pad.r,y0+rowH);ctx.stroke(); }); drawCursors(ctx,w,h,pad,t0,t1); $('digitalLegend').innerHTML=sel.map((di,n)=>`<span class="legend-item"><i class="swatch" style="background:${COLORS[n%COLORS.length]}"></i>${esc(cfg.digital[di].id)}</span>`).join(''); }
+function drawAll(){ drawAnalog(); drawDigital(); const data=state.data; if(data) $('plotHint').textContent=`Đang xem ${data.samples.toLocaleString('vi-VN')} mẫu. Khoảng thời gian gốc: ${fmt(data.times[0],6)} s → ${fmt(data.times[data.samples-1],6)} s.`; }
+function clampSampleIndex(i){ const data=state.data; if(!data||!data.samples)return 0; return Math.max(0,Math.min(data.samples-1,Math.round(i||0))); }
+function getActiveCursorIndex(){ return state.activeCursor==='B'?state.cursorB:state.cursorA; }
+function setActiveCursor(which){ state.activeCursor=(which==='B')?'B':'A'; updateCursorReadout(); }
+function setupCursor(){ const data=state.data; const ra=$('cursorRangeA'), rb=$('cursorRangeB'); if(!data||!data.samples){ for(const r of [ra,rb]){ if(r){r.min=0;r.max=0;r.value=0;} } updateCursorReadout(); return;} for(const r of [ra,rb]){ r.min=0;r.max=data.samples-1;r.step=1; }
+  state.cursorA=clampSampleIndex(state.cursorA); state.cursorB=clampSampleIndex(state.cursorB); ra.value=state.cursorA; rb.value=state.cursorB; updateCursorReadout(); }
+function setCursorIndex(i, redraw=true, which=state.activeCursor){ const data=state.data; if(!data)return; const v=clampSampleIndex(i); if(which==='B') state.cursorB=v; else state.cursorA=v; const el=$(which==='B'?'cursorRangeB':'cursorRangeA'); if(el)el.value=v; updateCursorReadout(); renderCursorTable(); if(redraw)drawAll(); }
+function nfmt(v,d=9){ return Number.isFinite(v)?fmt(v,d):''; }
+function updateCursorReadout(){ const data=state.data; const aEl=$('cursorReadoutA'), bEl=$('cursorReadoutB'), dEl=$('cursorDeltaReadout'); if(!data||!data.samples){ if(aEl)aEl.textContent='A: chưa có dữ liệu'; if(bEl)bEl.textContent='B: chưa có dữ liệu'; if(dEl)dEl.textContent='Δt: chưa có dữ liệu'; return; }
+  const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB), ta=data.times[ia], tb=data.times[ib]; const dt=tb-ta, adt=Math.abs(dt); const ds=ib-ia; const freq=adt>0?1/adt:NaN; const grid=state.cfg?.frequency||50; const cycles=adt*grid; const angle=((dt*grid*360)%360+360)%360;
+  if(aEl)aEl.textContent=`${state.activeCursor==='A'?'● ':''}A: mẫu #${ia+1}/${data.samples} · t = ${fmt(ta,9)} s`;
+  if(bEl)bEl.textContent=`${state.activeCursor==='B'?'● ':''}B: mẫu #${ib+1}/${data.samples} · t = ${fmt(tb,9)} s`;
+  if(dEl)dEl.textContent=`Δ mẫu = ${ds} · Δt = ${fmt(dt,9)} s = ${fmt(dt*1000,6)} ms · |Δt| = ${fmt(adt*1e6,3)} µs · f≈${nfmt(freq,6)} Hz · ${fmt(cycles,6)} chu kỳ @${fmt(grid,3)}Hz · góc≈${fmt(angle,3)}°`;
+}
+function renderCursorTable(){ const cfg=state.cfg,data=state.data; if(!cfg||!data){$('cursorTable').innerHTML='<div class="tiny" style="padding:12px">Chưa có dữ liệu.</div>';return;} const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB); const selectedOnly=checked('cursorSelectedOnly'); const rows=[]; rows.push(['TIME','t_s','',fmt(data.times[ia],9),fmt(data.times[ib],9),fmt(data.times[ib]-data.times[ia],9)]); rows.push(['TIME','sample','',ia+1,ib+1,ib-ia]); const A=selectedOnly?[...state.selectedAnalog]:[...Array(cfg.analogCount).keys()]; const D=selectedOnly?[...state.selectedDigital]:[...Array(cfg.digitalCount).keys()];
+  for(const a of A){ const va=data.analog[a][ia], vb=data.analog[a][ib]; rows.push(['Analog',a+1,esc(cfg.analog[a].id)+(cfg.analog[a].unit?' ('+esc(cfg.analog[a].unit)+')':''),fmt(va,9),fmt(vb,9),fmt(vb-va,9)]); }
+  for(const d of D){ const va=data.digital[d][ia]?1:0, vb=data.digital[d][ib]?1:0; rows.push(['Digital',d+1,esc(cfg.digital[d].id),va,vb,va===vb?'không đổi':(va+' → '+vb)]); }
+  $('cursorTable').innerHTML=table(['Loại','#','Kênh','A','B','Δ B-A'],rows); }
+function canvasClickToCursor(canvas, ev){ const data=state.data; if(!data)return; const rect=canvas.getBoundingClientRect(); const x=ev.clientX-rect.left; const pad=canvas.id==='analogCanvas'?{l:55,r:16}:{l:150,r:16}; const [i0,i1]=findRange(); const W=rect.width-pad.l-pad.r; const ratio=Math.max(0,Math.min(1,(x-pad.l)/W)); const t=data.times[i0]+ratio*(data.times[i1]-data.times[i0]); setCursorIndex(nearestIndexByTime(data.times,t), true, state.activeCursor); }
+
+
+function normText(s){ return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
+function wordListFromInput(id, fallback){ const raw=($(id)?.value||fallback||''); return normText(raw).split(/[,;|]+/).map(x=>x.trim()).filter(Boolean); }
+function readInputNumber(id, def){ const v=Number($(id)?.value); return Number.isFinite(v)?v:def; }
+function clampVal(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function estimateSampleRate(){ const data=state.data,cfg=state.cfg; if(cfg?.sampleRates?.[0]?.rate>0) return cfg.sampleRates[0].rate; if(!data||data.samples<3) return 1000; const del=[]; for(let i=1;i<Math.min(data.samples,3000);i++){ const d=data.times[i]-data.times[i-1]; if(d>0) del.push(d); } const md=median(del); return md>0?1/md:1000; }
+function samplesFromMs(ms, rate, min=1){ return Math.max(min, Math.round((Number(ms)||0)*rate/1000)); }
+function slidingRms(arr, win){ const n=arr.length, out=new Float64Array(n); win=Math.max(1,Math.round(win||1)); let sum=0, cnt=0; for(let i=0;i<n;i++){ const v=arr[i]; if(Number.isFinite(v)){sum+=v*v; cnt++;} const j=i-win; if(j>=0){ const old=arr[j]; if(Number.isFinite(old)){sum-=old*old; cnt--;} } out[i]=cnt>0?Math.sqrt(Math.max(0,sum/cnt)):NaN; } return out; }
+function valuesInRange(arr, i0, i1){ const vals=[]; i0=Math.max(0,Math.round(i0||0)); i1=Math.min(arr.length-1,Math.round(i1??arr.length-1)); for(let i=i0;i<=i1;i++){ const v=arr[i]; if(Number.isFinite(v)) vals.push(v); } return vals; }
+function percentileRange(arr, p, i0=0, i1=arr.length-1){ const vals=valuesInRange(arr,i0,i1).sort((a,b)=>a-b); if(!vals.length) return NaN; const pos=(vals.length-1)*clampVal(p,0,1); const lo=Math.floor(pos), hi=Math.ceil(pos); if(lo===hi) return vals[lo]; return vals[lo]+(vals[hi]-vals[lo])*(pos-lo); }
+function avgRange(arr,i0,i1){ const vals=valuesInRange(arr,i0,i1); if(!vals.length) return NaN; return vals.reduce((a,b)=>a+b,0)/vals.length; }
+function maxRange(arr,i0,i1){ let v=-Infinity, idx=i0; i0=Math.max(0,i0); i1=Math.min(arr.length-1,i1); for(let i=i0;i<=i1;i++){ const x=arr[i]; if(Number.isFinite(x)&&x>v){v=x;idx=i;} } return {value:v, index:idx}; }
+function minRange(arr,i0,i1){ let v=Infinity, idx=i0; i0=Math.max(0,i0); i1=Math.min(arr.length-1,i1); for(let i=i0;i<=i1;i++){ const x=arr[i]; if(Number.isFinite(x)&&x<v){v=x;idx=i;} } return {value:v, index:idx}; }
+function isCurrentChannel(ch){ const id=normText(ch.id), unit=normText(ch.unit); const c=id.replace(/[^A-Z0-9]/g,''); if(/^I[A-Z0-9]/.test(c)||/\bI\s*[_\- ]?(A|B|C|R|S|T|L1|L2|L3|N|0|G)\b/.test(id)) return true; return /^(A|KA|AMP|AMPE|AMPERE)$/.test(unit) || unit==='A' || unit==='KA'; }
+function isVoltageChannel(ch){ const id=normText(ch.id), unit=normText(ch.unit); const c=id.replace(/[^A-Z0-9]/g,''); if(/^[UV][A-Z0-9]/.test(c)||/\b(U|V)\s*[_\- ]?(A|B|C|R|S|T|L1|L2|L3|N|0|G)\b/.test(id)) return true; return /^(V|KV|VOLT|VOLTS)$/.test(unit) || unit==='V' || unit==='KV'; }
+function phaseFromChannel(ch, kind){ const ph=normText(ch.phase).replace(/[^A-Z0-9]/g,''); if(['A','R','L1','1'].includes(ph)) return 'A'; if(['B','S','L2','2'].includes(ph)) return 'B'; if(['C','T','L3','3'].includes(ph)) return 'C'; if(['N','G','0','E'].includes(ph)) return 'N'; const id=normText(ch.id); const c=id.replace(/[^A-Z0-9]/g,'');
+  if(kind==='I'){
+    if(/^(IN|I0|3I0|IG|IE|IRES|IRN|NIN)/.test(c)||/\b(3I0|I0|IN|IG|IE|RESIDUAL|NEUTRAL|GROUND|EARTH)\b/.test(id)) return 'N';
+    if(/^(IA|IR|IL1|I1)/.test(c)||/\bI\s*[_\- ]?(A|R|L1|1)\b/.test(id)) return 'A';
+    if(/^(IB|IS|IL2|I2)/.test(c)||/\bI\s*[_\- ]?(B|S|L2|2)\b/.test(id)) return 'B';
+    if(/^(IC|IT|IL3|I3)/.test(c)||/\bI\s*[_\- ]?(C|T|L3|3)\b/.test(id)) return 'C';
+  } else {
+    if(/^(VN|UN|V0|U0|3U0|3V0)/.test(c)||/\b(3U0|3V0|U0|V0|UN|VN|NEUTRAL)\b/.test(id)) return 'N';
+    if(/^([UV]A|[UV]R|[UV]L1|[UV]1|VAN|UAN)/.test(c)||/\b(U|V)\s*[_\- ]?(A|R|L1|1)\b/.test(id)) return 'A';
+    if(/^([UV]B|[UV]S|[UV]L2|[UV]2|VBN|UBN)/.test(c)||/\b(U|V)\s*[_\- ]?(B|S|L2|2)\b/.test(id)) return 'B';
+    if(/^([UV]C|[UV]T|[UV]L3|[UV]3|VCN|UCN)/.test(c)||/\b(U|V)\s*[_\- ]?(C|T|L3|3)\b/.test(id)) return 'C';
+  }
+  return '';
+}
+function findAnalogRoles(){ const cfg=state.cfg; const roles={I:{A:null,B:null,C:null,N:null}, V:{A:null,B:null,C:null,N:null}, notes:[]}; if(!cfg)return roles; cfg.analog.forEach((ch,i)=>{ const cur=isCurrentChannel(ch), vol=isVoltageChannel(ch); if(cur){ const p=phaseFromChannel(ch,'I'); if(p && roles.I[p]===null) roles.I[p]=i; } if(vol && !cur){ const p=phaseFromChannel(ch,'V'); if(p && roles.V[p]===null) roles.V[p]=i; } });
+  for(const p of ['A','B','C']){ if(roles.I[p]!==null) roles.notes.push(`Dòng ${p}: #${roles.I[p]+1} ${cfg.analog[roles.I[p]].id}`); if(roles.V[p]!==null) roles.notes.push(`Áp ${p}: #${roles.V[p]+1} ${cfg.analog[roles.V[p]].id}`); }
+  if(roles.I.N!==null) roles.notes.push(`Dòng trung tính/thứ tự không: #${roles.I.N+1} ${cfg.analog[roles.I.N].id}`); if(roles.V.N!==null) roles.notes.push(`Áp trung tính/thứ tự không: #${roles.V.N+1} ${cfg.analog[roles.V.N].id}`); return roles; }
+function makeSegments(mask, scores, minLen, mergeGap){ const raw=[]; let s=-1; for(let i=0;i<mask.length;i++){ if(mask[i]&&s<0)s=i; if((!mask[i]||i===mask.length-1)&&s>=0){ const e=mask[i]?i:i-1; raw.push({s,e}); s=-1; } } if(!raw.length)return []; const merged=[raw[0]]; for(let i=1;i<raw.length;i++){ const last=merged[merged.length-1]; if(raw[i].s-last.e<=mergeGap) last.e=raw[i].e; else merged.push(raw[i]); } return merged.filter(g=>g.e-g.s+1>=minLen).map(g=>{ let peak=0, pi=g.s; for(let i=g.s;i<=g.e;i++){ if(scores[i]>peak){peak=scores[i];pi=i;} } return {...g, peak, peakIndex:pi, length:g.e-g.s+1}; }); }
+function classifyFault(activePhases, ground, onlyVoltage){ if(!activePhases.length) return onlyVoltage?'Sụt áp/mất áp chưa xác định pha':'Chưa xác định rõ dạng sự cố'; const p=activePhases.join('-'); if(onlyVoltage) return `Sụt áp/mất áp pha ${p}`; if(activePhases.length===1) return `Sự cố 1 pha ${p}${ground?'-đất':' (nghi ngờ)'}`; if(activePhases.length===2) return `Sự cố 2 pha ${p}${ground?' chạm đất':''}`; return `Sự cố 3 pha${ground?' có thành phần thứ tự không/đất':''}`; }
+function getFaultOptions(){ return {iFactor:Math.max(1,readInputNumber('faultCurrentFactor',2)), iAbs:Math.max(0,readInputNumber('faultCurrentAbs',0)), vDropPct:clampVal(readInputNumber('faultVoltageDrop',70),5,100), minMs:Math.max(0.1,readInputNumber('faultMinMs',4)), preMs:Math.max(1,readInputNumber('faultPreMs',200)), postMs:Math.max(1,readInputNumber('faultPostMs',200)), pickupKw:wordListFromInput('faultDigitalPickup','PICKUP,START'), tripKw:wordListFromInput('faultDigitalTrip','TRIP,OPERATE'), breakerKw:wordListFromInput('faultDigitalBreaker','52A,52B,CB,MC,BREAKER,OPEN')}; }
+function hasAnyKeyword(name, arr){ const n=normText(name); return arr.some(k=>k && n.includes(k)); }
+function findDigitalFaultEvents(s,e,opts,rate){ const cfg=state.cfg,data=state.data, out=[]; if(!cfg||!data||!cfg.digitalCount)return out; const from=Math.max(1,s-samplesFromMs(opts.preMs,rate,1)), to=Math.min(data.samples-1,e+samplesFromMs(opts.postMs,rate,1)); for(let d=0;d<cfg.digitalCount;d++){ const ch=cfg.digital[d], name=ch.id||('D'+(d+1)), arr=data.digital[d]; const isPickup=hasAnyKeyword(name,opts.pickupKw), isTrip=hasAnyKeyword(name,opts.tripKw), isBreaker=hasAnyKeyword(name,opts.breakerKw); for(let i=from;i<=to;i++){ const prev=arr[i-1]?1:0, cur=arr[i]?1:0; if(prev===cur)continue; let type='Digital đổi trạng thái'; if(isPickup && cur===1) type='Pickup/Start'; else if(isTrip && cur===1) type='Trip/Operate'; else if(isBreaker) type='Máy cắt đổi trạng thái'; out.push({index:i,time:data.times[i],channel:name,type,from:prev,to:cur}); } } out.sort((a,b)=>a.time-b.time); return out; }
+function analyzeFaultCore(){ const cfg=state.cfg,data=state.data; if(!cfg||!data) throw new Error('Chưa có dữ liệu COMTRADE.'); const opts=getFaultOptions(); const rate=estimateSampleRate(); const grid=cfg.frequency||50; const win=samplesFromMs(1000/(grid||50),rate,3); const minLen=samplesFromMs(opts.minMs,rate,1); const mergeGap=Math.max(1,Math.round(win/4)); const roles=findAnalogRoles(); const phases=['A','B','C']; const rmsI={}, rmsV={}, thresholdsI={}, thresholdsV={}, baseI={}, baseV={}, peakI={}, minV={}; const n=data.samples; let availableI=0, availableV=0;
+  for(const p of phases){ if(roles.I[p]!==null){ availableI++; const arr=slidingRms(data.analog[roles.I[p]],win); rmsI[p]=arr; baseI[p]=Math.max(percentileRange(arr,0.20,0,Math.min(n-1,samplesFromMs(opts.preMs,rate,win))), percentileRange(arr,0.10,0,n-1), 1e-12); const mx=maxRange(arr,0,n-1).value; peakI[p]=mx; thresholdsI[p]=Math.max(opts.iAbs, baseI[p]*opts.iFactor, mx*0.30); }
+    if(roles.V[p]!==null){ availableV++; const arr=slidingRms(data.analog[roles.V[p]],win); rmsV[p]=arr; baseV[p]=Math.max(percentileRange(arr,0.60,0,Math.min(n-1,samplesFromMs(opts.preMs,rate,win))), percentileRange(arr,0.70,0,n-1), 1e-12); thresholdsV[p]=baseV[p]*opts.vDropPct/100; minV[p]=minRange(arr,0,n-1).value; } }
+  if(!availableI && !availableV) throw new Error('Không tự nhận dạng được kênh dòng/áp. Hãy kiểm tra tên kênh, phase hoặc đơn vị trong CFG.');
+  const mask=new Uint8Array(n), scores=new Float64Array(n); for(let i=0;i<n;i++){ let score=0; for(const p of phases){ if(rmsI[p]){ const th=thresholdsI[p]||Infinity; if(rmsI[p][i]>th) score=Math.max(score,rmsI[p][i]/th); } if(rmsV[p] && baseV[p]>1e-9){ const th=thresholdsV[p]; if(rmsV[p][i]<th) score=Math.max(score,th/Math.max(Math.abs(rmsV[p][i]),1e-12)); } } if(score>1){mask[i]=1;scores[i]=score;} }
+  const segments=makeSegments(mask,scores,minLen,mergeGap).sort((a,b)=>(b.peak*100000+b.length)-(a.peak*100000+a.length)); let detected=segments.length>0, source='RMS tự động'; let seg=segments[0]; if(!seg){ const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB); const s=Math.min(ia,ib), e=Math.max(ia,ib); if(e>s){ seg={s,e,peak:0,peakIndex:Math.round((s+e)/2),length:e-s+1}; source='Không phát hiện rõ, dùng khoảng con trỏ A/B'; detected=false; } else throw new Error('Không phát hiện rõ vùng sự cố theo ngưỡng hiện tại. Hãy giảm ngưỡng hoặc đặt con trỏ A/B vào vùng nghi ngờ rồi phân tích lại.'); }
+  const s=Math.max(0,seg.s-Math.floor(win/2)), e=Math.min(n-1,seg.e), peakIndex=seg.peakIndex||Math.round((s+e)/2); const preWin=samplesFromMs(opts.preMs,rate,win), postWin=samplesFromMs(opts.postMs,rate,win); let pre0=Math.max(0,s-preWin), pre1=Math.max(pre0,Math.min(n-1,s-1)); if(pre1<=pre0){pre0=0;pre1=Math.min(n-1,Math.max(win,Math.round(n*0.05)));} let post0=Math.min(n-1,e+1), post1=Math.min(n-1,e+postWin); if(post1<=post0){post1=n-1;post0=Math.max(0,n-1-postWin);}
+  const valueRows=[], phasePeaks=[]; for(const p of phases){ if(rmsI[p]){ const f=maxRange(rmsI[p],s,e), pre=avgRange(rmsI[p],pre0,pre1), post=avgRange(rmsI[p],post0,post1); const ch=cfg.analog[roles.I[p]]; valueRows.push(['Dòng RMS '+p, esc(ch.id), fmt(pre,6), fmt(f.value,6), fmt(post,6), fmt(f.value/Math.max(pre,1e-12),3)+' ×', esc(ch.unit||'')]); phasePeaks.push({phase:p, value:f.value, pre, threshold:thresholdsI[p], index:f.index}); } }
+  for(const p of phases){ if(rmsV[p]){ const f=minRange(rmsV[p],s,e), pre=avgRange(rmsV[p],pre0,pre1), post=avgRange(rmsV[p],post0,post1); const ch=cfg.analog[roles.V[p]]; valueRows.push(['Áp RMS '+p, esc(ch.id), fmt(pre,6), fmt(f.value,6), fmt(post,6), fmt((f.value/Math.max(pre,1e-12))*100,2)+' %', esc(ch.unit||'')]); } }
+  let maxI=phasePeaks.length?Math.max(...phasePeaks.map(x=>x.value)):NaN; let active=phasePeaks.filter(x=>x.value>=Math.max((Number.isFinite(maxI)?maxI*0.35:0), (x.threshold||0)*0.90)).map(x=>x.phase); let onlyVoltage=false; if(!active.length && availableV){ onlyVoltage=true; active=phases.filter(p=>rmsV[p] && minRange(rmsV[p],s,e).value <= thresholdsV[p]); }
+  let residualText='', ground=false; if(roles.I.N!==null){ const r=slidingRms(data.analog[roles.I.N],win); const m=maxRange(r,s,e); residualText=`I0/IN kênh ${cfg.analog[roles.I.N].id}: max RMS ${fmt(m.value,6)} ${cfg.analog[roles.I.N].unit||''}`; if(Number.isFinite(maxI) && m.value>Math.max(maxI*0.15, avgRange(r,pre0,pre1)*(opts.iFactor||2))) ground=true; valueRows.push(['Dòng thứ tự không/trung tính', esc(cfg.analog[roles.I.N].id), fmt(avgRange(r,pre0,pre1),6), fmt(m.value,6), fmt(avgRange(r,post0,post1),6), Number.isFinite(maxI)?fmt(m.value/Math.max(maxI,1e-12),3)+' × Imax':'', esc(cfg.analog[roles.I.N].unit||'')]); }
+  else if(roles.I.A!==null && roles.I.B!==null && roles.I.C!==null){ const ia=data.analog[roles.I.A], ib=data.analog[roles.I.B], ic=data.analog[roles.I.C]; const res=new Float64Array(n); for(let i=0;i<n;i++)res[i]=(ia[i]||0)+(ib[i]||0)+(ic[i]||0); const rr=slidingRms(res,win); const m=maxRange(rr,s,e); residualText=`3I0 tính từ IA+IB+IC: max RMS ${fmt(m.value,6)}`; if(Number.isFinite(maxI) && m.value>maxI*0.20) ground=true; valueRows.push(['3I0 tính toán', 'IA+IB+IC', fmt(avgRange(rr,pre0,pre1),6), fmt(m.value,6), fmt(avgRange(rr,post0,post1),6), Number.isFinite(maxI)?fmt(m.value/Math.max(maxI,1e-12),3)+' × Imax':'', '']); }
+  if(active.length===1) ground=true; const type=classifyFault(active,ground,onlyVoltage); const digitalEvents=findDigitalFaultEvents(s,e,opts,rate); const firstPickup=digitalEvents.find(x=>x.type==='Pickup/Start'); const firstTrip=digitalEvents.find(x=>x.type==='Trip/Operate'); const firstBreaker=digitalEvents.find(x=>x.type==='Máy cắt đổi trạng thái'); const timeline=[{time:data.times[s],event:'Bắt đầu sự cố theo analog/RMS',channel:'',detail:source},{time:data.times[peakIndex],event:'Điểm nặng nhất/đỉnh chỉ báo',channel:'',detail:'Mẫu #'+(peakIndex+1)},...digitalEvents.map(x=>({time:x.time,event:x.type,channel:x.channel,detail:x.from+' → '+x.to})),{time:data.times[e],event:'Kết thúc vùng sự cố theo analog/RMS',channel:'',detail:''}].sort((a,b)=>a.time-b.time);
+  const notes=[]; notes.push('Kênh tự nhận dạng: '+(roles.notes.length?roles.notes.join(' | '):'không có ghi chú')); notes.push(`RMS trượt: ${win} mẫu ≈ ${fmt(win/rate*1000,3)} ms, rate≈${fmt(rate,3)} Hz, f lưới=${fmt(grid,3)} Hz.`); notes.push(`Ngưỡng: dòng > max(${opts.iFactor}×trước sự cố, ${opts.iAbs||'tự động'}, 30% đỉnh toàn bản ghi); áp < ${opts.vDropPct}% trước sự cố.`); if(!detected) notes.push('Không phát hiện rõ bằng ngưỡng, kết quả đang dùng khoảng A/B nên cần kiểm tra thủ công.'); if(residualText) notes.push(residualText); if(!digitalEvents.length) notes.push('Không tìm thấy digital đổi trạng thái trong cửa sổ phân tích theo các từ khóa hiện tại.');
+  return {createdAt:new Date().toISOString(), detected, source, type, phases:active, ground, onlyVoltage, startIndex:s, endIndex:e, peakIndex, startTime:data.times[s], endTime:data.times[e], peakTime:data.times[peakIndex], duration:data.times[e]-data.times[s], sampleDuration:e-s+1, rate, rmsWindowSamples:win, options:opts, roles, valueRows, timeline, digitalEvents, firstPickup, firstTrip, firstBreaker, notes, confidence:detected?(active.length?'Cao':'Trung bình'):'Thấp'}; }
+function faultMetricCard(label,value,small,cls=''){ return `<div class="metric ${cls}"><small>${esc(label)}</small><b>${value}</b>${small?`<small>${small}</small>`:''}</div>`; }
+function renderFaultAnalysis(){ const r=state.faultAnalysis; const m=$('faultMetrics'); if(!m)return; if(!r){ m.innerHTML=''; $('faultSummary').innerHTML='<div class="tiny" style="padding:12px">Chưa có kết quả. Bấm “Phân tích sự cố”.</div>'; $('faultValueTable').innerHTML=''; $('faultTimeline').innerHTML=''; $('faultNotes').textContent='Chưa có ghi chú.'; return; }
+  m.innerHTML=[faultMetricCard('Dạng sự cố',esc(r.type),'Độ tin cậy: '+r.confidence),faultMetricCard('Pha sự cố',esc(r.phases.length?r.phases.join('-'):'chưa rõ'),r.ground?'Có dấu hiệu chạm đất/thứ tự không':''),faultMetricCard('Bắt đầu',fmt(r.startTime,9)+' s','Mẫu #'+(r.startIndex+1)),faultMetricCard('Thời gian sự cố',fmt(r.duration*1000,6)+' ms',r.sampleDuration+' mẫu')].join('');
+  const calcRows=[['Dạng sự cố',esc(r.type)],['Pha sự cố',esc(r.phases.length?r.phases.join(', '):'chưa xác định')],['Thời điểm bắt đầu',fmt(r.startTime,9)+' s'],['Thời điểm nặng nhất/peak',fmt(r.peakTime,9)+' s'],['Thời điểm kết thúc',fmt(r.endTime,9)+' s'],['Thời gian sự cố',fmt(r.duration,9)+' s = '+fmt(r.duration*1000,6)+' ms'],['Pickup đầu tiên',r.firstPickup?fmt(r.firstPickup.time,9)+' s · '+esc(r.firstPickup.channel):'không thấy'],['Trip đầu tiên',r.firstTrip?fmt(r.firstTrip.time,9)+' s · '+esc(r.firstTrip.channel):'không thấy'],['Máy cắt đổi trạng thái',r.firstBreaker?fmt(r.firstBreaker.time,9)+' s · '+esc(r.firstBreaker.channel):'không thấy']];
+  if(r.firstTrip) calcRows.push(['Thời gian từ bắt đầu sự cố đến Trip',fmt((r.firstTrip.time-r.startTime)*1000,6)+' ms']); if(r.firstBreaker) calcRows.push(['Thời gian từ bắt đầu sự cố đến máy cắt đổi trạng thái',fmt((r.firstBreaker.time-r.startTime)*1000,6)+' ms']); if(r.firstTrip&&r.firstBreaker) calcRows.push(['Thời gian từ Trip đến máy cắt đổi trạng thái',fmt((r.firstBreaker.time-r.firstTrip.time)*1000,6)+' ms']);
+  $('faultSummary').innerHTML=table(['Mục','Giá trị'],calcRows); $('faultValueTable').innerHTML=r.valueRows.length?table(['Thông số','Kênh','Trước sự cố RMS','Trong sự cố RMS/Min-Max','Sau sự cố RMS','Tỷ lệ','Đơn vị'],r.valueRows):'<div class="tiny" style="padding:12px">Chưa có bảng giá trị.</div>'; $('faultTimeline').innerHTML=table(['t (s)','Sự kiện','Kênh','Chi tiết'],r.timeline.map(x=>[fmt(x.time,9),esc(x.event),esc(x.channel||''),esc(x.detail||'')])); $('faultNotes').textContent=r.notes.join('\n'); }
+function runFaultAnalysis(silent=false){ try{ const r=analyzeFaultCore(); state.faultAnalysis=r; renderFaultAnalysis(); const st=$('faultResultStatus'); if(st){st.className='status '+(r.detected?'good':'warn'); st.textContent=(r.detected?'Đã phân tích xong: ':'Phân tích bằng vùng A/B: ')+r.type+' · pha '+(r.phases.join('-')||'chưa rõ')+' · thời gian '+fmt(r.duration*1000,6)+' ms';} return r; }catch(e){ state.faultAnalysis=null; renderFaultAnalysis(); const st=$('faultResultStatus'); if(st){st.className='status bad'; st.textContent='Lỗi phân tích sự cố: '+e.message;} if(!silent) alert('Lỗi phân tích sự cố: '+e.message); return null; } }
+function ensureFaultAnalysis(){ return state.faultAnalysis || runFaultAnalysis(true); }
+function setCursorsToFault(){ const r=ensureFaultAnalysis(); if(!r)return; setCursorIndex(r.startIndex,false,'A'); setCursorIndex(r.endIndex,true,'B'); setActiveCursor('A'); }
+function zoomFaultWindow(){ const r=ensureFaultAnalysis(); if(!r||!state.data)return; const pad=Math.max(Math.abs(r.duration)*0.25, 2/(state.cfg?.frequency||50), 0.005); $('tStart').value=Math.max(state.data.times[0], r.startTime-pad).toFixed(6); $('tEnd').value=Math.min(state.data.times[state.data.samples-1], r.endTime+pad).toFixed(6); drawAll(); }
+function exportFaultJson(){ const r=ensureFaultAnalysis(); if(!r)return; downloadText((state.activeBase||'comtrade')+'_fault_analysis.json', JSON.stringify(r,null,2), 'application/json;charset=utf-8'); }
+function exportFaultCsv(){ const r=ensureFaultAnalysis(); if(!r)return; const rows=[['section','item','channel','value1','value2','value3','unit_or_note'],['summary','type','',r.type,'','',''],['summary','phases','',r.phases.join('-'),'','',''],['summary','start_s','',r.startTime,'','',''],['summary','end_s','',r.endTime,'','',''],['summary','duration_ms','',r.duration*1000,'','',''],...r.valueRows.map(x=>['value',x[0],String(x[1]).replace(/<[^>]*>/g,''),String(x[2]).replace(/<[^>]*>/g,''),String(x[3]).replace(/<[^>]*>/g,''),String(x[4]).replace(/<[^>]*>/g,''),String(x[6]).replace(/<[^>]*>/g,'')]),...r.timeline.map(x=>['timeline',x.event,x.channel,x.time,x.detail,'',''])]; downloadText((state.activeBase||'comtrade')+'_fault_analysis.csv', rows.map(r=>r.map(csvCell).join(',')).join('\n'), 'text/csv;charset=utf-8'); }
+
+
+function stripHtml(s){ const d=document.createElement('div'); d.innerHTML=String(s??''); return d.textContent||d.innerText||''; }
+function plainCell(v){ return stripHtml(v).replace(/\s+/g,' ').trim(); }
+function htmlReportTable(headers, rows){ return `<table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${esc(plainCell(c))}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
+function getCanvasImage(id){ try{ const c=$(id); return c&&c.width&&c.height?c.toDataURL('image/png'):''; }catch(e){ return ''; } }
+function faultSummaryRows(r){ const rows=[['Tên bộ file',state.activeBase||'comtrade'],['Trạm/thiết bị',(state.cfg?.station||'')+' / '+(state.cfg?.device||'')],['Revision nguồn',state.cfg?.rev||''],['Kiểu DAT đã đọc',state.data?.format||state.cfg?.datType||''],['Dạng sự cố',r.type],['Pha sự cố',r.phases.length?r.phases.join(', '):'chưa xác định'],['Độ tin cậy',r.confidence],['Bắt đầu',fmt(r.startTime,9)+' s · mẫu #'+(r.startIndex+1)],['Nặng nhất/peak',fmt(r.peakTime,9)+' s · mẫu #'+(r.peakIndex+1)],['Kết thúc',fmt(r.endTime,9)+' s · mẫu #'+(r.endIndex+1)],['Thời gian sự cố',fmt(r.duration,9)+' s = '+fmt(r.duration*1000,6)+' ms'],['Số mẫu sự cố',r.sampleDuration],['Tần số lưới',fmt(state.cfg?.frequency||50,3)+' Hz'],['Tần số lấy mẫu ước tính',fmt(r.rate,3)+' Hz']]; if(r.firstPickup) rows.push(['Pickup đầu tiên',fmt(r.firstPickup.time,9)+' s · '+r.firstPickup.channel]); if(r.firstTrip) rows.push(['Trip đầu tiên',fmt(r.firstTrip.time,9)+' s · '+r.firstTrip.channel]); if(r.firstBreaker) rows.push(['Máy cắt đổi trạng thái',fmt(r.firstBreaker.time,9)+' s · '+r.firstBreaker.channel]); if(r.firstTrip) rows.push(['Từ bắt đầu sự cố đến Trip',fmt((r.firstTrip.time-r.startTime)*1000,6)+' ms']); if(r.firstBreaker) rows.push(['Từ bắt đầu sự cố đến máy cắt',fmt((r.firstBreaker.time-r.startTime)*1000,6)+' ms']); if(r.firstTrip&&r.firstBreaker) rows.push(['Từ Trip đến máy cắt',fmt((r.firstBreaker.time-r.firstTrip.time)*1000,6)+' ms']); return rows; }
+function makeFaultReportHtml(){ const r=ensureFaultAnalysis(); if(!r)return ''; drawAll(); const analogImg=getCanvasImage('analogCanvas'), digitalImg=getCanvasImage('digitalCanvas'); const now=new Date().toLocaleString('vi-VN'); const summary=htmlReportTable(['Mục','Giá trị'], faultSummaryRows(r)); const values=r.valueRows.length?htmlReportTable(['Thông số','Kênh','Trước sự cố RMS','Trong sự cố RMS/Min-Max','Sau sự cố RMS','Tỷ lệ','Đơn vị'], r.valueRows):'<p>Chưa có bảng giá trị.</p>'; const timeline=htmlReportTable(['t (s)','Sự kiện','Kênh','Chi tiết'], r.timeline.map(x=>[fmt(x.time,9),x.event,x.channel||'',x.detail||''])); const notes=(r.notes||[]).map(x=>`<li>${esc(x)}</li>`).join(''); const title=`Báo cáo phân tích sự cố COMTRADE - ${state.activeBase||'comtrade'}`; return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>body{font-family:Arial,system-ui,sans-serif;margin:24px;color:#111;line-height:1.45}h1{font-size:22px;margin:0 0 6px}h2{font-size:17px;margin:22px 0 8px;border-bottom:2px solid #ddd;padding-bottom:4px}.muted{color:#666;font-size:13px}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eaf6ff;border:1px solid #b5def7;font-weight:700;margin:4px 6px 4px 0}table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0 12px}th,td{border:1px solid #ccc;padding:7px 8px;text-align:left;vertical-align:top}th{background:#f0f3f7}.imgbox{border:1px solid #ddd;border-radius:8px;padding:8px;margin:8px 0}.imgbox img{max-width:100%;display:block}pre{white-space:pre-wrap;background:#f7f7f7;border:1px solid #ddd;padding:10px;border-radius:8px}@media print{button{display:none}body{margin:10mm}.imgbox{break-inside:avoid}table{break-inside:auto}tr{break-inside:avoid}}</style></head><body><button onclick="window.print()">In / lưu PDF</button><h1>${esc(title)}</h1><div class="muted">Tạo lúc: ${esc(now)} · Báo cáo này là file HTML offline, có thể mở bằng trình duyệt trên điện thoại hoặc máy tính.</div><p><span class="badge">${esc(r.type)}</span><span class="badge">Pha: ${esc(r.phases.join('-')||'chưa rõ')}</span><span class="badge">Thời gian: ${esc(fmt(r.duration*1000,6))} ms</span><span class="badge">Độ tin cậy: ${esc(r.confidence)}</span></p><h2>Kết luận nhanh</h2>${summary}<h2>Giá trị các phần tử sự cố</h2>${values}<h2>Dòng thời gian tác động</h2>${timeline}<h2>Biểu đồ sóng tại thời điểm xuất báo cáo</h2>${analogImg?`<div class="imgbox"><b>Analog waveform</b><img src="${analogImg}"></div>`:''}${digitalImg?`<div class="imgbox"><b>Digital/status</b><img src="${digitalImg}"></div>`:''}<h2>Ghi chú phân tích</h2><ul>${notes}</ul><h2>Thông tin giải mã</h2><pre>${esc((state.data?.parserNotes||[]).concat(state.decoderNotes||[]).join('\n')||'Không có ghi chú giải mã.')}</pre></body></html>`; }
+function makeFaultReportText(){ const r=ensureFaultAnalysis(); if(!r)return ''; const lines=[]; lines.push('BÁO CÁO PHÂN TÍCH SỰ CỐ COMTRADE'); lines.push('Bộ file: '+(state.activeBase||'comtrade')); lines.push('Tạo lúc: '+new Date().toLocaleString('vi-VN')); lines.push(''); for(const row of faultSummaryRows(r)) lines.push(row[0]+': '+plainCell(row[1])); lines.push(''); lines.push('GIÁ TRỊ CÁC PHẦN TỬ SỰ CỐ'); lines.push(['Thông số','Kênh','Trước','Trong','Sau','Tỷ lệ','Đơn vị'].join('\t')); for(const x of r.valueRows) lines.push(x.map(plainCell).join('\t')); lines.push(''); lines.push('DÒNG THỜI GIAN TÁC ĐỘNG'); lines.push(['t(s)','Sự kiện','Kênh','Chi tiết'].join('\t')); for(const x of r.timeline) lines.push([fmt(x.time,9),x.event,x.channel||'',x.detail||''].map(plainCell).join('\t')); lines.push(''); lines.push('GHI CHÚ'); lines.push(...(r.notes||[])); return lines.join('\n'); }
+function exportFaultHtml(){ const html=makeFaultReportHtml(); if(html) downloadText((state.activeBase||'comtrade')+'_fault_report.html', html, 'text/html;charset=utf-8'); }
+function openFaultHtml(){ const html=makeFaultReportHtml(); if(!html)return; const blob=new Blob([html],{type:'text/html;charset=utf-8'}); const url=URL.createObjectURL(blob); const w=window.open(url,'_blank'); if(!w){ downloadText((state.activeBase||'comtrade')+'_fault_report.html', html, 'text/html;charset=utf-8'); alert('Trình duyệt chặn cửa sổ mới, đã tải báo cáo HTML thay thế.'); } setTimeout(()=>URL.revokeObjectURL(url),60000); }
+function exportFaultTxt(){ const txt=makeFaultReportText(); if(txt) downloadText((state.activeBase||'comtrade')+'_fault_report.txt', txt, 'text/plain;charset=utf-8'); }
+function applyViewMode(mode){ mode=['auto','mobile','desktop'].includes(mode)?mode:'auto'; document.body.classList.toggle('view-mobile',mode==='mobile'); document.body.classList.toggle('view-desktop',mode==='desktop'); const vp=document.querySelector('meta[name="viewport"]'); if(vp) vp.setAttribute('content', mode==='desktop'?'width=1220, initial-scale=1, viewport-fit=cover':'width=device-width, initial-scale=1, viewport-fit=cover'); localStorage.setItem('comtradeViewMode',mode); const msg=mode==='mobile'?'Đang ép giao diện điện thoại.':mode==='desktop'?'Đang ép giao diện máy tính.':'Đang dùng giao diện tự động theo kích thước màn hình.'; const st=$('viewModeStatus'); if(st) st.textContent=msg; ['Auto','Mobile','Desktop'].forEach(x=>{ const b=$('btnView'+x); if(b)b.classList.toggle('view-mode-active',x.toLowerCase()===mode); }); setTimeout(drawAll,120); }
+function initViewMode(){ applyViewMode(localStorage.getItem('comtradeViewMode')||'auto'); const a=$('btnViewAuto'), m=$('btnViewMobile'), d=$('btnViewDesktop'); if(a)a.onclick=()=>applyViewMode('auto'); if(m)m.onclick=()=>applyViewMode('mobile'); if(d)d.onclick=()=>applyViewMode('desktop'); }
+
+function renderDigitalEvents(){ const cfg=state.cfg,data=state.data; if(!cfg||!data){$('digitalEvents').innerHTML='<div class="tiny" style="padding:12px">Chưa có dữ liệu.</div>';return;} const rows=[]; const maxRows=2500; for(let d=0;d<cfg.digitalCount;d++){ const arr=data.digital[d]; let prev=arr[0]; for(let i=1;i<data.samples;i++){ const v=arr[i]; if(v!==prev){ rows.push([fmt(data.times[i],6),d+1,esc(cfg.digital[d].id),prev,v,`<button onclick="setCursorIndex(${i})">Soi</button>`]); prev=v; if(rows.length>=maxRows) break; } } if(rows.length>=maxRows) break; } $('digitalEvents').innerHTML=rows.length?table(['t (s)','#','Kênh','Từ','Sang','Con trỏ'],rows):'<div class="tiny" style="padding:12px">Không thấy digital đổi trạng thái trong bản ghi.</div>'; }
+function renderLogs(){ const sel=$('logSelect'); sel.innerHTML=''; if(!state.logs.length){ sel.innerHTML='<option>Không có</option>'; $('logView').textContent='Chưa có file log/hdr/inf.'; return; } state.logs.forEach((l,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=l.name; sel.appendChild(o); }); showLog(); }
+function showLog(){ if(!state.logs.length) return; const i=Number($('logSelect').value)||0; const text=state.logs[i]?.text||''; const q=$('logSearch').value.trim().toLowerCase(); if(!q){ $('logView').textContent=text; return; } const lines=text.split(/\r?\n/).filter(line=>line.toLowerCase().includes(q)); $('logView').textContent=lines.length?lines.join('\n'):'Không tìm thấy: '+q; }
+function renderDecoderNotes(){ const notes=[]; if(state.data?.parserNotes) notes.push(...state.data.parserNotes); if(state.decoderNotes?.length) notes.push(...state.decoderNotes); $('decoderNotes').textContent=notes.length?notes.join('\n'):'Chưa có ghi chú giải mã.'; }
+async function handleFiles(fileList){ const files=[...fileList]; if(!files.length)return; state.groups.clear(); state.activeBase=null; state.cfg=null; state.data=null; state.logs=[]; state.summary=[]; state.selectedAnalog.clear(); state.selectedDigital.clear(); state.cursorA=0; state.cursorB=0; state.activeCursor='A'; state.faultAnalysis=null; setStatus('Đang phân loại file...', '');
+  for(const f of files){ const ext=extName(f.name); if(ext==='cff'){ try{ const ex=await extractCff(f); const b=ex.base; state.groups.set(b,{cfg:ex.cfg,dat:ex.dat,logs:ex.logs.map(l=>makeVirtualFile([l.text],l.name,'text/plain')),cff:f,cffMeta:ex.meta}); }catch(e){ state.groups.set(baseName(f.name),{cfg:null,dat:null,logs:[makeVirtualFile(['Lỗi đọc CFF: '+e.message],baseName(f.name)+'.cff_error.log','text/plain')],cff:f,cffError:e.message}); } continue; }
+    if(!['cfg','dat','log','hdr','inf','txt'].includes(ext)) continue; const b=baseName(f.name); if(!state.groups.has(b)) state.groups.set(b,{cfg:null,dat:null,logs:[]}); const g=state.groups.get(b); if(ext==='cfg') g.cfg=f; else if(ext==='dat') g.dat=f; else g.logs.push(f); }
+  renderGroups(); const first=[...state.groups.entries()].find(([b,g])=>g.cfg&&g.dat); if(first) await loadGroup(first[0]); else setStatus('Đã nhận file nhưng chưa tìm thấy .CFG + .DAT hoặc CFF hợp lệ.', 'warn'); }
+async function loadGroup(base){ const g=state.groups.get(base); if(!g)return; state.activeBase=base; renderGroups(); if(!g.cfg||!g.dat){ setStatus('Bộ '+base+' thiếu CFG hoặc DAT.', 'bad'); return; } try{ setStatus('Đang đọc CFG...', ''); const cfgText=await g.cfg.text(); state.cfg=parseCfg(cfgText); state.decoderNotes=[]; state.logs=[]; for(const f of g.logs){ try{state.logs.push({name:f.name,text:await f.text()});}catch(e){state.logs.push({name:f.name,text:'Không đọc được file: '+e.message});} } if(g.cffMeta){ state.logs.push({name:base+'.cff_sections.txt', text:'CFF sections:\n'+g.cffMeta.sections.join('\n')+'\nDAT header: '+g.cffMeta.datHeader+'\nDAT bytes: '+g.cffMeta.datBytes}); }
+    setStatus('Đang đọc DAT '+state.cfg.datType+'...', ''); state.data=await parseDat(g.dat,state.cfg); state.summary=buildSummary(); state.selectedAnalog=new Set([...Array(Math.min(6,state.cfg.analogCount)).keys()]); state.selectedDigital=new Set([...Array(Math.min(12,state.cfg.digitalCount)).keys()]); setFullTimeInputs(); state.cursorA=0; state.cursorB=state.data?Math.min(state.data.samples-1,Math.max(0,Math.round(state.data.samples/2))):0; state.activeCursor='A'; state.faultAnalysis=null;
+    let msg=`Đã đọc xong bộ ${base}\nNguồn: ${g.cff?'CFF một-file':'CFG/DAT rời'}\nCFG: ${g.cfg.name}\nDAT: ${g.dat.name}\nMẫu: ${state.data.samples.toLocaleString('vi-VN')} · Kiểu: ${state.data.format}`; if(state.data.endian) msg+=` · ${state.data.endian}-endian`; if(state.data.recordBytes) msg+=` · ${state.data.recordBytes} byte/bản ghi`; if(state.data.trailingBytes) msg+=`\nCảnh báo: còn dư ${state.data.trailingBytes} byte ở cuối DAT.`; if(state.data.badRows) msg+=`\nCảnh báo: có dòng/byte bất thường cần kiểm tra.`; if(state.cfg.warnings.length) msg+='\n'+state.cfg.warnings.join('\n'); setStatus(msg, state.cfg.warnings.length||state.data.badRows?'warn':'good'); renderAll(); }catch(err){ console.error(err); setStatus('Lỗi đọc COMTRADE: '+err.message, 'bad'); } }
+function selectA(mode){ state.selectedAnalog.clear(); if(mode==='first') for(let i=0;i<Math.min(6,state.cfg?.analogCount||0);i++)state.selectedAnalog.add(i); if(mode==='all') for(let i=0;i<(state.cfg?.analogCount||0);i++)state.selectedAnalog.add(i); renderChecks(); drawAll(); renderCursorTable(); }
+function selectD(mode){ state.selectedDigital.clear(); if(mode==='first') for(let i=0;i<Math.min(12,state.cfg?.digitalCount||0);i++)state.selectedDigital.add(i); if(mode==='all') for(let i=0;i<(state.cfg?.digitalCount||0);i++)state.selectedDigital.add(i); renderChecks(); drawAll(); renderCursorTable(); }
+function exportCsv(mode){ const data=state.data,cfg=state.cfg; if(!data||!cfg){alert('Chưa có dữ liệu.');return;} if(mode==='cursor'){ const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB); const rows=[['type','index','channel','unit','A','B','delta_B_minus_A','tA_s','tB_s'],['TIME','','','',data.times[ia],data.times[ib],data.times[ib]-data.times[ia],data.times[ia],data.times[ib]],...cfg.analog.map((ch,a)=>['Analog',a+1,ch.id,ch.unit,data.analog[a][ia],data.analog[a][ib],data.analog[a][ib]-data.analog[a][ia],data.times[ia],data.times[ib]]),...cfg.digital.map((ch,d)=>['Digital',d+1,ch.id,'',data.digital[d][ia],data.digital[d][ib],(data.digital[d][ia]===data.digital[d][ib]?'':(data.digital[d][ia]+'->'+data.digital[d][ib])),data.times[ia],data.times[ib]])]; downloadText((state.activeBase||'comtrade')+'_cursor_AB.csv', rows.map(r=>r.map(csvCell).join(',')).join('\n'), 'text/csv;charset=utf-8'); return; }
+  const [i0,i1]=findRange(); let A=[],D=[...state.selectedDigital]; if(mode==='allA') A=[...Array(cfg.analogCount).keys()]; else A=[...state.selectedAnalog]; const headers=['t_s','sample_index',...A.map(i=>cfg.analog[i].id+'_'+(cfg.analog[i].unit||'')),...D.map(i=>cfg.digital[i].id)]; const out=[headers.map(csvCell).join(',')]; for(let i=i0;i<=i1;i++){ const row=[data.times[i],i+1,...A.map(a=>data.analog[a][i]),...D.map(d=>data.digital[d][i])]; out.push(row.map(csvCell).join(',')); } downloadText((state.activeBase||'comtrade')+'_'+mode+'.csv', out.join('\n'), 'text/csv;charset=utf-8'); }
+function csvCell(v){ const s=String(v??''); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
+function exportJsonSummary(){ if(!state.cfg){alert('Chưa có dữ liệu.');return;} const ia=state.data?clampSampleIndex(state.cursorA):0, ib=state.data?clampSampleIndex(state.cursorB):0; const obj={station:state.cfg.station,device:state.cfg.device,revision:state.cfg.rev,datTypeCfg:state.cfg.datType,decodedFormat:state.data?.format,parserNotes:state.data?.parserNotes,channels:{analog:state.cfg.analog,digital:state.cfg.digital},sampleRates:state.cfg.sampleRates,startTime:state.cfg.startTime,triggerTime:state.cfg.triggerTime,samples:state.data?.samples,analogSummary:state.summary,cursors:{A:{index:ia,time_s:state.data?.times[ia]},B:{index:ib,time_s:state.data?.times[ib]},delta_s:state.data?(state.data.times[ib]-state.data.times[ia]):null}, faultAnalysis:state.faultAnalysis||null}; downloadText((state.activeBase||'comtrade')+'_summary.json', JSON.stringify(obj,null,2), 'application/json;charset=utf-8'); }
+function downloadText(name, text, type){ const blob=new Blob([text],{type}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500); }
+
+function downloadBlob(name, blob){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},900); }
+function utf8Bytes(s){ return new TextEncoder().encode(String(s??'')); }
+function concatBytes(parts){ let n=0; for(const p of parts)n+=p.length; const out=new Uint8Array(n); let o=0; for(const p of parts){out.set(p,o);o+=p.length;} return out; }
+function writeU16(a,o,v){ a[o]=v&255; a[o+1]=(v>>>8)&255; }
+function writeU32(a,o,v){ a[o]=v&255; a[o+1]=(v>>>8)&255; a[o+2]=(v>>>16)&255; a[o+3]=(v>>>24)&255; }
+const CRC_TABLE=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(bytes){ let c=0xffffffff; for(const b of bytes)c=CRC_TABLE[(c^b)&255]^(c>>>8); return (c^0xffffffff)>>>0; }
+function dosTimeDate(date=new Date()){ const time=(date.getHours()<<11)|(date.getMinutes()<<5)|Math.floor(date.getSeconds()/2); const day=date.getDate(), mon=date.getMonth()+1, yr=Math.max(0,date.getFullYear()-1980); const dt=(yr<<9)|(mon<<5)|day; return {time, date:dt}; }
+function makeZip(files){ const locals=[], centrals=[]; let offset=0; const td=dosTimeDate(); for(const f of files){ const nameBytes=utf8Bytes(f.name); const data=f.bytes instanceof Uint8Array?f.bytes:utf8Bytes(f.text||''); const crc=crc32(data); const local=new Uint8Array(30+nameBytes.length); writeU32(local,0,0x04034b50); writeU16(local,4,20); writeU16(local,6,0x0800); writeU16(local,8,0); writeU16(local,10,td.time); writeU16(local,12,td.date); writeU32(local,14,crc); writeU32(local,18,data.length); writeU32(local,22,data.length); writeU16(local,26,nameBytes.length); writeU16(local,28,0); local.set(nameBytes,30); locals.push(local,data);
+    const cen=new Uint8Array(46+nameBytes.length); writeU32(cen,0,0x02014b50); writeU16(cen,4,20); writeU16(cen,6,20); writeU16(cen,8,0x0800); writeU16(cen,10,0); writeU16(cen,12,td.time); writeU16(cen,14,td.date); writeU32(cen,16,crc); writeU32(cen,20,data.length); writeU32(cen,24,data.length); writeU16(cen,28,nameBytes.length); writeU16(cen,30,0); writeU16(cen,32,0); writeU16(cen,34,0); writeU16(cen,36,0); writeU32(cen,38,0); writeU32(cen,42,offset); cen.set(nameBytes,46); centrals.push(cen); offset+=local.length+data.length; }
+  const centralStart=offset; const central=concatBytes(centrals); offset+=central.length; const end=new Uint8Array(22); writeU32(end,0,0x06054b50); writeU16(end,8,files.length); writeU16(end,10,files.length); writeU32(end,12,central.length); writeU32(end,16,centralStart); writeU16(end,20,0); return new Blob([concatBytes([...locals,central,end])],{type:'application/zip'}); }
+function cfgField(v){ const s=String(v??''); return /[,"]|\r|\n/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
+function plainNum(v,d=12){ if(!Number.isFinite(Number(v))) return '0'; return Number(v).toPrecision(d).replace(/(?:\.0+|(?:(\.\d*?)0+))$/,'$1'); }
+function targetTsFactor(unit){ return unit==='nano'?1e9:unit==='milli'?1e3:unit==='second'?1:1e6; }
+function medianDt(times){ const ds=[]; for(let i=1;i<Math.min(times.length,5000);i++){ const d=times[i]-times[i-1]; if(d>0&&Number.isFinite(d))ds.push(d); } const m=median(ds); return Number.isFinite(m)?m:0.001; }
+function sanitizeTargetOptions(){ let rev=option('targetRevision')||'2013', type=option('targetDatType')||'ASCII', pack=option('targetPackage')||'zip'; const notes=[]; if(rev==='1991'){ if(type!=='ASCII')notes.push('1991 được ép DAT ASCII.'); type='ASCII'; if(pack==='cff'){notes.push('1991 không đóng gói CFF, chuyển sang ZIP/file rời.'); pack='zip';} }
+  if(rev==='1999' && (type==='BINARY32'||type==='FLOAT32')){ notes.push('1999 không dùng BINARY32/FLOAT32, chuyển sang BINARY 16-bit.'); type='BINARY'; }
+  if(pack==='cff' && rev!=='2013'){ notes.push('CFF chỉ xuất ở cấu trúc 2013 trong công cụ này. Đã chuyển sang ZIP.'); pack='zip'; }
+  return {rev,type,pack,notes,le:option('targetEndian')!=='be', tsUnit:option('targetTsUnit')||'micro', asciiDigital:option('targetDigitalAscii')||'columns'}; }
+function exportBaseName(){ return (($('targetBaseName')?.value||'').trim() || state.activeBase || 'converted_comtrade').replace(/[\\/:*?"<>|]+/g,'_'); }
+function buildTargetCfg(opts){ const cfg=state.cfg,data=state.data; const A=cfg.analogCount,D=cfg.digitalCount,N=data.samples; const rev=opts.rev; let lines=[]; lines.push([cfgField(cfg.station||'STATION'),cfgField(cfg.device||'DEVICE'),rev].join(',')); lines.push(`${A+D},${A}A,${D}D`);
+  for(let a=0;a<A;a++){ const ch=cfg.analog[a]; let aa=ch.a, bb=ch.b, mn=ch.min, mx=ch.max; if(opts.type==='FLOAT32'){ aa=1; bb=0; let min=Infinity,max=-Infinity; for(let i=0;i<N;i++){ const v=data.analog[a][i]; if(Number.isFinite(v)){if(v<min)min=v;if(v>max)max=v;} } mn=Number.isFinite(min)?min:0; mx=Number.isFinite(max)?max:0; } else if(opts.type==='BINARY'){ mn=-32768; mx=32767; } else if(opts.type==='BINARY32'){ mn=-2147483648; mx=2147483647; }
+    lines.push([ch.index||a+1,cfgField(ch.id||('A'+(a+1))),cfgField(ch.phase||''),cfgField(ch.ccbm||''),cfgField(ch.unit||''),plainNum(aa||1),plainNum(bb||0),plainNum(ch.skew||0),plainNum(mn),plainNum(mx),plainNum(Number.isFinite(ch.primary)?ch.primary:1),plainNum(Number.isFinite(ch.secondary)?ch.secondary:1),cfgField(ch.ps||'P')].join(',')); }
+  for(let d=0;d<D;d++){ const ch=cfg.digital[d]; lines.push([ch.index||d+1,cfgField(ch.id||('D'+(d+1))),cfgField(ch.phase||''),cfgField(ch.ccbm||''),Number.isFinite(ch.normal)?ch.normal:0].join(',')); }
+  lines.push(plainNum(cfg.frequency||50)); const keep=option('targetRateMode')==='keep' && cfg.sampleRates?.length; if(keep){ const rates=cfg.sampleRates.map((r,i)=>({rate:r.rate||0,end:i===cfg.sampleRates.length-1?N:Math.min(N,r.end||N)})); lines.push(String(rates.length)); for(const r of rates) lines.push(`${plainNum(r.rate||1)},${r.end}`); } else { const dt=medianDt(data.times); lines.push('1'); lines.push(`${plainNum(1/dt,12)},${N}`); }
+  lines.push(cfg.startTime||'01/01/1970,00:00:00.000000'); lines.push(cfg.triggerTime||cfg.startTime||'01/01/1970,00:00:00.000000'); lines.push(opts.type); if(rev==='1999'||rev==='2013') lines.push('1'); if(rev==='2013'){ lines.push((cfg.extra2013?.timeCode||'+7h00')+','+(cfg.extra2013?.localCode||'+7h00')); lines.push((cfg.extra2013?.tmqCode||'0')+','+(cfg.extra2013?.leapSec||'0')); }
+  return lines.join('\r\n')+'\r\n'; }
+function rawAnalogValue(a,i,type){ const cfg=state.cfg,data=state.data,ch=cfg.analog[a]; const v=data.analog[a][i]; if(type==='FLOAT32') return Number.isFinite(v)?v:0; const aa=(Number.isFinite(ch.a)&&ch.a!==0)?ch.a:1; const bb=Number.isFinite(ch.b)?ch.b:0; let raw=Math.round((v-bb)/aa); if(type==='BINARY') raw=Math.max(-32768,Math.min(32767,raw)); else raw=Math.max(-2147483648,Math.min(2147483647,raw)); return raw; }
+function timestampOut(i,opts){ const data=state.data; const f=targetTsFactor(opts.tsUnit); const t0=data.times[0]||0; return Math.round((data.times[i]-t0)*f); }
+function buildTargetDat(opts){ const cfg=state.cfg,data=state.data,A=cfg.analogCount,D=cfg.digitalCount,N=data.samples; if(opts.type==='ASCII'){ const packed=opts.asciiDigital==='packed'; const words=Math.ceil(D/16); const lines=[]; for(let i=0;i<N;i++){ const row=[i+1,timestampOut(i,opts)]; for(let a=0;a<A;a++) row.push(rawAnalogValue(a,i,opts.type)); if(packed){ for(let w=0;w<words;w++){ let word=0; for(let b=0;b<16;b++){ const d=w*16+b; if(d<D && data.digital[d][i]) word|=(1<<b); } row.push(word); } } else { for(let d=0;d<D;d++) row.push(data.digital[d][i]?1:0); } lines.push(row.join(',')); } return {text:lines.join('\r\n')+'\r\n', bytes:null}; }
+  const le=opts.le, words=Math.ceil(D/16), aBytes=opts.type==='BINARY'?2:4; const recBytes=8+A*aBytes+words*2; const bytes=new Uint8Array(N*recBytes); const dv=new DataView(bytes.buffer); for(let i=0,off=0;i<N;i++,off+=recBytes){ dv.setUint32(off,i+1,le); dv.setInt32(off+4,timestampOut(i,opts),le); let k=off+8; for(let a=0;a<A;a++){ const raw=rawAnalogValue(a,i,opts.type); if(opts.type==='BINARY'){ dv.setInt16(k,raw,le); k+=2; } else if(opts.type==='BINARY32'){ dv.setInt32(k,raw,le); k+=4; } else { dv.setFloat32(k,raw,le); k+=4; } } for(let w=0;w<words;w++){ let word=0; for(let b=0;b<16;b++){ const d=w*16+b; if(d<D && data.digital[d][i]) word|=(1<<b); } dv.setUint16(k,word,le); k+=2; } } return {text:null, bytes}; }
+function collectLogFilesForExport(base){ const files=[]; const used=new Set(); for(const l of state.logs||[]){ let ext=extName(l.name); if(!['hdr','inf','log','txt'].includes(ext)) ext='log'; let name=base+'.'+ext; let n=1; while(used.has(name)){name=base+'_'+(n++)+'.'+ext;} used.add(name); files.push({name,text:l.text||''}); } return files; }
+function buildConvertedPackage(){ if(!state.cfg||!state.data) throw new Error('Chưa có dữ liệu COMTRADE để chuyển đổi.'); const opts=sanitizeTargetOptions(); const base=exportBaseName(); const cfgText=buildTargetCfg(opts); const dat=buildTargetDat(opts); const datName=base+'.dat', cfgName=base+'.cfg'; const logFiles=collectLogFilesForExport(base); const datBytes=dat.bytes || utf8Bytes(dat.text); const result={opts,base,cfgText,datText:dat.text,datBytes,datName,cfgName,files:[{name:cfgName,text:cfgText},{name:datName,bytes:datBytes},...logFiles]}; state.converted=result; $('convertedCfgPreview').value=cfgText; const size=fileSize(datBytes.length); $('convertStatus').className='status good'; $('convertStatus').textContent=`Đã dựng gói chuyển đổi: ${opts.rev} · ${opts.type} · ${opts.pack.toUpperCase()} · DAT ${size}`+(opts.notes.length?'\nGhi chú: '+opts.notes.join(' '):''); return result; }
+function downloadConverted(){ try{ const r=buildConvertedPackage(); const opts=r.opts; if(opts.pack==='separate'){ downloadText(r.cfgName,r.cfgText,'text/plain;charset=utf-8'); setTimeout(()=>downloadBlob(r.datName,new Blob([r.datBytes],{type:'application/octet-stream'})),150); let delay=300; for(const f of r.files.slice(2)){ setTimeout(()=>downloadText(f.name,f.text,'text/plain;charset=utf-8'),delay); delay+=120; } return; }
+    if(opts.pack==='cff'){ const headCfg=`--- file type: CFG ---\r\n`; const chunks=[headCfg,r.cfgText]; for(const f of r.files.slice(2)){ const kind=extName(f.name).toUpperCase()||'HDR'; chunks.push(`--- file type: ${kind} ---\r\n`, f.text||'', '\r\n'); } if(opts.type==='ASCII') chunks.push(`--- file type: DAT ASCII ---\r\n`, r.datBytes); else chunks.push(`--- file type: DAT ${opts.type}: ${r.datBytes.length} ---\r\n`, r.datBytes); downloadBlob(r.base+'.cff', new Blob(chunks,{type:'application/octet-stream'})); return; }
+    downloadBlob(r.base+'_COMTRADE_'+opts.rev+'_'+opts.type+'.zip', makeZip(r.files)); }catch(e){ $('convertStatus').className='status bad'; $('convertStatus').textContent='Lỗi chuyển đổi: '+e.message; } }
+function previewConvertedCfg(){ try{ buildConvertedPackage(); }catch(e){ $('convertStatus').className='status bad'; $('convertStatus').textContent='Lỗi xem trước CFG: '+e.message; } }
+function downloadConvertedDatOnly(){ try{ const r=state.converted||buildConvertedPackage(); downloadBlob(r.datName,new Blob([r.datBytes],{type:'application/octet-stream'})); }catch(e){ alert('Lỗi tải DAT: '+e.message); } }
+
+function demoFiles(asCff=false){ const rate=1000,N=2000,A=4,D=4; let cfg=`DEMO_STATION,DEMO_RELAY,2013\n${A+D},${A}A,${D}D\n`; ['IA','IB','IC','VN'].forEach((id,i)=>{cfg+=`${i+1},${id},${i<3?'A':'N'},,${i<3?'A':'V'},0.001,0,0,-32768,32767,1,1,P\n`;}); ['TRIP','PICKUP','CB52A','BLOCK'].forEach((id,i)=>{cfg+=`${i+1},${id},,,0\n`;}); cfg+=`50\n1\n${rate},${N}\n09/06/2026,16:00:00.000000\n09/06/2026,16:00:01.000000\nASCII\n1\n+7h00,+7h00\n0,0\n`; let dat=''; for(let i=0;i<N;i++){ const t=i/rate; const fault=t>0.82&&t<1.18?2.6:1; const ia=Math.round(1000*fault*Math.sin(2*Math.PI*50*t)); const ib=Math.round(1000*fault*Math.sin(2*Math.PI*50*t-2*Math.PI/3)); const ic=Math.round(1000*fault*Math.sin(2*Math.PI*50*t+2*Math.PI/3)); const vn=Math.round(220000+10000*Math.sin(2*Math.PI*50*t)); const trip=t>1.03?1:0,pickup=t>0.82&&t<1.2?1:0,cb=t>1.08?0:1,block=0; dat+=`${i+1},${Math.round(t*1e6)},${ia},${ib},${ic},${vn},${trip},${pickup},${cb},${block}\n`; } const log='DEMO LOG\n16:00:00.820 PICKUP ON\n16:00:01.030 TRIP ISSUED\n16:00:01.080 CB52A OPEN\n'; if(asCff){ const cff=`--- file type: CFG ---\n${cfg}--- file type: INF ---\nDemo INF offline\n--- file type: HDR ---\n${log}--- file type: DAT ASCII ---\n${dat}`; return [makeVirtualFile([cff],'demo.cff','application/octet-stream')]; } return [makeVirtualFile([cfg],'demo.cfg','text/plain'),makeVirtualFile([dat],'demo.dat','text/plain'),makeVirtualFile([log],'demo.log','text/plain')]; }
+function makeDemo(){ handleFiles(demoFiles(false)); } function makeDemoCff(){ handleFiles(demoFiles(true)); }
+function bind(){ $('btnPickFiles').onclick=()=>$('fileInput').click(); $('btnPickFolder').onclick=()=>$('folderInput').click(); $('fileInput').onchange=e=>handleFiles(e.target.files); $('folderInput').onchange=e=>handleFiles(e.target.files); const drop=$('drop'); ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');})); ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');})); drop.addEventListener('drop',e=>handleFiles(e.dataTransfer.files)); document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-'+t.dataset.tab).classList.add('active'); setTimeout(drawAll,60);});
+  $('btnAFirst6').onclick=()=>selectA('first'); $('btnAAll').onclick=()=>selectA('all'); $('btnAClear').onclick=()=>selectA('clear'); $('btnDFirst12').onclick=()=>selectD('first'); $('btnDAll').onclick=()=>selectD('all'); $('btnDClear').onclick=()=>selectD('clear'); $('btnFullRange').onclick=()=>{setFullTimeInputs();drawAll();}; $('btnDraw').onclick=()=>{drawAll();renderCursorTable();}; $('btnWindowCursor').onclick=()=>{ const d=state.data;if(!d)return; const t=d.times[getActiveCursorIndex()]; const dur=d.times[d.samples-1]-d.times[0]; const w=Math.max(dur/50,0.02); $('tStart').value=(t-w/2).toFixed(6); $('tEnd').value=(t+w/2).toFixed(6); drawAll();}; $('btnCursorToRange').onclick=()=>{ const d=state.data;if(!d)return; const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB); const t0=Math.min(d.times[ia],d.times[ib]), t1=Math.max(d.times[ia],d.times[ib]); const pad=Math.max((t1-t0)*0.15, (d.times[d.samples-1]-d.times[0])/100, 0.005); $('tStart').value=(t0-pad).toFixed(6); $('tEnd').value=(t1+pad).toFixed(6); drawAll(); }; $('normalizePlot').onchange=drawAll;
+  ['datProfile','endianMode','bitOrder','timestampUnit','datTypeOverride','preferTimestamp'].forEach(id=>$(id).onchange=()=>state.activeBase&&loadGroup(state.activeBase)); $('cursorRangeA').oninput=e=>setCursorIndex(+e.target.value, checked('autoDraw'), 'A'); $('cursorRangeB').oninput=e=>setCursorIndex(+e.target.value, checked('autoDraw'), 'B'); $('cursorSelectedOnly').onchange=renderCursorTable; $('btnActiveA').onclick=()=>setActiveCursor('A'); $('btnActiveB').onclick=()=>setActiveCursor('B'); $('btnCursorPrev').onclick=()=>setCursorIndex(getActiveCursorIndex()-1); $('btnCursorNext').onclick=()=>setCursorIndex(getActiveCursorIndex()+1); $('btnSwapCursors').onclick=()=>{ const t=state.cursorA; state.cursorA=state.cursorB; state.cursorB=t; setupCursor(); renderCursorTable(); drawAll(); }; $('analogCanvas').onclick=e=>canvasClickToCursor($('analogCanvas'),e); $('digitalCanvas').onclick=e=>canvasClickToCursor($('digitalCanvas'),e);
+  $('logSelect').onchange=showLog; $('logSearch').oninput=showLog; $('btnCsvSelected').onclick=()=>exportCsv('selected'); $('btnCsvAllAnalog').onclick=()=>exportCsv('allA'); $('btnCsvCursor').onclick=()=>exportCsv('cursor'); $('btnJsonSummary').onclick=exportJsonSummary; $('btnConvertDownload').onclick=downloadConverted; $('btnPreviewCfg').onclick=previewConvertedCfg; $('btnDownloadConvertedDat').onclick=downloadConvertedDatOnly; ['targetRevision','targetDatType','targetPackage','targetEndian','targetTsUnit','targetDigitalAscii','targetRateMode'].forEach(id=>$(id).onchange=()=>{state.converted=null;}); $('btnPrint').onclick=()=>window.print(); $('btnDemo').onclick=makeDemo; $('btnDemoCff').onclick=makeDemoCff; $('btnFaultAnalyze').onclick=()=>runFaultAnalysis(false); $('btnFaultSetCursors').onclick=setCursorsToFault; $('btnFaultZoom').onclick=zoomFaultWindow; $('btnFaultExportJson').onclick=exportFaultJson; $('btnFaultExportCsv').onclick=exportFaultCsv; $('btnFaultExportHtml').onclick=exportFaultHtml; $('btnFaultOpenHtml').onclick=openFaultHtml; $('btnFaultExportTxt').onclick=exportFaultTxt; const fh2=$('btnExportFaultHtml2'); if(fh2)fh2.onclick=exportFaultHtml; const oh2=$('btnOpenFaultHtml2'); if(oh2)oh2.onclick=openFaultHtml; ['faultCurrentFactor','faultCurrentAbs','faultVoltageDrop','faultMinMs','faultPreMs','faultPostMs','faultDigitalPickup','faultDigitalTrip','faultDigitalBreaker'].forEach(id=>$(id).onchange=()=>{state.faultAnalysis=null; renderFaultAnalysis();}); window.addEventListener('resize',()=>setTimeout(drawAll,100)); }
+bind();
+initViewMode();
+</script>
+
+<script>
+(function(){
+  const APP_VERSION='COMTRADE-PWA-V5.0.0-REPORT-UPDATE';
+  let deferredPrompt=null;
+  function el(id){return document.getElementById(id)}
+  function toast(msg,type=''){
+    let t=el('pwaToast');
+    if(!t){t=document.createElement('div');t.id='pwaToast';t.className='toast-pwa';document.body.appendChild(t)}
+    t.textContent=msg; t.classList.add('show');
+    if(type==='bad') t.style.borderLeftColor='var(--bad)'; else if(type==='good') t.style.borderLeftColor='var(--good)'; else t.style.borderLeftColor='var(--accent)';
+    clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),5200);
+  }
+  function setPwaStatus(msg,mode){
+    const st=el('pwaStatus'), led=el('pwaLed'); if(st) st.innerHTML='<span class="pwa-led '+(mode==='on'?'on':mode==='off'?'off':'')+'" id="pwaLed"></span>'+msg;
+  }
+  function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
+
+  function messageSW(worker, data, timeout=9000){
+    return new Promise((resolve,reject)=>{
+      if(!worker) return reject(new Error('Chưa có Service Worker đang hoạt động.'));
+      const ch=new MessageChannel();
+      const timer=setTimeout(()=>reject(new Error('Service Worker không phản hồi.')),timeout);
+      ch.port1.onmessage=(ev)=>{ clearTimeout(timer); resolve(ev.data||{}); };
+      worker.postMessage(data,[ch.port2]);
+    });
+  }
+  async function readRemoteSwVersion(){
+    try{ const r=await fetch('./sw.js?check='+Date.now(), {cache:'no-store'}); const text=await r.text(); const m=text.match(/CACHE_VERSION\s*=\s*['\"]([^'\"]+)/); return m?m[1]:'không đọc được version'; }catch(e){ return 'không kiểm tra được: '+e.message; }
+  }
+  async function registerSW(){
+    const btnInstall=el('btnPwaInstall'), btnUpdate=el('btnPwaUpdate'), btnClear=el('btnPwaClear'), btnReload=el('btnPwaReload'), btnCheck=el('btnPwaCheck'), btnForce=el('btnPwaForceUpdate'), btnHard=el('btnPwaHardReload');
+    if(btnInstall) btnInstall.disabled=true;
+    if(btnReload) btnReload.onclick=()=>location.reload();
+    if(btnHard) btnHard.onclick=()=>{ const u=new URL(location.href); u.searchParams.set('reload', Date.now()); location.replace(u.toString()); };
+    if(!('serviceWorker' in navigator)) { setPwaStatus('Trình duyệt không hỗ trợ Service Worker/PWA.', 'off'); return; }
+    if(location.protocol==='file:') { setPwaStatus('Đang mở bằng file:// — đọc COMTRADE được, nhưng chưa thể cài PWA. Hãy chạy qua localhost.', 'off'); return; }
+    try{
+      const reg=await navigator.serviceWorker.register('./sw.js', {scope:'./'});
+      setPwaStatus((isStandalone()?'Đang chạy ở chế độ PWA. ':'Đã bật cache offline. ')+APP_VERSION, 'on');
+      if(btnCheck) btnCheck.onclick=async()=>{
+        toast('Đang kiểm tra phiên bản PWA...');
+        try{
+          await reg.update();
+          const activeVer=await messageSW(reg.active || navigator.serviceWorker.controller,{type:'GET_VERSION'}).catch(()=>({cache:'không đọc được'}));
+          const remoteVer=await readRemoteSwVersion();
+          if(reg.waiting) toast('Đã có Service Worker mới đang chờ. Bấm “Ép cập nhật phiên bản” để áp dụng.\nĐang dùng: '+(activeVer.cache||APP_VERSION)+'\nBản trên thư mục: '+remoteVer,'good');
+          else toast('Kiểm tra xong.\nĐang dùng: '+(activeVer.cache||APP_VERSION)+'\nBản trên thư mục: '+remoteVer,'good');
+        }catch(e){ toast('Không kiểm tra được bản mới: '+e.message,'bad'); }
+      };
+      if(btnForce) btnForce.onclick=async()=>{
+        if(!confirm('Ép cập nhật PWA: xóa cache cũ, nạp lại app shell và tải lại trang. Tiếp tục?')) return;
+        toast('Đang ép cập nhật PWA...');
+        try{
+          const keys=await caches.keys();
+          await Promise.all(keys.filter(k=>k.startsWith('comtrade-reader-')).map(k=>caches.delete(k)));
+          await reg.update();
+          if(reg.waiting){ reg.waiting.postMessage({type:'SKIP_WAITING'}); return; }
+          const active=reg.active || navigator.serviceWorker.controller;
+          if(active) await messageSW(active,{type:'REFRESH_CACHE'},12000).catch(()=>null);
+          const u=new URL(location.href); u.searchParams.set('pwa_update', Date.now());
+          toast('Đã ép cập nhật. Trang sẽ tải lại.', 'good');
+          setTimeout(()=>location.replace(u.toString()),700);
+        }catch(e){ toast('Ép cập nhật lỗi: '+e.message,'bad'); }
+      };
+      if(btnUpdate) btnUpdate.onclick=async()=>{
+        toast('Đang nạp lại các file PWA vào cache...');
+        try{
+          const active=reg.active || navigator.serviceWorker.controller;
+          if(active){
+            await new Promise((resolve,reject)=>{
+              const ch=new MessageChannel();
+              const timer=setTimeout(()=>reject(new Error('Service Worker không phản hồi khi làm mới cache.')),8000);
+              ch.port1.onmessage=(ev)=>{ clearTimeout(timer); ev.data&&ev.data.ok?resolve(ev.data):reject(new Error(ev.data?.error||'Không làm mới được cache.')); };
+              active.postMessage({type:'REFRESH_CACHE'}, [ch.port2]);
+            });
+          }
+          await reg.update();
+          const waiting=reg.waiting || (reg.installing && await new Promise(res=>{ const sw=reg.installing; sw.addEventListener('statechange',()=>{ if(sw.state==='installed') res(sw); }); setTimeout(()=>res(null),2500); }));
+          if(waiting){ waiting.postMessage({type:'SKIP_WAITING'}); toast('Đã có Service Worker mới. Trang sẽ tải lại.', 'good'); setTimeout(()=>location.reload(),900); }
+          else toast('Đã cập nhật cache ứng dụng. Có thể dùng offline.', 'good');
+        }catch(e){ toast('Không cập nhật được cache: '+e.message,'bad'); }
+      };
+      if(btnClear) btnClear.onclick=async()=>{
+        if(!confirm('Xóa toàn bộ cache PWA của ứng dụng này? Sau đó cần mở lại khi còn truy cập được thư mục/localhost để nạp cache mới.')) return;
+        const keys=await caches.keys(); await Promise.all(keys.filter(k=>k.includes('comtrade-reader')).map(k=>caches.delete(k)));
+        toast('Đã xóa cache cũ. Hãy bấm Cập nhật cache hoặc tải lại trang.', 'good');
+      };
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!window.__pwaReloading){ window.__pwaReloading=true; location.reload(); }});
+    }catch(e){ setPwaStatus('Lỗi đăng ký Service Worker: '+e.message, 'off'); toast('Lỗi PWA: '+e.message,'bad'); }
+  }
+  window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e; const b=el('btnPwaInstall'); if(b){b.disabled=false;b.textContent='Cài PWA';} setPwaStatus('Có thể cài PWA offline trên thiết bị này.', 'on'); });
+  window.addEventListener('appinstalled',()=>{ deferredPrompt=null; toast('Đã cài COMTRADE Reader PWA.', 'good'); setPwaStatus('Đã cài PWA offline.', 'on'); });
+  window.addEventListener('load',()=>{
+    const b=el('btnPwaInstall'); if(b) b.onclick=async()=>{
+      if(deferredPrompt){ deferredPrompt.prompt(); const choice=await deferredPrompt.userChoice; toast(choice.outcome==='accepted'?'Đã xác nhận cài PWA.':'Đã hủy cài PWA.', choice.outcome==='accepted'?'good':''); deferredPrompt=null; b.disabled=true; }
+      else toast('Nếu chưa thấy hộp cài đặt, hãy mở bằng localhost/HTTPS rồi dùng menu trình duyệt: Cài đặt ứng dụng / Install app.');
+    };
+    registerSW();
+  });
+})();
+</script>
+
+</body>
+</html>

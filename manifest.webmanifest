@@ -1,0 +1,90 @@
+{
+  "name": "COMTRADE Offline Reader Pro V5",
+  "short_name": "COMTRADE V5",
+  "description": "Đọc, phân tích sự cố, xuất báo cáo HTML/TXT/PDF in, ép giao diện mobile/desktop, cập nhật PWA chủ động và chuyển đổi COMTRADE offline.",
+  "id": "comtrade-offline-reader-pro",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "orientation": "any",
+  "lang": "vi",
+  "dir": "ltr",
+  "categories": [
+    "utilities",
+    "productivity",
+    "engineering"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mở COMTRADE Reader",
+      "short_name": "Reader",
+      "description": "Mở công cụ đọc dữ liệu sự cố COMTRADE offline",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "./index.html",
+      "accept": {
+        "application/octet-stream": [
+          ".cff",
+          ".dat"
+        ],
+        "text/plain": [
+          ".cfg",
+          ".log",
+          ".hdr",
+          ".inf",
+          ".txt"
+        ]
+      }
+    }
+  ]
+}
