@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.8 PWA - TRIP + Vector/Phasor đồng bộ VBS</title>
+<title>COMTRADE Offline Reader Pro V9.9.4 PWA - HTML động đồng bộ RMS/Peak</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -116,7 +116,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.8.0</h1>
+      <h1>COMTRADE Offline Reader Pro V9.9.0</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -290,6 +290,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
                   <button id="btnCursorNext">Mẫu sau ▶</button>
                   <button id="btnSwapCursors">Đảo A/B</button>
                   <button id="btnCursorToRange">Đưa khoảng xem tới A/B</button>
+                  <button id="btnCursorTripMc">Đưa A/B tới Trip-MC</button>
                 </div>
               </div>
               <div>
@@ -864,6 +865,26 @@ function focusPlotOnFault(r, switchToPlot=false){ if(!r||!state.data)return; con
 function runFaultAnalysis(silent=false){ try{ const r=analyzeFaultCore(); state.faultAnalysis=r; renderFaultAnalysis(); const didFocus=!silent && checked('faultAutoFocus'); if(didFocus) focusPlotOnFault(r,false); const st=$('faultResultStatus'); if(st){st.className='status '+(r.detected?'good':'warn'); st.textContent=(r.detected?'Đã phân tích xong: ':'Phân tích bằng vùng A/B: ')+r.type+' · pha '+(r.phases.join('-')||'chưa rõ')+' · thời gian '+fmt(r.duration*1000,6)+' ms'+(didFocus?'. Biểu đồ đã tập trung vào vùng sự cố.':'.');} return r; }catch(e){ state.faultAnalysis=null; renderFaultAnalysis(); const st=$('faultResultStatus'); if(st){st.className='status bad'; st.textContent='Lỗi phân tích sự cố: '+e.message;} if(!silent) alert('Lỗi phân tích sự cố: '+e.message); return null; } }
 function ensureFaultAnalysis(){ return state.faultAnalysis || runFaultAnalysis(true); }
 function setCursorsToFault(){ const r=ensureFaultAnalysis(); if(!r)return; setCursorIndex(r.startIndex,false,'A'); setCursorIndex(r.endIndex,true,'B'); setActiveCursor('A'); }
+
+function setCursorsToTripMc(){
+  const r=ensureFaultAnalysis(); const data=state.data;
+  if(!r||!data)return;
+  const tTrip = r.firstTrip && Number.isFinite(r.firstTrip.time) ? r.firstTrip.time : r.startTime;
+  const tMc = r.firstBreaker && Number.isFinite(r.firstBreaker.time) ? r.firstBreaker.time : (r.firstTrip ? r.endTime : r.endTime);
+  const iTrip = nearestIndexByTime(data.times, tTrip);
+  const iMc = nearestIndexByTime(data.times, tMc);
+  setCursorIndex(iTrip,false,'A');
+  setCursorIndex(iMc,true,'B');
+  setActiveCursor('A');
+  const t0=Math.min(data.times[iTrip],data.times[iMc]), t1=Math.max(data.times[iTrip],data.times[iMc]);
+  const span=Math.max(t1-t0, 1/Math.max(state.cfg?.frequency||50,1));
+  const pad=Math.max(span*0.8, 0.01);
+  if($('tStart')&&$('tEnd')){
+    $('tStart').value=Math.max(data.times[0], t0-pad).toFixed(6);
+    $('tEnd').value=Math.min(data.times[data.samples-1], t1+pad).toFixed(6);
+  }
+  drawAll(); renderCursorTable();
+}
 function zoomFaultWindow(){ const r=ensureFaultAnalysis(); if(!r||!state.data)return; const fr=faultFocusRange(r,'screen'); if(!fr)return; $('tStart').value=fr.t0.toFixed(6); $('tEnd').value=fr.t1.toFixed(6); setCursorsToFault(); drawAll(); renderCursorTable(); }
 function drawReportGrid(ctx,w,h,pad,t0,t1){ ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.strokeStyle='#d7dde8'; ctx.lineWidth=1; ctx.font='18px Arial'; ctx.fillStyle='#1f2937'; ctx.fillText(fmt(t0,6)+' s',pad.l,h-18); ctx.fillText(fmt(t1,6)+' s',w-pad.r-145,h-18); const W=w-pad.l-pad.r,H=h-pad.t-pad.b; ctx.strokeRect(pad.l,pad.t,W,H); for(let i=1;i<10;i++){ const x=pad.l+W*i/10; ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+H);ctx.stroke(); } }
 function reportX(t,t0,t1,pad,w){ return pad.l+(t-t0)/(t1-t0)*(w-pad.l-pad.r); }
@@ -961,6 +982,225 @@ function plainCell(v){ return stripHtml(v).replace(/\s+/g,' ').trim(); }
 function htmlReportTable(headers, rows){ return `<table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${esc(plainCell(c))}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
 function getCanvasImage(id){ try{ const c=$(id); return c&&c.width&&c.height?c.toDataURL('image/png'):''; }catch(e){ return ''; } }
 function faultSummaryRows(r){ const rows=[['Tên bộ file',state.activeBase||'comtrade'],['Trạm/thiết bị',(state.cfg?.station||'')+' / '+(state.cfg?.device||'')],['Revision nguồn',state.cfg?.rev||''],['Kiểu DAT đã đọc',state.data?.format||state.cfg?.datType||''],['Dạng sự cố',r.type],['Pha sự cố',r.phases.length?r.phases.join(', '):'chưa xác định'],['Độ tin cậy',r.confidence],['Bắt đầu',fmt(r.startTime,9)+' s · mẫu #'+(r.startIndex+1)],['Nặng nhất/peak',fmt(r.peakTime,9)+' s · mẫu #'+(r.peakIndex+1)],['Kết thúc',fmt(r.endTime,9)+' s · mẫu #'+(r.endIndex+1)],['Thời gian sự cố',fmt(r.duration,9)+' s = '+fmt(r.duration*1000,6)+' ms'],['Số mẫu sự cố',r.sampleDuration],['Tần số lưới',fmt(state.cfg?.frequency||50,3)+' Hz'],['Tần số lấy mẫu ước tính',fmt(r.rate,3)+' Hz']]; if(r.firstPickup) rows.push(['Pickup đầu tiên',fmt(r.firstPickup.time,9)+' s · '+r.firstPickup.channel]); if(r.firstTrip) rows.push(['Trip đầu tiên',fmt(r.firstTrip.time,9)+' s · '+r.firstTrip.channel]); if(r.firstBreaker) rows.push(['Máy cắt đổi trạng thái',fmt(r.firstBreaker.time,9)+' s · '+r.firstBreaker.channel]); if(r.firstTrip) rows.push(['Từ bắt đầu sự cố đến Trip',fmt((r.firstTrip.time-r.startTime)*1000,6)+' ms']); if(r.firstBreaker) rows.push(['Từ bắt đầu sự cố đến máy cắt',fmt((r.firstBreaker.time-r.startTime)*1000,6)+' ms']); if(r.firstTrip&&r.firstBreaker) rows.push(['Từ Trip đến máy cắt',fmt((r.firstBreaker.time-r.firstTrip.time)*1000,6)+' ms']); return rows; }
+
+function safeJsText(s){ return String(s??'').replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026'); }
+function roundForExport(v,d=6){ if(!Number.isFinite(v))return null; return Number(Number(v).toFixed(d)); }
+function seriesForInteractiveReport(r){
+  const cfg=state.cfg, data=state.data;
+  if(!cfg||!data||!data.times||!data.samples) return {times:[],analog:[],digital:[]};
+
+  // V9.9.2 FIX: data.times, data.analog[] va data.digital[] co the la TypedArray
+  // (Float64Array/Int8Array). JSON.stringify(TypedArray) se thanh object {0:...}
+  // thay vi mang [...], lam bao cao dong doc DATA.times.length = undefined va bao
+  // "Khong co du lieu bieu do". Vi vay phai ep sang Array thuong truoc khi nhung JSON.
+  const toNumArray=(arr,d=6)=>Array.from(arr||[], x=>roundForExport(Number(x),d));
+  const toBitArray=(arr)=>Array.from(arr||[], x=>x?1:0);
+
+  const roles=r.roles||findAnalogRoles();
+  const analogIdx=[];
+  const addA=i=>{ if(Number.isInteger(i)&&i>=0&&i<cfg.analogCount&&!analogIdx.includes(i)) analogIdx.push(i); };
+  for(const p of ['A','B','C','N']) addA(roles.I?.[p]);
+  for(const p of ['A','B','C','N']) addA(roles.V?.[p]);
+  for(const i of faultRelevantAnalogIndices(r)) addA(i);
+  const analog=analogIdx.slice(0,12).map(i=>{
+    const ch=cfg.analog[i]||{};
+    let role='';
+    for(const p of ['A','B','C','N']){ if(roles.I?.[p]===i)role='I'+p; if(roles.V?.[p]===i)role='V'+p; }
+    return {name:ch.id||('A'+(i+1)), unit:ch.unit||'', role, values:toNumArray(data.analog[i],6)};
+  });
+  const digitalIdx=[]; const addD=i=>{ if(Number.isInteger(i)&&i>=0&&i<cfg.digitalCount&&!digitalIdx.includes(i)) digitalIdx.push(i); };
+  for(const i of faultRelevantDigitalIndices(r)) addD(i);
+  const digital=digitalIdx.slice(0,20).map(i=>({name:(cfg.digital[i]?.id||('D'+(i+1))), values:toBitArray(data.digital[i])}));
+  return {times:toNumArray(data.times,9), analog, digital};
+}
+
+function buildInteractivePeakRows(r, pack){
+  const rows=[];
+  if(!r||!pack||!Array.isArray(pack.times)||!pack.times.length) return rows;
+  const times=pack.times;
+  const clampIdx=i=>Math.max(0,Math.min(times.length-1,Math.round(Number(i)||0)));
+  const idxAtTimeLocal=t=>{
+    t=Number(t); if(!Number.isFinite(t)) return 0;
+    let lo=0,hi=times.length-1;
+    while(lo<hi){const m=(lo+hi)>>1; if(times[m]<t)lo=m+1; else hi=m;}
+    if(lo>0 && Math.abs(times[lo-1]-t)<Math.abs(times[lo]-t)) return lo-1;
+    return lo;
+  };
+  const i0=Number.isInteger(r.startIndex)?clampIdx(r.startIndex):idxAtTimeLocal(r.startTime);
+  const i1=Number.isInteger(r.endIndex)?clampIdx(r.endIndex):idxAtTimeLocal(r.endTime);
+  const a0=Math.min(i0,i1), a1=Math.max(i0,i1);
+  const ip=Number.isInteger(r.peakIndex)?clampIdx(r.peakIndex):idxAtTimeLocal(r.peakTime);
+  for(const s of (pack.analog||[])){
+    const vals=Array.isArray(s.values)?s.values:[];
+    let min=Infinity,max=-Infinity,absMax=-Infinity,absIdx=ip;
+    for(let i=a0;i<=a1;i++){
+      const v=Number(vals[i]);
+      if(!Number.isFinite(v)) continue;
+      if(v<min) min=v;
+      if(v>max) max=v;
+      if(Math.abs(v)>absMax){absMax=Math.abs(v); absIdx=i;}
+    }
+    const vp=Number(vals[ip]);
+    rows.push([
+      s.role||s.name||'',
+      s.name||'',
+      s.unit||'',
+      Number.isFinite(times[ip])?fmt(times[ip],9):'',
+      Number.isFinite(vp)?fmt(vp,6):'',
+      Number.isFinite(min)?fmt(min,6):'',
+      Number.isFinite(max)?fmt(max,6):'',
+      Number.isFinite(absMax)?fmt(absMax,6):'',
+      Number.isFinite(times[absIdx])?fmt(times[absIdx],9):''
+    ]);
+  }
+  return rows;
+}
+
+function makeFaultInteractiveReportHtml(){
+  const r=ensureFaultAnalysis(); if(!r)return '';
+  if(typeof window.v99DynamicPrepareFaultReport==='function') window.v99DynamicPrepareFaultReport(r);
+  const pack=seriesForInteractiveReport(r);
+  const summaryRows=faultSummaryRows(r).map(row=>row.map(plainCell));
+  const valueHeaders=(r.v10ValueHeaders||['Thông số','Kênh','Trước sự cố RMS','Trong sự cố RMS/Min-Max','Sau sự cố RMS','Tỷ lệ','Đơn vị']).map(plainCell);
+  const valueRows=(r.v10ValueRows||r.valueRows||[]).map(row=>row.map(plainCell));
+  const timelineRows=(r.timeline||[]).map(x=>[fmt(x.time,9), plainCell(x.event), plainCell(x.channel||''), plainCell(x.detail||'')]);
+  const notes=(r.notes||[]).map(plainCell);
+  const peakRows=buildInteractivePeakRows(r,pack);
+  const payload={
+    title:'Báo cáo HTML động phân tích sự cố COMTRADE',
+    base:state.activeBase||'comtrade',
+    created:new Date().toLocaleString('vi-VN'),
+    times:pack.times,
+    analog:pack.analog,
+    digital:pack.digital,
+    summaryRows,
+    valueRows,
+    peakRows,
+    timelineRows,
+    notes,
+    valueHeaders,
+    measureMode:r.v10MeasureMode||'',
+    unitMode:r.v10UnitMode||'',
+    unitNote:r.v10UnitNote||'',
+    metricTitle:r.v10DynamicMetricTitle||'Thông số đỉnh / Peak',
+    metricHeaders:r.v10DynamicMetricHeaders||['Vai trò','Kênh','Đơn vị','t tại Peak','Giá trị tại Peak','Min vùng sự cố','Max vùng sự cố','|Đỉnh| lớn nhất','t |Đỉnh|'],
+    chartModeLabel:r.v10DynamicChartModeLabel||'',
+    markers:{
+      faultStart:roundForExport(r.startTime,9),
+      faultEnd:roundForExport(r.endTime,9),
+      peak:roundForExport(r.peakTime,9),
+      trip:r.firstTrip?roundForExport(r.firstTrip.time,9):null,
+      tripChannel:r.firstTrip?String(r.firstTrip.channel||''):'',
+      breaker:r.firstBreaker?roundForExport(r.firstBreaker.time,9):null,
+      breakerChannel:r.firstBreaker?String(r.firstBreaker.channel||''):''
+    }
+  };
+  const json=JSON.stringify(payload).replace(/<\//g,'<\\/');
+  return `<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(payload.title)} - ${esc(payload.base)}</title>
+<style>
+:root{--bg:#0b1020;--panel:#111a2f;--panel2:#17223b;--ink:#edf3ff;--muted:#a9b8d6;--line:#2d3d62;--accent:#59d0ff;--good:#5ee392;--warn:#ffd166;--bad:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,#16213d 0,#0b1020 42%,#070a13 100%);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45}
+main{max-width:1500px;margin:0 auto;padding:14px}.card{background:rgba(17,26,47,.94);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0;box-shadow:0 12px 36px rgba(0,0,0,.25)}h1{margin:0;font-size:23px}h2{margin:0 0 10px;font-size:18px}.muted{color:var(--muted);font-size:13px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+button{border:0;border-radius:11px;background:linear-gradient(180deg,#315078,#243455);color:var(--ink);padding:9px 12px;font-weight:700;cursor:pointer}button:hover{filter:brightness(1.1)}button.active{outline:2px solid var(--accent)}
+.grid{display:grid;grid-template-columns:1.3fr .7fr;gap:12px}.canvasBox{background:#061020;border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}canvas{display:block;width:100%;height:330px;background:#071427;border-radius:10px;cursor:crosshair}.digital{height:360px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid rgba(255,255,255,.10);padding:7px 8px;text-align:left;vertical-align:top}th{background:#16213d;position:sticky;top:0}.tableWrap{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:12px}.pill{display:inline-block;border:1px solid var(--line);background:#0e1a31;border-radius:999px;padding:4px 8px;margin:2px;color:var(--muted)}input[type=range]{width:100%}.readout{font-weight:800;color:white}.small{font-size:12px;color:var(--muted)}.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}canvas{height:280px}.digital{height:320px}}
+@media print{body{background:#fff;color:#111}main{max-width:none}.card{box-shadow:none;border-color:#ccc;background:#fff}button,.toolbar input{display:none}canvas{border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+  <h1>Báo cáo HTML động phân tích sự cố COMTRADE</h1>
+  <div class="muted">Bộ file: <b>${esc(payload.base)}</b> · Tạo lúc: ${esc(payload.created)}</div>
+  <div id="markerInfo" style="margin-top:8px"></div>
+  <div id="modeInfo" class="muted" style="margin-top:8px"></div>
+</div>
+<div class="card">
+  <h2>Kết luận và thông số sự cố</h2>
+  <div id="summaryTable" class="tableWrap"></div>
+</div>
+<div class="card"><h2 id="metricTitle">Thông số đỉnh / Peak</h2><div id="peakTable" class="tableWrap"></div></div>
+<div class="grid">
+  <section>
+    <div class="card">
+      <h2>Biểu đồ động</h2>
+      <div id="chartModeInfo" class="muted"></div>
+      <div class="toolbar">
+        <button id="btnAll">Toàn bộ</button>
+        <button id="btnFault">Vùng sự cố</button>
+        <button id="btnAB">Đưa khoảng xem tới A-B</button>
+        <button id="btnTripMc">Đưa A/B tới Trip-MC</button>
+        <button id="btnSwap">Đảo A/B</button>
+        <button id="btnA" class="active">Đặt A</button>
+        <button id="btnB">Đặt B</button>
+      </div>
+      <label class="small">Con trỏ A</label><input id="rangeA" type="range" min="0" max="0" step="1" value="0">
+      <div id="readA" class="readout"></div>
+      <label class="small">Con trỏ B</label><input id="rangeB" type="range" min="0" max="0" step="1" value="0">
+      <div id="readB" class="readout"></div>
+      <div id="delta" class="readout"></div>
+      <div class="canvasBox"><h2>Dòng điện</h2><canvas id="canI"></canvas></div>
+      <div class="canvasBox"><h2>Điện áp</h2><canvas id="canV"></canvas></div>
+      <div class="canvasBox"><h2>Tín hiệu Digital / TRIP / MC</h2><canvas id="canD" class="digital"></canvas></div>
+    </div>
+  </section>
+  <aside>
+    <div class="card"><h2>Bảng giá trị tại A/B</h2><div id="cursorTable" class="tableWrap"></div></div>
+    <div class="card"><h2>Dòng thời gian tác động</h2><div id="timelineTable" class="tableWrap"></div></div>
+  </aside>
+</div>
+<div class="card"><h2>Giá trị các phần tử sự cố</h2><div id="valueTable" class="tableWrap"></div></div>
+<div class="card"><h2>Ghi chú phân tích</h2><div id="notes"></div></div>
+</main>
+<script id="payload" type="application/json">${json}<\/script>
+<script>
+'use strict';
+const DATA=JSON.parse(document.getElementById('payload').textContent);
+const $=id=>document.getElementById(id);
+const COLORS=['#59d0ff','#5ee392','#ffd166','#ff6b6b','#b892ff','#ff9f1c','#2ec4b6','#e71d36','#a6e22e','#f92672','#66d9ef','#fd971f'];
+function normalizePayloadArray(x){
+  if(Array.isArray(x)) return x;
+  if(x && typeof x==='object'){
+    const keys=Object.keys(x).filter(k=>/^\d+$/.test(k)).sort((a,b)=>Number(a)-Number(b));
+    return keys.map(k=>x[k]);
+  }
+  return [];
+}
+const times=normalizePayloadArray(DATA.times); let a=0,b=Math.max(0,times.length-1), active='A', view={i0:0,i1:Math.max(0,times.length-1)};
+(DATA.analog||[]).forEach(s=>{s.values=normalizePayloadArray(s.values)});
+(DATA.digital||[]).forEach(s=>{s.values=normalizePayloadArray(s.values)});
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmt(v,d=6){if(v==null||!Number.isFinite(Number(v)))return ''; return Number(v).toLocaleString('vi-VN',{maximumFractionDigits:d});}
+function idxAtTime(t){let lo=0,hi=times.length-1;while(lo<hi){const m=(lo+hi)>>1;if(times[m]<t)lo=m+1;else hi=m;}if(lo>0&&Math.abs(times[lo-1]-t)<Math.abs(times[lo]-t))return lo-1;return lo;}
+function table(head,rows){return '<table><thead><tr>'+head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
+function clamp(i){return Math.max(0,Math.min(times.length-1,Math.round(i||0)));}
+function setCursors(ia,ib){a=clamp(ia);b=clamp(ib);$('rangeA').value=a;$('rangeB').value=b;drawAll();}
+function setView(i0,i1,padFrac=.08){i0=clamp(i0);i1=clamp(i1);if(i1<i0)[i0,i1]=[i1,i0];let pad=Math.max(2,Math.round((i1-i0)*padFrac));view.i0=clamp(i0-pad);view.i1=clamp(i1+pad);drawAll();}
+function setViewTime(t0,t1,padFrac=.12){setView(idxAtTime(t0),idxAtTime(t1),padFrac);}
+function setTripMc(){const m=DATA.markers||{}; const ia=m.trip!=null?idxAtTime(m.trip):idxAtTime(m.faultStart); const ib=m.breaker!=null?idxAtTime(m.breaker):idxAtTime(m.faultEnd); setCursors(ia,ib); setView(ia,ib,.8);}
+function resizeCanvas(c){const r=c.getBoundingClientRect();const ratio=window.devicePixelRatio||1;c.width=Math.max(300,Math.round(r.width*ratio));c.height=Math.max(180,Math.round(r.height*ratio));const ctx=c.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);return {ctx,w:r.width,h:r.height};}
+function drawAxes(ctx,w,h,pad,t0,t1){ctx.clearRect(0,0,w,h);ctx.fillStyle='#071427';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#2d3d62';ctx.lineWidth=1;const W=w-pad.l-pad.r,H=h-pad.t-pad.b;ctx.strokeRect(pad.l,pad.t,W,H);ctx.fillStyle='#a9b8d6';ctx.font='12px Arial';for(let k=0;k<=5;k++){const x=pad.l+W*k/5;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+H);ctx.stroke();const t=t0+(t1-t0)*k/5;ctx.fillText(fmt(t,6),x-22,h-8);} }
+function xOf(i,w,pad){return pad.l+(i-view.i0)/Math.max(1,view.i1-view.i0)*(w-pad.l-pad.r);}
+function drawMarkers(ctx,w,h,pad){const marks=[['START',DATA.markers.faultStart,'#ffd166'],['END',DATA.markers.faultEnd,'#ffd166'],['TRIP',DATA.markers.trip,'#ff6b6b'],['MC',DATA.markers.breaker,'#5ee392']];ctx.font='12px Arial';for(const [lab,t,col] of marks){if(t==null)continue;const i=idxAtTime(t);if(i<view.i0||i>view.i1)continue;const x=xOf(i,w,pad);ctx.strokeStyle=col;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,h-pad.b);ctx.stroke();ctx.fillStyle=col;ctx.fillText(lab,x+3,pad.t+13);}}
+function drawAnalog(canvas,seriesFilter){const c=$(canvas);const {ctx,w,h}=resizeCanvas(c);const pad={l:54,r:18,t:18,b:30};const list=DATA.analog.filter(seriesFilter);const vals=[];for(const s of list)for(let i=view.i0;i<=view.i1;i++){const v=s.values[i];if(Number.isFinite(v))vals.push(v);}let min=Math.min(...vals),max=Math.max(...vals);if(!vals.length){min=0;max=1}if(min===max){min-=1;max+=1}drawAxes(ctx,w,h,pad,times[view.i0],times[view.i1]);ctx.fillStyle='#a9b8d6';ctx.fillText(fmt(max,3),6,pad.t+8);ctx.fillText(fmt(min,3),6,h-pad.b);list.forEach((s,si)=>{ctx.strokeStyle=COLORS[si%COLORS.length];ctx.lineWidth=1.4;ctx.beginPath();let started=false;for(let i=view.i0;i<=view.i1;i++){const v=s.values[i];if(!Number.isFinite(v))continue;const x=xOf(i,w,pad);const y=pad.t+(max-v)/(max-min)*(h-pad.t-pad.b);if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);}ctx.stroke();ctx.fillStyle=COLORS[si%COLORS.length];ctx.fillText(s.role||s.name, pad.l+8, pad.t+15+si*15);});drawMarkers(ctx,w,h,pad);drawCursorLines(ctx,w,h,pad);}
+function drawCursorLines(ctx,w,h,pad){for(const [idx,col,lab] of [[a,'#fff','A'],[b,'#59d0ff','B']]){if(idx<view.i0||idx>view.i1)continue;const x=xOf(idx,w,pad);ctx.strokeStyle=col;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,h-pad.b);ctx.stroke();ctx.fillStyle=col;ctx.fillText(lab,x+3,h-pad.b-6);}}
+function drawDigital(){const c=$('canD');const {ctx,w,h}=resizeCanvas(c);const pad={l:160,r:18,t:18,b:30};drawAxes(ctx,w,h,pad,times[view.i0],times[view.i1]);const lanes=DATA.digital||[];const H=h-pad.t-pad.b;ctx.font='12px Arial';lanes.forEach((s,li)=>{const y0=pad.t+(li+.5)*H/Math.max(1,lanes.length), amp=Math.min(12,H/Math.max(1,lanes.length)*.35);ctx.fillStyle='#a9b8d6';ctx.fillText(s.name,8,y0+4);ctx.strokeStyle=COLORS[li%COLORS.length];ctx.lineWidth=1.6;ctx.beginPath();let started=false;for(let i=view.i0;i<=view.i1;i++){const y=y0-(s.values[i]?amp:-amp);const x=xOf(i,w,pad);if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);}ctx.stroke();});drawMarkers(ctx,w,h,pad);drawCursorLines(ctx,w,h,pad);}
+function canvasClick(e){const rect=e.currentTarget.getBoundingClientRect();const x=e.clientX-rect.left;const pad={l:e.currentTarget.id==='canD'?160:54,r:18,t:18,b:30};const frac=(x-pad.l)/Math.max(1,rect.width-pad.l-pad.r);const idx=clamp(view.i0+frac*(view.i1-view.i0)); if(active==='B')b=idx;else a=idx;drawAll();}
+function readout(){const ta=times[a],tb=times[b];$('readA').textContent='A = mẫu '+(a+1)+' · t = '+fmt(ta,9)+' s';$('readB').textContent='B = mẫu '+(b+1)+' · t = '+fmt(tb,9)+' s';$('delta').textContent='Δt(B-A) = '+fmt((tb-ta)*1000,6)+' ms';$('rangeA').value=a;$('rangeB').value=b;}
+function cursorTable(){const rows=[];rows.push(['Thời gian','s',fmt(times[a],9),fmt(times[b],9),fmt(times[b]-times[a],9)]);for(const s of DATA.analog){const va=s.values[a],vb=s.values[b];rows.push([s.role||s.name,s.unit||'',fmt(va,6),fmt(vb,6),fmt((vb??0)-(va??0),6)]);}for(const s of DATA.digital){rows.push([s.name,'digital',s.values[a],s.values[b],s.values[a]===s.values[b]?'không đổi':'đổi trạng thái']);}$('cursorTable').innerHTML=table(['Kênh','Đơn vị','A','B','B-A / nhận xét'],rows);}
+function drawAll(){if(!times.length)return;view.i0=clamp(view.i0);view.i1=clamp(view.i1);if(view.i1<=view.i0)view.i1=clamp(view.i0+1);drawAnalog('canI',s=>String(s.role||s.name).startsWith('I')||/\\bI[A-CN]|\\bI[E0G]/i.test(s.name));drawAnalog('canV',s=>String(s.role||s.name).startsWith('V')||/[UV][ABC]/i.test(s.name));drawDigital();readout();cursorTable();}
+function init(){if(!times.length){document.body.innerHTML='<main><div class="card">Không có dữ liệu biểu đồ trong báo cáo HTML.</div></main>';return;}$('rangeA').max=$('rangeB').max=times.length-1;const m=DATA.markers||{};a=m.trip!=null?idxAtTime(m.trip):idxAtTime(m.faultStart??times[0]);b=m.breaker!=null?idxAtTime(m.breaker):idxAtTime(m.faultEnd??times[times.length-1]);view={i0:0,i1:times.length-1};$('summaryTable').innerHTML=table(['Mục','Giá trị'],DATA.summaryRows||[]);$('valueTable').innerHTML=table(DATA.valueHeaders||['Thông số','Kênh','Trước sự cố','Trong sự cố','Sau sự cố','Tỷ lệ','Đơn vị'],DATA.valueRows||[]);$('metricTitle').textContent=DATA.metricTitle||'Thông số theo chế độ';$('peakTable').innerHTML=table(DATA.metricHeaders||['Vai trò','Kênh','Đơn vị','t','Giá trị','Min','Max','|Đỉnh|','t |Đỉnh|'],DATA.peakRows||[]);$('timelineTable').innerHTML=table(['t (s)','Sự kiện','Kênh','Chi tiết'],DATA.timelineRows||[]);$('notes').innerHTML='<ul>'+((DATA.notes||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>Không có ghi chú.</li>')+'</ul>';$('markerInfo').innerHTML=['FaultStart: '+fmt(m.faultStart,9)+' s','Trip: '+(m.trip!=null?fmt(m.trip,9)+' s · '+esc(m.tripChannel):'không thấy'),'MC Open/52a-52b: '+(m.breaker!=null?fmt(m.breaker,9)+' s · '+esc(m.breakerChannel):'không thấy')].map(x=>'<span class="pill">'+x+'</span>').join('');$('modeInfo').textContent=DATA.unitNote||'';$('chartModeInfo').textContent=DATA.chartModeLabel||DATA.unitNote||'';for(const id of ['canI','canV','canD'])$(id).addEventListener('click',canvasClick);$('rangeA').oninput=e=>{a=clamp(e.target.value);drawAll()};$('rangeB').oninput=e=>{b=clamp(e.target.value);drawAll()};$('btnA').onclick=()=>{active='A';$('btnA').classList.add('active');$('btnB').classList.remove('active')};$('btnB').onclick=()=>{active='B';$('btnB').classList.add('active');$('btnA').classList.remove('active')};$('btnSwap').onclick=()=>{[a,b]=[b,a];drawAll()};$('btnAll').onclick=()=>{view={i0:0,i1:times.length-1};drawAll()};$('btnFault').onclick=()=>{setViewTime(m.faultStart??times[0],m.faultEnd??times[times.length-1],.25)};$('btnAB').onclick=()=>setView(a,b,.15);$('btnTripMc').onclick=setTripMc;window.addEventListener('resize',()=>setTimeout(drawAll,80));drawAll();}
+init();
+<\/script>
+</body></html>`;
+}
+
 function makeFaultReportHtml(){ const r=ensureFaultAnalysis(); if(!r)return ''; const analogImg=renderFaultAnalogReportImage(r), digitalImg=renderFaultDigitalReportImage(r); const fr=faultFocusRange(r,'report'); const now=new Date().toLocaleString('vi-VN'); const summary=htmlReportTable(['Mục','Giá trị'], faultSummaryRows(r)); const values=r.valueRows.length?htmlReportTable(['Thông số','Kênh','Trước sự cố RMS','Trong sự cố RMS/Min-Max','Sau sự cố RMS','Tỷ lệ','Đơn vị'], r.valueRows):'<p>Chưa có bảng giá trị.</p>'; const timeline=htmlReportTable(['t (s)','Sự kiện','Kênh','Chi tiết'], r.timeline.map(x=>[fmt(x.time,9),x.event,x.channel||'',x.detail||''])); const notes=(r.notes||[]).map(x=>`<li>${esc(x)}</li>`).join(''); const title=`Báo cáo phân tích sự cố COMTRADE - ${state.activeBase||'comtrade'}`; const focusText=fr?`${fmt(fr.t0,6)} s → ${fmt(fr.t1,6)} s`:'vùng sự cố'; return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>body{font-family:Arial,system-ui,sans-serif;margin:18px;color:#111;line-height:1.45}h1{font-size:23px;margin:0 0 6px}h2{font-size:18px;margin:22px 0 8px;border-bottom:2px solid #ddd;padding-bottom:4px}.muted{color:#666;font-size:13px}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eaf6ff;border:1px solid #b5def7;font-weight:700;margin:4px 6px 4px 0}table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0 12px}th,td{border:1px solid #ccc;padding:7px 8px;text-align:left;vertical-align:top}th{background:#f0f3f7}.imgbox{border:1px solid #bbb;border-radius:10px;padding:10px;margin:10px 0 18px;background:#fff;break-inside:avoid;overflow:auto}.imgbox b{display:block;margin-bottom:8px}.imgbox img{width:100%;min-width:980px;max-width:none;display:block;border:1px solid #e5e7eb;border-radius:6px}.imgbox a{display:block}.zoomnote{font-size:12px;color:#555;margin:4px 0 8px}pre{white-space:pre-wrap;background:#f7f7f7;border:1px solid #ddd;padding:10px;border-radius:8px}.note{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;margin:10px 0;font-size:13px}@media screen{body{max-width:1400px;margin:18px auto}}@media print{button{display:none}body{margin:8mm;max-width:none}.imgbox{page-break-inside:avoid;break-inside:avoid}table{break-inside:auto}tr{break-inside:avoid}.imgbox img{width:100%}}
 
 /* V9.4: bảng thống kê có dòng/áp, nút xem/sửa, và báo cáo HTML có phân tích máy cắt */
@@ -971,8 +1211,32 @@ function makeFaultReportHtml(){ const r=ensureFaultAnalysis(); if(!r)return ''; 
 
 </style></head><body><button onclick="window.print()">In / lưu PDF</button><h1>${esc(title)}</h1><div class="muted">Tạo lúc: ${esc(now)} · Báo cáo HTML offline, mở được bằng trình duyệt trên điện thoại hoặc máy tính.</div><p><span class="badge">${esc(r.type)}</span><span class="badge">Pha: ${esc(r.phases.join('-')||'chưa rõ')}</span><span class="badge">Thời gian: ${esc(fmt(r.duration*1000,6))} ms</span><span class="badge">Độ tin cậy: ${esc(r.confidence)}</span></p><h2>Kết luận nhanh</h2>${summary}<h2>Giá trị các phần tử sự cố</h2>${values}<h2>Dòng thời gian tác động</h2>${timeline}<h2>Biểu đồ sóng tập trung vùng sự cố</h2><div class="note">Ảnh biểu đồ dưới đây được dựng riêng khi xuất báo cáo ở độ phân giải lớn, tự lấy vùng ${esc(focusText)}, có vùng tô vàng giữa START-END; các mốc START/END/PEAK/Pickup/Trip/Máy cắt được đặt theo từng hàng kênh để tránh chồng lấn.</div>${analogImg?`<div class="imgbox"><b>Analog waveform - vùng sự cố</b><div class="zoomnote">Bấm vào ảnh để mở đúng kích thước/zoom khi cần xem chi tiết.</div><a href="${analogImg}" target="_blank"><img src="${analogImg}"></a></div>`:''}${digitalImg?`<div class="imgbox"><b>Digital/status - vùng sự cố</b><div class="zoomnote">Bấm vào ảnh để mở đúng kích thước/zoom khi cần xem chi tiết.</div><a href="${digitalImg}" target="_blank"><img src="${digitalImg}"></a></div>`:''}<h2>Ghi chú phân tích</h2><ul>${notes}</ul><h2>Thông tin giải mã</h2><pre>${esc((state.data?.parserNotes||[]).concat(state.decoderNotes||[]).join('\n')||'Không có ghi chú giải mã.')}</pre></body></html>`; }
 function makeFaultReportText(){ const r=ensureFaultAnalysis(); if(!r)return ''; const lines=[]; lines.push('BÁO CÁO PHÂN TÍCH SỰ CỐ COMTRADE'); lines.push('Bộ file: '+(state.activeBase||'comtrade')); lines.push('Tạo lúc: '+new Date().toLocaleString('vi-VN')); lines.push(''); for(const row of faultSummaryRows(r)) lines.push(row[0]+': '+plainCell(row[1])); lines.push(''); lines.push('GIÁ TRỊ CÁC PHẦN TỬ SỰ CỐ'); lines.push(['Thông số','Kênh','Trước','Trong','Sau','Tỷ lệ','Đơn vị'].join('\t')); for(const x of r.valueRows) lines.push(x.map(plainCell).join('\t')); lines.push(''); lines.push('DÒNG THỜI GIAN TÁC ĐỘNG'); lines.push(['t(s)','Sự kiện','Kênh','Chi tiết'].join('\t')); for(const x of r.timeline) lines.push([fmt(x.time,9),x.event,x.channel||'',x.detail||''].map(plainCell).join('\t')); lines.push(''); lines.push('GHI CHÚ'); lines.push(...(r.notes||[])); return lines.join('\n'); }
-function exportFaultHtml(){ const html=makeFaultReportHtml(); if(html) downloadText((state.activeBase||'comtrade')+'_fault_report.html', html, 'text/html;charset=utf-8'); }
-function openFaultHtml(){ const html=makeFaultReportHtml(); if(!html)return; const blob=new Blob([html],{type:'text/html;charset=utf-8'}); const url=URL.createObjectURL(blob); const w=window.open(url,'_blank'); if(!w){ downloadText((state.activeBase||'comtrade')+'_fault_report.html', html, 'text/html;charset=utf-8'); alert('Trình duyệt chặn cửa sổ mới, đã tải báo cáo HTML thay thế.'); } setTimeout(()=>URL.revokeObjectURL(url),60000); }
+function exportFaultHtml(){
+  const r=ensureFaultAnalysis(); if(!r)return;
+  const html=makeFaultReportHtml();
+  if(html) downloadText((state.activeBase||'comtrade')+'_fault_report_tinh.html', html, 'text/html;charset=utf-8');
+}
+function openFaultHtml(){
+  const r=ensureFaultAnalysis(); if(!r)return;
+  const html=makeFaultReportHtml(); if(!html)return;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'}); const url=URL.createObjectURL(blob); const w=window.open(url,'_blank');
+  if(!w){ downloadText((state.activeBase||'comtrade')+'_fault_report_tinh.html', html, 'text/html;charset=utf-8'); alert('Trình duyệt chặn cửa sổ mới, đã tải báo cáo HTML tĩnh thay thế.'); }
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+function exportFaultDynamicHtml(){
+  const r=ensureFaultAnalysis(); if(!r)return;
+  const pack=seriesForInteractiveReport(r);
+  if(!pack.times.length){ alert('Chưa có dữ liệu sóng để xuất HTML động. Hãy nạp CFG/DAT và đọc xong bản ghi trước khi xuất.'); return; }
+  const html=makeFaultInteractiveReportHtml(); if(html) downloadText((state.activeBase||'comtrade')+'_fault_report_dong.html', html, 'text/html;charset=utf-8');
+}
+function openFaultDynamicHtml(){
+  const r=ensureFaultAnalysis(); if(!r)return;
+  const pack=seriesForInteractiveReport(r);
+  if(!pack.times.length){ alert('Chưa có dữ liệu sóng để mở HTML động. Hãy nạp CFG/DAT và đọc xong bản ghi trước khi mở báo cáo.'); return; }
+  const html=makeFaultInteractiveReportHtml(); if(!html)return; const blob=new Blob([html],{type:'text/html;charset=utf-8'}); const url=URL.createObjectURL(blob); const w=window.open(url,'_blank');
+  if(!w){ downloadText((state.activeBase||'comtrade')+'_fault_report_dong.html', html, 'text/html;charset=utf-8'); alert('Trình duyệt chặn cửa sổ mới, đã tải báo cáo HTML động thay thế.'); }
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
 function exportFaultTxt(){ const txt=makeFaultReportText(); if(txt) downloadText((state.activeBase||'comtrade')+'_fault_report.txt', txt, 'text/plain;charset=utf-8'); }
 function applyViewMode(mode){ mode=['auto','mobile','desktop'].includes(mode)?mode:'auto'; document.body.classList.toggle('view-mobile',mode==='mobile'); document.body.classList.toggle('view-desktop',mode==='desktop'); const vp=document.querySelector('meta[name="viewport"]'); if(vp) vp.setAttribute('content', mode==='desktop'?'width=1220, initial-scale=1, viewport-fit=cover':'width=device-width, initial-scale=1, viewport-fit=cover'); localStorage.setItem('comtradeViewMode',mode); const msg=mode==='mobile'?'Đang ép giao diện điện thoại.':mode==='desktop'?'Đang ép giao diện máy tính.':'Đang dùng giao diện tự động theo kích thước màn hình.'; const st=$('viewModeStatus'); if(st) st.textContent=msg; ['Auto','Mobile','Desktop'].forEach(x=>{ const b=$('btnView'+x); if(b)b.classList.toggle('view-mode-active',x.toLowerCase()===mode); }); setTimeout(drawAll,120); }
 function initViewMode(){ applyViewMode(localStorage.getItem('comtradeViewMode')||'auto'); const a=$('btnViewAuto'), m=$('btnViewMobile'), d=$('btnViewDesktop'); if(a)a.onclick=()=>applyViewMode('auto'); if(m)m.onclick=()=>applyViewMode('mobile'); if(d)d.onclick=()=>applyViewMode('desktop'); }
@@ -1048,7 +1312,7 @@ function setSidebarCollapsed(collapsed){
 function toggleSidebar(){ setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed')); }
 function initSidebarMode(){ setSidebarCollapsed(localStorage.getItem('comtradeSidebarCollapsed')==='1'); const top=$('btnToggleSidebar'); if(top) top.onclick=toggleSidebar; const fl=$('btnFloatingSidebar'); if(fl) fl.onclick=toggleSidebar; }
 function bind(){ $('btnPickFiles').onclick=()=>$('fileInput').click(); $('btnPickFolder').onclick=()=>$('folderInput').click(); $('fileInput').onchange=e=>handleFiles(e.target.files); $('folderInput').onchange=e=>handleFiles(e.target.files); const drop=$('drop'); ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');})); ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');})); drop.addEventListener('drop',e=>handleFiles(e.dataTransfer.files)); document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-'+t.dataset.tab).classList.add('active'); setTimeout(drawAll,60);});
-  $('btnAFirst6').onclick=()=>selectA('first'); $('btnAAll').onclick=()=>selectA('all'); $('btnAClear').onclick=()=>selectA('clear'); $('btnDFirst12').onclick=()=>selectD('first'); $('btnDAll').onclick=()=>selectD('all'); $('btnDClear').onclick=()=>selectD('clear'); $('btnFullRange').onclick=()=>{setFullTimeInputs();drawAll();}; $('btnDraw').onclick=()=>{drawAll();renderCursorTable();}; $('btnFaultFocusPlot').onclick=()=>{ const r=ensureFaultAnalysis(); if(r)focusPlotOnFault(r,false); }; $('btnWindowCursor').onclick=()=>{ const d=state.data;if(!d)return; const t=d.times[getActiveCursorIndex()]; const dur=d.times[d.samples-1]-d.times[0]; const w=Math.max(dur/50,0.02); $('tStart').value=(t-w/2).toFixed(6); $('tEnd').value=(t+w/2).toFixed(6); drawAll();}; $('btnCursorToRange').onclick=()=>{ const d=state.data;if(!d)return; const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB); const t0=Math.min(d.times[ia],d.times[ib]), t1=Math.max(d.times[ia],d.times[ib]); const pad=Math.max((t1-t0)*0.15, (d.times[d.samples-1]-d.times[0])/100, 0.005); $('tStart').value=(t0-pad).toFixed(6); $('tEnd').value=(t1+pad).toFixed(6); drawAll(); }; $('normalizePlot').onchange=drawAll;
+  $('btnAFirst6').onclick=()=>selectA('first'); $('btnAAll').onclick=()=>selectA('all'); $('btnAClear').onclick=()=>selectA('clear'); $('btnDFirst12').onclick=()=>selectD('first'); $('btnDAll').onclick=()=>selectD('all'); $('btnDClear').onclick=()=>selectD('clear'); $('btnFullRange').onclick=()=>{setFullTimeInputs();drawAll();}; $('btnDraw').onclick=()=>{drawAll();renderCursorTable();}; $('btnFaultFocusPlot').onclick=()=>{ const r=ensureFaultAnalysis(); if(r)focusPlotOnFault(r,false); }; $('btnWindowCursor').onclick=()=>{ const d=state.data;if(!d)return; const t=d.times[getActiveCursorIndex()]; const dur=d.times[d.samples-1]-d.times[0]; const w=Math.max(dur/50,0.02); $('tStart').value=(t-w/2).toFixed(6); $('tEnd').value=(t+w/2).toFixed(6); drawAll();}; $('btnCursorToRange').onclick=()=>{ const d=state.data;if(!d)return; const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB); const t0=Math.min(d.times[ia],d.times[ib]), t1=Math.max(d.times[ia],d.times[ib]); const pad=Math.max((t1-t0)*0.15, (d.times[d.samples-1]-d.times[0])/100, 0.005); $('tStart').value=(t0-pad).toFixed(6); $('tEnd').value=(t1+pad).toFixed(6); drawAll(); }; const ctm=$('btnCursorTripMc'); if(ctm)ctm.onclick=setCursorsToTripMc; $('normalizePlot').onchange=drawAll;
   ['datProfile','endianMode','bitOrder','timestampUnit','datTypeOverride','preferTimestamp'].forEach(id=>$(id).onchange=()=>state.activeBase&&loadGroup(state.activeBase)); $('cursorRangeA').oninput=e=>setCursorIndex(+e.target.value, checked('autoDraw'), 'A'); $('cursorRangeB').oninput=e=>setCursorIndex(+e.target.value, checked('autoDraw'), 'B'); $('cursorSelectedOnly').onchange=renderCursorTable; $('btnActiveA').onclick=()=>setActiveCursor('A'); $('btnActiveB').onclick=()=>setActiveCursor('B'); $('btnCursorPrev').onclick=()=>setCursorIndex(getActiveCursorIndex()-1); $('btnCursorNext').onclick=()=>setCursorIndex(getActiveCursorIndex()+1); $('btnSwapCursors').onclick=()=>{ const t=state.cursorA; state.cursorA=state.cursorB; state.cursorB=t; setupCursor(); renderCursorTable(); drawAll(); }; $('analogCanvas').onclick=e=>canvasClickToCursor($('analogCanvas'),e); $('digitalCanvas').onclick=e=>canvasClickToCursor($('digitalCanvas'),e);
   $('logSelect').onchange=showLog; $('logSearch').oninput=showLog; $('btnCsvSelected').onclick=()=>exportCsv('selected'); $('btnCsvAllAnalog').onclick=()=>exportCsv('allA'); $('btnCsvCursor').onclick=()=>exportCsv('cursor'); $('btnJsonSummary').onclick=exportJsonSummary; $('btnConvertDownload').onclick=downloadConverted; $('btnPreviewCfg').onclick=previewConvertedCfg; $('btnDownloadConvertedDat').onclick=downloadConvertedDatOnly; ['targetRevision','targetDatType','targetPackage','targetEndian','targetTsUnit','targetDigitalAscii','targetRateMode'].forEach(id=>$(id).onchange=()=>{state.converted=null;}); $('btnPrint').onclick=()=>window.print(); $('btnDemo').onclick=makeDemo; $('btnDemoCff').onclick=makeDemoCff; $('btnFaultAnalyze').onclick=()=>runFaultAnalysis(false); $('btnFaultSetCursors').onclick=setCursorsToFault; $('btnFaultZoom').onclick=zoomFaultWindow; $('btnFaultOpenFocusedPlot').onclick=openFaultFocusedPlot; $('btnFaultExportPng').onclick=exportFaultFocusedPng; $('btnFaultExportJson').onclick=exportFaultJson; $('btnFaultExportCsv').onclick=exportFaultCsv; $('btnFaultExportHtml').onclick=exportFaultHtml; $('btnFaultOpenHtml').onclick=openFaultHtml; $('btnFaultExportTxt').onclick=exportFaultTxt; const fh2=$('btnExportFaultHtml2'); if(fh2)fh2.onclick=exportFaultHtml; const oh2=$('btnOpenFaultHtml2'); if(oh2)oh2.onclick=openFaultHtml; ['faultCurrentFactor','faultCurrentAbs','faultVoltageDrop','faultMinMs','faultPreMs','faultPostMs','faultDigitalPickup','faultDigitalTrip','faultDigitalBreaker'].forEach(id=>$(id).onchange=()=>{state.faultAnalysis=null; renderFaultAnalysis();}); ['faultAutoFocus','faultAutoSelectChannels'].forEach(id=>{ const e=$(id); if(e)e.onchange=()=>{ if(state.faultAnalysis&&id==='faultAutoSelectChannels')focusPlotOnFault(state.faultAnalysis,false); }; }); window.addEventListener('resize',()=>setTimeout(drawAll,100)); }
 
@@ -2216,6 +2480,73 @@ initSidebarMode();
     const prevAll=renderAll;
     renderAll=function(){ const ret=prevAll.apply(this,arguments); ensureControls(); bindStatsAndExport(); return ret; };
   }
+
+
+  // ===== V9.9.4 HOTFIX: HTML động đồng bộ chế độ RMS / Peak / RMS+Peak =====
+  function v994ToNumArray(arr,d){ return Array.from(arr||[], x=>roundForExport(Number(x),d==null?6:d)); }
+  function v994ToBitArray(arr){ return Array.from(arr||[], x=>x?1:0); }
+  function v994RoleForIndex(i,roles){
+    let role='';
+    for(const p of ['A','B','C','N']){ if(roles&&roles.I&&roles.I[p]===i) role='I'+p; if(roles&&roles.V&&roles.V[p]===i) role='V'+p; }
+    return role;
+  }
+  function v994KindForIndex(i,roles){
+    const role=v994RoleForIndex(i,roles); if(role.charAt(0)==='I') return 'I'; if(role.charAt(0)==='V') return 'V';
+    const ch=(state.cfg&&state.cfg.analog)?state.cfg.analog[i]:null; return isI(ch,'')?'I':(isV(ch,'')?'V':'');
+  }
+  function v994ConvertedSeriesValues(raw,ch,kind){ return v994ToNumArray(Array.from(raw||[], v=>convertValue(Number(v),ch,kind)),6); }
+  function v994RmsValues(raw,ch,kind,win){
+    let rms;
+    try{ rms=(typeof slidingRms==='function')?slidingRms(raw,win):raw; }catch(e){ rms=raw; }
+    return v994ToNumArray(Array.from(rms||[], v=>convertValue(Number(v),ch,kind)),6);
+  }
+  function v994BuildDynamicPack(r){
+    const cfg=state.cfg, data=state.data;
+    if(!cfg||!data||!data.times||!data.samples) return {times:[],analog:[],digital:[]};
+    const roles=r.roles||((typeof findAnalogRoles==='function')?findAnalogRoles():{});
+    const analogIdx=[]; const addA=i=>{ if(Number.isInteger(i)&&i>=0&&i<cfg.analogCount&&!analogIdx.includes(i)) analogIdx.push(i); };
+    for(const p of ['A','B','C','N']) addA(roles.I&&roles.I[p]);
+    for(const p of ['A','B','C','N']) addA(roles.V&&roles.V[p]);
+    if(typeof faultRelevantAnalogIndices==='function') for(const i of faultRelevantAnalogIndices(r)) addA(i);
+    const meas=measureMode();
+    const rate=r.rate||((typeof estimateSampleRate==='function')?estimateSampleRate():1000);
+    const grid=(state.cfg&&Number(state.cfg.frequency))||50;
+    const win=Math.max(1,Math.round(rate/Math.max(1,grid)));
+    const analog=[];
+    analogIdx.slice(0,12).forEach(i=>{
+      const ch=cfg.analog[i]||{}, kind=v994KindForIndex(i,roles); if(!kind) return;
+      const baseRole=v994RoleForIndex(i,roles)||((kind==='I'?'I':'V')+(i+1));
+      const unit=unitFor(ch,kind), raw=data.analog[i];
+      if(meas==='rms'){
+        analog.push({name:(ch.id||('A'+(i+1)))+' · RMS', unit, role:baseRole+' RMS', values:v994RmsValues(raw,ch,kind,win), measure:'RMS'});
+      } else if(meas==='peak'){
+        analog.push({name:(ch.id||('A'+(i+1)))+' · Peak/tức thời', unit, role:baseRole+' Peak', values:v994ConvertedSeriesValues(raw,ch,kind), measure:'Peak'});
+      } else {
+        analog.push({name:(ch.id||('A'+(i+1)))+' · RMS', unit, role:baseRole+' RMS', values:v994RmsValues(raw,ch,kind,win), measure:'RMS'});
+        analog.push({name:(ch.id||('A'+(i+1)))+' · Peak/tức thời', unit, role:baseRole+' Peak', values:v994ConvertedSeriesValues(raw,ch,kind), measure:'Peak'});
+      }
+    });
+    const digitalIdx=[]; const addD=i=>{ if(Number.isInteger(i)&&i>=0&&i<cfg.digitalCount&&!digitalIdx.includes(i)) digitalIdx.push(i); };
+    if(typeof faultRelevantDigitalIndices==='function') for(const i of faultRelevantDigitalIndices(r)) addD(i);
+    const digital=digitalIdx.slice(0,20).map(i=>({name:(cfg.digital[i]&&cfg.digital[i].id)||('D'+(i+1)), values:v994ToBitArray(data.digital[i])}));
+    return {times:v994ToNumArray(data.times,9), analog, digital};
+  }
+  function v994MetricTitle(){ const m=measureMode(); return m==='rms'?'Thông số RMS trong vùng sự cố':(m==='peak'?'Thông số đỉnh / Peak trong vùng sự cố':'Thông số RMS + Peak trong vùng sự cố'); }
+  function v994MetricHeaders(){ const m=measureMode(); if(m==='rms') return ['Vai trò','Kênh','Đơn vị','t tại max RMS','RMS tại điểm nặng nhất','Min RMS vùng sự cố','Max RMS vùng sự cố','RMS lớn nhất','t RMS lớn nhất']; return ['Vai trò','Kênh','Đơn vị','t tại Peak','Giá trị tại Peak','Min vùng sự cố','Max vùng sự cố','|Đỉnh| lớn nhất','t |Đỉnh|']; }
+  function v994ChartModeLabel(){ const m=measureMode(); const unit=unitMode()==='secondary'?'thứ cấp a×raw+b':(unitMode()==='primary_raw'?'sơ cấp A/V':'sơ cấp kA/kV'); const mm=m==='rms'?'biểu đồ RMS trượt':(m==='peak'?'biểu đồ giá trị tức thời/Peak':'hiển thị song song RMS trượt và giá trị tức thời/Peak'); return 'Chế độ HTML động: '+mm+'; đơn vị '+unit+'.'; }
+  window.v99DynamicPrepareFaultReport=function(r){
+    if(!r) return r;
+    buildValueRows(r); buildSeqRows(r);
+    r.v10UnitNote=unitNote();
+    r.v10DynamicMetricTitle=v994MetricTitle();
+    r.v10DynamicMetricHeaders=v994MetricHeaders();
+    r.v10DynamicChartModeLabel=v994ChartModeLabel();
+    return r;
+  };
+  if(typeof seriesForInteractiveReport==='function'){
+    seriesForInteractiveReport=function(r){ try{ if(r) window.v99DynamicPrepareFaultReport(r); return v994BuildDynamicPack(r); }catch(e){ return {times:[],analog:[],digital:[]}; } };
+  }
+
   window.v97RefreshGlobalUnits=refreshAll;
   window.addEventListener('load',()=>{ setTimeout(()=>{ ensureControls(); refreshAll(); bindStatsAndExport(); },700); });
 })();
@@ -2375,6 +2706,29 @@ initSidebarMode();
     makeFaultReportText=function(){ const base=oldT.apply(this,arguments); const r=state.faultAnalysis||null; if(!r||!r.v98Version)return base; const lines=['','KẾT LUẬN THỐNG NHẤT V9.8 - TRIP + VECTOR']; summaryRows98(r).forEach(x=>lines.push(txt(x[0])+': '+txt(x[1]))); return base+'\n'+lines.join('\n'); };
   }
   window.v98ReanalyzeTripVector=function(){ const r=ensureFaultAnalysis(); if(r){ classifyTripVector(r); renderFaultAnalysis(); } return r; };
+})();
+
+
+/* V9.9.3: khôi phục xuất/xem HTML tĩnh và thêm xuất/xem HTML động riêng */
+(function(){
+  function byId(id){return document.getElementById(id);}
+  function addBtnAfter(afterId,id,text,handler){
+    const after=byId(afterId); if(!after||byId(id)) return;
+    const b=document.createElement('button'); b.id=id; b.type='button'; b.textContent=text; b.onclick=handler;
+    after.insertAdjacentElement('afterend', b);
+  }
+  function wire993(){
+    const e1=byId('btnFaultExportHtml'); if(e1){e1.textContent='Xuất HTML tĩnh'; e1.onclick=exportFaultHtml;}
+    const o1=byId('btnFaultOpenHtml'); if(o1){o1.textContent='Mở HTML tĩnh'; o1.onclick=openFaultHtml;}
+    addBtnAfter('btnFaultOpenHtml','btnFaultOpenHtmlDynamic','Mở HTML động',openFaultDynamicHtml);
+    addBtnAfter('btnFaultOpenHtml','btnFaultExportHtmlDynamic','Xuất HTML động',exportFaultDynamicHtml);
+    const e2=byId('btnExportFaultHtml2'); if(e2){e2.textContent='Xuất báo cáo HTML tĩnh'; e2.onclick=exportFaultHtml;}
+    const o2=byId('btnOpenFaultHtml2'); if(o2){o2.textContent='Mở báo cáo HTML tĩnh'; o2.onclick=openFaultHtml;}
+    addBtnAfter('btnOpenFaultHtml2','btnOpenFaultHtmlDynamic2','Mở báo cáo HTML động',openFaultDynamicHtml);
+    addBtnAfter('btnOpenFaultHtml2','btnExportFaultHtmlDynamic2','Xuất báo cáo HTML động',exportFaultDynamicHtml);
+  }
+  if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', wire993); else wire993();
+  window.addEventListener('load', wire993);
 })();
 </script>
 
