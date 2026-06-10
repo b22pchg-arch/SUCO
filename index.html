@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.7 PWA - ABCN + Global CTPT + RMS/Peak</title>
+<title>COMTRADE Offline Reader Pro V9.8 PWA - TRIP + Vector/Phasor đồng bộ VBS</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -116,7 +116,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.5.2</h1>
+      <h1>COMTRADE Offline Reader Pro V9.8.0</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -325,7 +325,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
       <section id="page-fault" class="page">
         <div class="card">
           <h2>Công cụ phân tích sự cố</h2>
-          <p class="tiny">Công cụ này phân tích offline từ dữ liệu đã giải mã: tự nhận dạng kênh dòng/áp theo tên kênh và đơn vị, tính RMS trượt theo 1 chu kỳ, xác định thời điểm bắt đầu/kết thúc sự cố, pha sự cố, dòng/áp trong sự cố và các mốc digital như Pickup/Trip/Máy cắt.</p>
+          <p class="tiny">Công cụ này phân tích offline từ dữ liệu đã giải mã: tự nhận dạng kênh dòng/áp theo tên kênh và đơn vị, tính RMS trượt theo 1 chu kỳ, ưu tiên kênh Pickup/TRIP/Máy cắt, phân tích vector/góc pha/thành phần thứ tự để kết luận pha chính, pha liên quan và logic cắt 3 pha thống nhất với VBS V6.</p>
           <div class="grid four">
             <div><label>Ngưỡng tăng dòng RMS × trước sự cố</label><input id="faultCurrentFactor" type="number" step="0.1" value="2.0"></div>
             <div><label>Ngưỡng dòng tuyệt đối, 0 = tự động</label><input id="faultCurrentAbs" type="number" step="0.001" value="0"></div>
@@ -335,8 +335,8 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
           <div class="grid four" style="margin-top:10px">
             <div><label>Cửa sổ trước sự cố (ms)</label><input id="faultPreMs" type="number" step="1" value="200"></div>
             <div><label>Cửa sổ sau sự cố (ms)</label><input id="faultPostMs" type="number" step="1" value="200"></div>
-            <div><label>Từ khóa Pickup/Start</label><input id="faultDigitalPickup" type="text" value="PICKUP,START,50,51,67,21"></div>
-            <div><label>Từ khóa Trip/Máy cắt</label><input id="faultDigitalTrip" type="text" value="TRIP,OPERATE,SHOT,CUT"></div>
+            <div><label>Từ khóa Pickup/Start</label><input id="faultDigitalPickup" type="text" value="PICKUP,START,PU,Z1,Z2,Z3,50,51,67,21,OC,EF"></div>
+            <div><label>Từ khóa Trip/Máy cắt</label><input id="faultDigitalTrip" type="text" value="TRIP,OPERATE,SHOT,CUT,BO,COIL"></div>
           </div>
           <div class="grid two" style="margin-top:10px">
             <div><label>Từ khóa máy cắt mở</label><input id="faultDigitalBreaker" type="text" value="52A,52B,CB,MC,MAY CAT,MÁY CẮT,BREAKER,OPEN"></div>
@@ -2218,6 +2218,163 @@ initSidebarMode();
   }
   window.v97RefreshGlobalUnits=refreshAll;
   window.addEventListener('load',()=>{ setTimeout(()=>{ ensureControls(); refreshAll(); bindStatsAndExport(); },700); });
+})();
+</script>
+
+
+<script>
+// ===== V9.8 PATCH: đồng bộ logic VBS V6 - ưu tiên TRIP + vector/phasor =====
+(function(){
+  'use strict';
+  const V98_VERSION='V9.8.0-TRIP-FIRST-VECTOR-PHASOR-SYNC-VBS6';
+  window.COMTRADE_V98_VERSION=V98_VERSION;
+
+  function $v(id){ return document.getElementById(id); }
+  function nrm(s){ try{return normText(s);}catch(e){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();} }
+  function txt(s){ const d=document.createElement('textarea'); d.innerHTML=String(s==null?'':s).replace(/<[^>]*>/g,''); return d.value.trim(); }
+  function fmt98(v,d=6){ try{return fmt(v,d);}catch(e){ return Number.isFinite(Number(v))?Number(v).toLocaleString('vi-VN',{maximumFractionDigits:d}):''; } }
+  function esc98(s){ try{return esc(s);}catch(e){return String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c));} }
+  function addNote(r,msg){ r.notes=Array.isArray(r.notes)?r.notes:[]; if(!r.notes.some(x=>String(x)===msg)) r.notes.unshift(msg); }
+  function arrMax(a){ let v=-Infinity,idx=0; for(let i=0;i<a.length;i++){ const x=a[i]; if(Number.isFinite(x)&&x>v){v=x;idx=i;} } return {value:v,index:idx}; }
+  function avg(a,s,e){ let sum=0,c=0; s=Math.max(0,Math.round(s)); e=Math.min(a.length-1,Math.round(e)); for(let i=s;i<=e;i++){ const v=a[i]; if(Number.isFinite(v)){sum+=v;c++;} } return c?sum/c:NaN; }
+  function maxRange98(a,s,e){ let v=-Infinity,idx=s; s=Math.max(0,Math.round(s)); e=Math.min(a.length-1,Math.round(e)); for(let i=s;i<=e;i++){ const x=a[i]; if(Number.isFinite(x)&&x>v){v=x;idx=i;} } return {value:v,index:idx}; }
+  function minRange98(a,s,e){ let v=Infinity,idx=s; s=Math.max(0,Math.round(s)); e=Math.min(a.length-1,Math.round(e)); for(let i=s;i<=e;i++){ const x=a[i]; if(Number.isFinite(x)&&x<v){v=x;idx=i;} } return {value:v,index:idx}; }
+  function sampleRate98(){ try{ return estimateSampleRate(); }catch(e){ const cfg=state.cfg,data=state.data; if(cfg&&cfg.sampleRates&&cfg.sampleRates[0]&&cfg.sampleRates[0].rate>0)return cfg.sampleRates[0].rate; if(!data||data.samples<2)return 1000; const dt=(data.times[data.samples-1]-data.times[0])/Math.max(1,data.samples-1); return dt>0?1/dt:1000; } }
+  function samplesMs98(ms,rate,min=1){ return Math.max(min,Math.round((Number(ms)||0)*rate/1000)); }
+  function rms98(arr,win){ try{return slidingRms(arr,win);}catch(e){ const out=new Float64Array(arr.length); let sum=0,c=0; for(let i=0;i<arr.length;i++){ const v=arr[i]; if(Number.isFinite(v)){sum+=v*v;c++;} const j=i-win; if(j>=0&&Number.isFinite(arr[j])){sum-=arr[j]*arr[j];c--;} out[i]=c?Math.sqrt(Math.max(0,sum/c)):NaN; } return out; } }
+  function cmplx(re,im){return {re:Number(re)||0,im:Number(im)||0};}
+  function cadd(a,b){return cmplx(a.re+b.re,a.im+b.im);} function csub(a,b){return cmplx(a.re-b.re,a.im-b.im);} function cmul(a,b){return cmplx(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);} function cdivs(a,k){return cmplx(a.re/k,a.im/k);} function cmag(a){return Math.hypot(a.re,a.im);} function cang(a){return Math.atan2(a.im,a.re)*180/Math.PI;}
+
+  function digitalKind(name,type){
+    const s=nrm((type||'')+' '+(name||''));
+    if(/(BLOCK|LOCKOUT|KHOA|KHÓA|INHIBIT|86)/.test(s)) return 'block';
+    if(/(CB|BREAKER|MAY CAT|MÁY CẮT|52A|52B|BI1_|BI2_)/.test(s) && /(OPEN|CLOSE|MO|DONG|ĐÓNG|MỞ|52A|52B)/.test(s)) return 'breaker';
+    if(/(TRIP COIL|BO\d*[_ -]*TRIP|CUON CAT|CUỘN CẮT|TRIP COIL 1|TRIP COIL 2)/.test(s)) return 'coil';
+    if(/(GEN\.TRIP|GENERAL TRIP|TRIP[-_ ]?[ABC]|TRIP A|TRIP B|TRIP C)/.test(s)) return 'genTrip';
+    if(/\b(Z1|Z2|Z3|21|DIST|DISTANCE|OC|EF|50|51|67|87|DIF|SOTF|POTT|PUTT|DEF)\b.*\bTRIP\b/.test(s) || /\bTRIP\b.*\b(Z1|Z2|Z3|21|DIST|OC|EF|50|51|67|87|DIF|SOTF)\b/.test(s)) return 'elementTrip';
+    if(/\b(TRIP|OPERATE|SHOT|CUT)\b/.test(s)) return 'trip';
+    if(/\b(PICKUP|START|PU|PICK UP|Z1S PU|Z2S PU|Z3S PU|Z1G PU|Z2G PU|Z3G PU|OC\d* PU|EF\d* PU)\b/.test(s)) return 'pickup';
+    if(/(AR IN|RECLOSE|ARC READY|ARC VCHK|AUTO RECLOSE)/.test(s)) return 'reclose';
+    return '';
+  }
+  function eventRise(e){ return e && (e.to===1 || e.to==='1' || e.from===0 && e.to!==0); }
+  function phaseFromTripName(name){ const s=nrm(name||''); const out=[]; if(/(TRIP[-_ ]?A|GEN\.TRIP[-_ ]?A|\bPHA A\b|\bPHASE A\b)/.test(s))out.push('A'); if(/(TRIP[-_ ]?B|GEN\.TRIP[-_ ]?B|\bPHA B\b|\bPHASE B\b)/.test(s))out.push('B'); if(/(TRIP[-_ ]?C|GEN\.TRIP[-_ ]?C|\bPHA C\b|\bPHASE C\b)/.test(s))out.push('C'); return out; }
+  function elementLabel(name){ const s=nrm(name||''); if(/Z1/.test(s)) return /G/.test(s)?'Z1G':'Z1S'; if(/Z2/.test(s)) return /G/.test(s)?'Z2G':'Z2S'; if(/Z3/.test(s)) return /G/.test(s)?'Z3G':'Z3S'; if(/87|DIF|DIFF/.test(s)) return '87/DIF'; if(/SOTF/.test(s)) return 'SOTF'; if(/EF/.test(s)) return 'EF'; if(/OC|50|51/.test(s)) return 'OC/50/51'; if(/67/.test(s)) return '67'; if(/21|DIST/.test(s)) return '21/DIST'; return txt(name||'TRIP'); }
+
+  function collectDigitalTripFacts(r){
+    const ev=(r.digitalEvents||[]).slice().sort((a,b)=>a.time-b.time), facts={pickup:[],elementTrips:[],genTrips:[],coils:[],breakers:[],blocks:[],reclose:[],otherTrips:[],tripPhases:[],allRelevant:[]};
+    ev.forEach(e=>{ const k=digitalKind(e.channel,e.type); if(!k)return; if(['pickup','elementTrip','genTrip','coil','trip','breaker','block','reclose'].includes(k)) facts.allRelevant.push(Object.assign({kind:k},e)); if(k==='pickup'&&eventRise(e))facts.pickup.push(e); else if(k==='elementTrip'&&eventRise(e))facts.elementTrips.push(e); else if(k==='genTrip'&&eventRise(e)){facts.genTrips.push(e); phaseFromTripName(e.channel).forEach(p=>{ if(!facts.tripPhases.includes(p))facts.tripPhases.push(p); });} else if(k==='coil'&&eventRise(e))facts.coils.push(e); else if(k==='breaker')facts.breakers.push(e); else if(k==='block')facts.blocks.push(e); else if(k==='reclose')facts.reclose.push(e); else if(k==='trip'&&eventRise(e))facts.otherTrips.push(e); });
+    facts.firstPickup=facts.pickup[0]||r.firstPickup||null; facts.firstElementTrip=facts.elementTrips[0]||null; facts.firstGenTrip=facts.genTrips[0]||null; facts.firstCoil=facts.coils[0]||null; facts.firstTrip=facts.firstElementTrip||facts.firstGenTrip||facts.firstCoil||facts.otherTrips[0]||r.firstTrip||null;
+    facts.firstBreaker=facts.breakers.find(e=>/OPEN|52B|BI2|CB OPEN/i.test(e.channel||'') && (e.to===1||/CLOSE/i.test(e.channel||'')&&e.to===0)) || facts.breakers[0] || r.firstBreaker || null;
+    facts.elementNames=[...new Set(facts.elementTrips.map(e=>elementLabel(e.channel)))];
+    return facts;
+  }
+
+  function phasorAt98(arr,times,center,win,freq){
+    if(!arr||!times||!arr.length)return null; center=Math.max(0,Math.min(arr.length-1,Math.round(center||0))); win=Math.max(8,Math.round(win||16)); let s=Math.max(0,center-Math.floor(win/2)), e=Math.min(arr.length-1,s+win-1); if(e-s+1<8){ s=Math.max(0,center); e=Math.min(arr.length-1,s+win-1); }
+    const t0=times[s]||0; let re=0,im=0,cnt=0;
+    for(let i=s;i<=e;i++){ const v=Number(arr[i]); if(!Number.isFinite(v))continue; const th=2*Math.PI*freq*((times[i]||0)-t0); re+=v*Math.cos(th); im-=v*Math.sin(th); cnt++; }
+    if(cnt<8)return null; const scale=2/cnt; re*=scale; im*=scale; return {re,im,mag:Math.hypot(re,im)/Math.SQRT2,ang:Math.atan2(im,re)*180/Math.PI,start:s,end:e};
+  }
+  function seqFromABC(P){
+    if(!P||!P.A||!P.B||!P.C)return null; const a=cmplx(-0.5,Math.sqrt(3)/2), a2=cmplx(-0.5,-Math.sqrt(3)/2);
+    const A=cmplx(P.A.re,P.A.im), B=cmplx(P.B.re,P.B.im), C=cmplx(P.C.re,P.C.im);
+    const Z0=cdivs(cadd(cadd(A,B),C),3);
+    const Z1=cdivs(cadd(cadd(A,cmul(a,B)),cmul(a2,C)),3);
+    const Z2=cdivs(cadd(cadd(A,cmul(a2,B)),cmul(a,C)),3);
+    return {Z0,Z1,Z2,I0:cmag(Z0)/Math.SQRT2,I1:cmag(Z1)/Math.SQRT2,I2:cmag(Z2)/Math.SQRT2,A:P.A,B:P.B,C:P.C};
+  }
+
+  function computeVector98(r){
+    const cfg=state.cfg,data=state.data; if(!cfg||!data||!r)return null; const roles=r.roles||findAnalogRoles(); const rate=r.rate||sampleRate98(), freq=cfg.frequency||50, win=r.rmsWindowSamples||samplesMs98(1000/freq,rate,8);
+    const tripIdx=Number.isInteger(r.v98TripFacts?.firstTrip?.index)?r.v98TripFacts.firstTrip.index:null;
+    const center=Number.isInteger(tripIdx)?Math.max(r.startIndex,tripIdx-Math.floor(win/2)):Math.max(r.startIndex,Math.min(r.endIndex,r.startIndex+win));
+    const ph={I:{},V:{},seqI:null,seqV:null,centerIndex:center,windowSamples:win,freq,rate,rows:[]};
+    ['A','B','C'].forEach(p=>{ const ii=roles.I&&roles.I[p], vi=roles.V&&roles.V[p]; if(Number.isInteger(ii)&&data.analog[ii]) ph.I[p]=phasorAt98(data.analog[ii],data.times,center,win,freq); if(Number.isInteger(vi)&&data.analog[vi]) ph.V[p]=phasorAt98(data.analog[vi],data.times,center,win,freq); });
+    ph.seqI=seqFromABC(ph.I); ph.seqV=seqFromABC(ph.V);
+    const add=(label,group,mag,ang,ratio,note)=>ph.rows.push([label,group,fmt98(mag,6),fmt98(ang,2),ratio||'',note||'','']);
+    ['A','B','C'].forEach(p=>{ if(ph.I[p]) add('I'+p,(roles.I&&Number.isInteger(roles.I[p])&&cfg.analog[roles.I[p]]?cfg.analog[roles.I[p]].id:'I'+p),ph.I[p].mag,ph.I[p].ang,'','phasor RMS'); });
+    if(ph.seqI){ const den=Math.max(ph.seqI.I1,1e-12); add('I0','IA+IB+IC',ph.seqI.I0,cang(ph.seqI.Z0),fmt98(ph.seqI.I0/den,3),'I0/I1'); add('I1','IA+IB+IC',ph.seqI.I1,cang(ph.seqI.Z1),'1,000','thứ tự thuận'); add('I2','IA+IB+IC',ph.seqI.I2,cang(ph.seqI.Z2),fmt98(ph.seqI.I2/den,3),'I2/I1'); }
+    ['A','B','C'].forEach(p=>{ if(ph.V[p]) add('V'+p,(roles.V&&Number.isInteger(roles.V[p])&&cfg.analog[roles.V[p]]?cfg.analog[roles.V[p]].id:'V'+p),ph.V[p].mag,ph.V[p].ang,'','phasor RMS'); });
+    if(ph.seqV){ const den=Math.max(ph.seqV.I1,1e-12); add('V0','VA+VB+VC',ph.seqV.I0,cang(ph.seqV.Z0),fmt98(ph.seqV.I0/den,3),'V0/V1'); add('V1','VA+VB+VC',ph.seqV.I1,cang(ph.seqV.Z1),'1,000','thứ tự thuận'); add('V2','VA+VB+VC',ph.seqV.I2,cang(ph.seqV.Z2),fmt98(ph.seqV.I2/den,3),'V2/V1'); }
+    return ph;
+  }
+
+  function phaseStats98(r){
+    const cfg=state.cfg,data=state.data, roles=r.roles||findAnalogRoles(); const rate=r.rate||sampleRate98(), freq=cfg.frequency||50, win=r.rmsWindowSamples||samplesMs98(1000/freq,rate,8), opts=r.options||getFaultOptions();
+    const s=Math.max(0,r.startIndex||0), e=Math.min(data.samples-1,r.endIndex||s); const pre0=Math.max(0,s-samplesMs98(opts.preMs||200,rate,win)), pre1=Math.max(pre0,Math.min(data.samples-1,s-1)); const out=[];
+    ['A','B','C'].forEach(p=>{ const ii=roles.I&&roles.I[p], vi=roles.V&&roles.V[p]; const st={phase:p,Ipre:NaN,Ifault:NaN,Iratio:NaN,Vpre:NaN,Vfault:NaN,Vratio:NaN,Iidx:ii,Vidx:vi};
+      if(Number.isInteger(ii)&&data.analog[ii]){ const rr=rms98(data.analog[ii],win), m=maxRange98(rr,s,e); st.Ipre=avg(rr,pre0,pre1); st.Ifault=m.value; st.Iratio=m.value/Math.max(Math.abs(st.Ipre),1e-12); }
+      if(Number.isInteger(vi)&&data.analog[vi]){ const rv=rms98(data.analog[vi],win), m=minRange98(rv,s,e); st.Vpre=avg(rv,pre0,pre1); st.Vfault=m.value; st.Vratio=m.value/Math.max(Math.abs(st.Vpre),1e-12); }
+      out.push(st); }); return out;
+  }
+
+  function classifyTripVector(r){
+    const facts=collectDigitalTripFacts(r); r.v98TripFacts=facts; const roles=r.roles||findAnalogRoles(); const ps=phaseStats98(r); const maxI=Math.max(...ps.map(x=>Number.isFinite(x.Ifault)?Math.abs(x.Ifault):0),0); const main=[], involved=[];
+    ps.forEach(x=>{ const iMain=maxI>0 && Math.abs(x.Ifault)>=maxI*0.35 && x.Iratio>=2.0; const vMain=Number.isFinite(x.Vratio) && x.Vratio<=0.85; const iInvolved=(Math.abs(x.Ifault)>=Math.max(maxI*0.10,Math.abs(x.Ipre||0)*3,1e-12) && x.Iratio>=2.5); const tripIn=facts.tripPhases.includes(x.phase); if(iInvolved || tripIn) involved.push(x.phase); if((iMain&&vMain) || (iMain && !Number.isFinite(x.Vratio))) main.push(x.phase); });
+    const vector=computeVector98(r); r.v98Vector=vector; if(vector){ r.sequence={rows:vector.rows, v10RawRows:vector.rows.map(x=>x.slice()), centerIndex:vector.centerIndex, windowSamples:vector.windowSamples, freq:vector.freq, rate:vector.rate, v98:true, I0I1:vector.seqI?vector.seqI.I0/Math.max(vector.seqI.I1,1e-12):NaN, I2I1:vector.seqI?vector.seqI.I2/Math.max(vector.seqI.I1,1e-12):NaN, V0V1:vector.seqV?vector.seqV.I0/Math.max(vector.seqV.I1,1e-12):NaN, V2V1:vector.seqV?vector.seqV.I2/Math.max(vector.seqV.I1,1e-12):NaN}; }
+    const i0i1=r.sequence&&Number.isFinite(r.sequence.I0I1)?r.sequence.I0I1:NaN; const i2i1=r.sequence&&Number.isFinite(r.sequence.I2I1)?r.sequence.I2I1:NaN; const residual=roles.I&&Number.isInteger(roles.I.N); const groundByTrip=facts.elementNames.some(x=>/G|EF|GROUND|EARTH/i.test(x)); const groundBySeq=Number.isFinite(i0i1)&&i0i1>=0.10; let ground=!!(r.ground||residual||groundByTrip||groundBySeq);
+    let primary=main.length?main.slice():((r.phases&&r.phases.length)?r.phases.slice():[]); if(primary.length===3 && main.length<3){ primary=main.length?main.slice():primary; }
+    if(primary.length===0 && facts.elementNames.length){ primary=ps.filter(x=>Math.abs(x.Ifault)>=maxI*0.28).map(x=>x.phase); }
+    if(primary.length===1 && !ground) ground=true;
+    const pair=primary.join('-'); let type='Chưa xác định rõ dạng sự cố';
+    if(primary.length===1) type=`Sự cố pha ${primary[0]}${ground?'-đất':' (nghi ngờ)'}`;
+    else if(primary.length===2) type=`Sự cố pha ${pair}${ground?' có thành phần đất':''}`;
+    else if(primary.length>=3) type=`Sự cố 3 pha${ground?' có thành phần đất/thứ tự không':''}`;
+    else if(facts.firstTrip) type='Có TRIP bảo vệ nhưng chưa xác định được pha chính';
+    const prot=(facts.elementNames.length?facts.elementNames.join(', '):(facts.firstTrip?txt(facts.firstTrip.channel):'không thấy TRIP phần tử'));
+    let action=''; if(/Z2/.test(prot)) action='Bảo vệ khoảng cách Zone 2 tác động'; else if(/Z1/.test(prot)) action='Bảo vệ khoảng cách Zone 1 tác động'; else if(/Z3/.test(prot)) action='Bảo vệ khoảng cách Zone 3 tác động'; else if(/87|DIF/.test(prot)) action='Bảo vệ so lệch tác động'; else if(/EF/.test(prot)) action='Bảo vệ chạm đất/quá dòng đất tác động'; else if(/OC|50|51/.test(prot)) action='Bảo vệ quá dòng tác động'; else if(facts.firstTrip) action='Relay đã phát lệnh TRIP'; else action='Chưa thấy lệnh TRIP trong cửa sổ phân tích';
+    const cut3=facts.tripPhases.length>=3 || facts.genTrips.some(e=>/GEN\.TRIP/.test(nrm(e.channel||'')) && !phaseFromTripName(e.channel).length);
+    const cAffected=involved.includes('C')&&!primary.includes('C');
+    r.phases=primary; r.involvedPhases=[...new Set(involved.length?involved:primary)].sort(); r.tripPhases=facts.tripPhases.slice().sort(); r.tripElements=facts.elementNames; r.ground=ground; r.type=type; r.protectionAction=action; r.confidence=facts.firstTrip?(primary.length?'Cao':'Trung bình'):(r.confidence||'Trung bình');
+    const concl=[]; concl.push(`${action}.`); if(primary.length) concl.push(`Pha sự cố chính theo vector dòng/áp: ${primary.join('-')}${ground?' có thành phần đất':''}.`); if(r.involvedPhases.length) concl.push(`Pha liên quan/bị ảnh hưởng: ${r.involvedPhases.join('-')}.`); if(cAffected) concl.push('Pha C có dòng tăng và/hoặc có GEN.TRIP-C, nhưng không được xếp là pha sự cố chính vì dòng nhỏ hơn rõ so với pha chính và điện áp pha C không sụt tương ứng.'); if(cut3) concl.push('Có lệnh cắt 3 pha/GEN.TRIP-A/B/C; đây là logic cắt của relay, không đồng nghĩa cả 3 pha đều là điểm sự cố chính.'); if(Number.isFinite(i0i1)) concl.push(`Thành phần thứ tự: I0/I1=${fmt98(i0i1,3)}, I2/I1=${fmt98(i2i1,3)}.`); if(facts.firstTrip&&facts.firstBreaker) concl.push(`MC có tín hiệu mở sau TRIP khoảng ${fmt98((facts.firstBreaker.time-facts.firstTrip.time)*1000,3)} ms.`);
+    r.finalConclusion=concl.join(' '); r.v98PhaseStats=ps; r.v98Version=V98_VERSION;
+    addNote(r,'V9.8: kết luận đã ưu tiên thứ tự Pickup → TRIP phần tử bảo vệ → GEN.TRIP/Trip coil → trạng thái máy cắt; analog RMS chỉ dùng để xác định pha chính/pha liên quan.');
+    addNote(r,'V9.8: phân tích vector tách riêng “pha sự cố chính” và “pha liên quan/bị ảnh hưởng”, tránh coi GEN.TRIP-A/B/C là bằng chứng trực tiếp của sự cố 3 pha.');
+    return r;
+  }
+
+  function summaryRows98(r){
+    const f=r.v98TripFacts||collectDigitalTripFacts(r); const rows=[['Kết luận thống nhất',r.finalConclusion||r.type||''],['Dạng sự cố chính',r.type||''],['Pha sự cố chính',r.phases&&r.phases.length?r.phases.join('-'):'chưa xác định'],['Pha liên quan/bị ảnh hưởng',r.involvedPhases&&r.involvedPhases.length?r.involvedPhases.join('-'):'chưa xác định'],['Pha có lệnh GEN.TRIP',r.tripPhases&&r.tripPhases.length?r.tripPhases.join('-'):'không tách pha / không thấy'],['Phần tử bảo vệ TRIP',r.tripElements&&r.tripElements.length?r.tripElements.join(', '):'không thấy'],['Hành động bảo vệ',r.protectionAction||''],['Độ tin cậy',r.confidence||'']];
+    rows.push(['Bắt đầu vùng analog/RMS',fmt98(r.startTime,9)+' s · mẫu #'+((r.startIndex||0)+1)]); rows.push(['Nặng nhất/điểm tính vector',fmt98(r.peakTime,9)+' s · mẫu #'+((r.peakIndex||0)+1)]); rows.push(['Kết thúc vùng analog/RMS',fmt98(r.endTime,9)+' s · mẫu #'+((r.endIndex||0)+1)]); rows.push(['Thời gian vùng analog/RMS',fmt98((r.duration||0)*1000,6)+' ms']);
+    if(f.firstPickup) rows.push(['Pickup đầu tiên',fmt98(f.firstPickup.time,9)+' s · '+f.firstPickup.channel]); if(f.firstTrip) rows.push(['TRIP ưu tiên đầu tiên',fmt98(f.firstTrip.time,9)+' s · '+f.firstTrip.channel]); if(f.firstCoil) rows.push(['Đầu ra/cuộn cắt',fmt98(f.firstCoil.time,9)+' s · '+f.firstCoil.channel]); if(f.firstBreaker) rows.push(['Xác nhận MC mở/đổi trạng thái',fmt98(f.firstBreaker.time,9)+' s · '+f.firstBreaker.channel]); if(f.firstTrip&&f.firstBreaker) rows.push(['TRIP → MC',fmt98((f.firstBreaker.time-f.firstTrip.time)*1000,3)+' ms']);
+    if(r.sequence&&Number.isFinite(r.sequence.I0I1)) rows.push(['I0/I1; I2/I1',fmt98(r.sequence.I0I1,3)+' ; '+fmt98(r.sequence.I2I1,3)]);
+    return rows;
+  }
+  function renderV98(r){
+    if(!r) return; const m=$v('faultMetrics'); if(m){ const mc=r.v98TripFacts?.firstBreaker&&r.v98TripFacts?.firstTrip?fmt98((r.v98TripFacts.firstBreaker.time-r.v98TripFacts.firstTrip.time)*1000,3)+' ms':'chưa đủ'; m.innerHTML=[faultMetricCard('Kết luận V9.8',esc98(r.type||''),'Ưu tiên TRIP + vector'),faultMetricCard('Pha chính',esc98((r.phases||[]).join('-')||'chưa rõ'),r.ground?'Có thành phần đất':''),faultMetricCard('Pha liên quan',esc98((r.involvedPhases||[]).join('-')||'chưa rõ'),(r.tripPhases&&r.tripPhases.length)?'GEN.TRIP: '+r.tripPhases.join('-'):''),faultMetricCard('TRIP → MC',esc98(mc),esc98(r.protectionAction||''))].join(''); }
+    const s=$v('faultSummary'); if(s) s.innerHTML=table(['Mục','Giá trị'],summaryRows98(r).map(x=>[esc98(x[0]),esc98(x[1])]));
+    const br=$v('breakerAnalysis'); if(br&&r.finalConclusion){ const old=br.innerHTML||''; if(!old.includes('Kết luận thống nhất V9.8')) br.innerHTML='<b>Kết luận thống nhất V9.8</b>\n'+esc98(r.finalConclusion)+'\n\n'+old; }
+    const sn=$v('sequenceNote'); if(sn&&r.sequence&&r.sequence.v98) sn.textContent='V9.8 tính phasor/sequence quanh mẫu #'+((r.sequence.centerIndex||0)+1)+', cửa sổ '+r.sequence.windowSamples+' mẫu. I0/I1 và I2/I1 dùng để phân biệt pha chính, pha bị ảnh hưởng và thành phần chạm đất.';
+  }
+
+  if(typeof analyzeFaultCore==='function'){
+    const prev=analyzeFaultCore;
+    analyzeFaultCore=function(){ const r=prev.apply(this,arguments); try{return classifyTripVector(r);}catch(e){ addNote(r,'V9.8 lỗi khi tăng cường TRIP/vector: '+e.message); return r; } };
+  }
+  if(typeof renderFaultAnalysis==='function'){
+    const prevR=renderFaultAnalysis;
+    renderFaultAnalysis=function(){ const ret=prevR.apply(this,arguments); try{ renderV98(state.faultAnalysis); }catch(e){} return ret; };
+  }
+  if(typeof faultSummaryRows==='function'){
+    const prevS=faultSummaryRows;
+    faultSummaryRows=function(r){ try{ if(r&&r.v98Version) return summaryRows98(r); }catch(e){} return prevS.apply(this,arguments); };
+  }
+  function patchReportHtml(html,r){
+    if(!html||!r||!r.v98Version)return html; const block='<h2>Kết luận thống nhất V9.8 - TRIP + Vector</h2><div class="note">'+esc98(r.finalConclusion||'')+'</div>'+htmlReportTable(['Mục','Giá trị'],summaryRows98(r));
+    if(html.includes('<h2>Tóm tắt</h2>')) return html.replace('<h2>Tóm tắt</h2>',block+'<h2>Tóm tắt</h2>');
+    if(html.includes('<h2>Giá trị các phần tử sự cố</h2>')) return html.replace('<h2>Giá trị các phần tử sự cố</h2>',block+'<h2>Giá trị các phần tử sự cố</h2>');
+    return html.replace('</body>',block+'</body>');
+  }
+  if(typeof makeFaultReportHtml==='function'){
+    const oldH=makeFaultReportHtml;
+    makeFaultReportHtml=function(){ const html=oldH.apply(this,arguments); return patchReportHtml(html,state.faultAnalysis||null); };
+  }
+  if(typeof makeFaultReportText==='function'){
+    const oldT=makeFaultReportText;
+    makeFaultReportText=function(){ const base=oldT.apply(this,arguments); const r=state.faultAnalysis||null; if(!r||!r.v98Version)return base; const lines=['','KẾT LUẬN THỐNG NHẤT V9.8 - TRIP + VECTOR']; summaryRows98(r).forEach(x=>lines.push(txt(x[0])+': '+txt(x[1]))); return base+'\n'+lines.join('\n'); };
+  }
+  window.v98ReanalyzeTripVector=function(){ const r=ensureFaultAnalysis(); if(r){ classifyTripVector(r); renderFaultAnalysis(); } return r; };
 })();
 </script>
 
