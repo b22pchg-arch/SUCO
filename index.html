@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.2 PWA - Fault Channel Order Fix</title>
+<title>COMTRADE Offline Reader Pro V9.7 PWA - ABCN + Global CTPT + RMS/Peak</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -116,7 +116,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.2</h1>
+      <h1>COMTRADE Offline Reader Pro V9.5.2</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -1752,5 +1752,474 @@ initSidebarMode();
 })();
 
 </script>
+
+
+<script>
+// ===== V9.5.2 HOTFIX: không can thiệp giao diện; bổ sung kết luận ABCN từ digital Trip A/B/C =====
+(function(){
+  'use strict';
+  const HOTFIX_VERSION = 'V9.5.2-ABCN-DIGITAL-TRIP-ASSIST';
+  window.COMTRADE_ABCN_HOTFIX_VERSION = HOTFIX_VERSION;
+
+  function safeNorm(s){
+    try { if (typeof normText === 'function') return normText(s); } catch(e) {}
+    return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  }
+  function cleanTokens(name){
+    return safeNorm(name).replace(/[^A-Z0-9]+/g,' ').trim().split(/\s+/).filter(Boolean);
+  }
+  function hasToken(tokens, t){ return tokens.indexOf(t) >= 0; }
+  function phaseFromName(name){
+    const n = safeNorm(name);
+    const tokens = cleanTokens(name);
+    const joined = tokens.join(' ');
+    const compact = tokens.join('');
+    const isTripLike = /\b(TRIP|OPERATE|SHOT|CAT|CUT)\b/.test(joined) || /TRIP|OPERATE|SHOT/.test(compact);
+    if(!isTripLike) return '';
+    // Ưu tiên các dạng đặt tên phổ biến: TRIP-A, TRIPA, A TRIP, GEN.TRIP A...
+    if(/\bTRIP\s*A\b|\bA\s*TRIP\b|TRIPA\b|\bTRIP_A\b|\bTRIP-A\b/.test(n) || (hasToken(tokens,'TRIP') && hasToken(tokens,'A'))) return 'A';
+    if(/\bTRIP\s*B\b|\bB\s*TRIP\b|TRIPB\b|\bTRIP_B\b|\bTRIP-B\b/.test(n) || (hasToken(tokens,'TRIP') && hasToken(tokens,'B'))) return 'B';
+    if(/\bTRIP\s*C\b|\bC\s*TRIP\b|TRIPC\b|\bTRIP_C\b|\bTRIP-C\b/.test(n) || (hasToken(tokens,'TRIP') && hasToken(tokens,'C'))) return 'C';
+    return '';
+  }
+  function isGroundTripName(name){
+    const n = safeNorm(name);
+    return /\b(Z2G|Z1G|Z0|GND|GROUND|EARTH|DAT|CHAM DAT|N|IN|IE|IG|3I0|I0)\b/.test(n) && /TRIP|OPERATE|SHOT/.test(n);
+  }
+  function phaseLabel(phases, ground){
+    const out=[];
+    ['A','B','C'].forEach(p=>{ if(phases && phases.indexOf(p)>=0) out.push(p); });
+    if(ground && out.indexOf('N')<0) out.push('N');
+    return out;
+  }
+  function classifyFromTrip(phases, ground){
+    const ph = (phases||[]).filter(p=>p==='A'||p==='B'||p==='C');
+    const label = phaseLabel(ph, ground).join('-');
+    if(ph.length >= 3) return ground ? 'Sự cố ABCN theo digital Trip A/B/C + thành phần đất' : 'Sự cố ABC theo digital Trip A/B/C';
+    if(ph.length === 2) return ground ? ('Sự cố '+label+' theo digital Trip') : ('Sự cố '+ph.join('-')+' theo digital Trip');
+    if(ph.length === 1) return ground ? ('Sự cố '+label+' theo digital Trip') : ('Sự cố pha '+ph[0]+' theo digital Trip');
+    return '';
+  }
+  function detectDigitalTripConclusion(r){
+    const phases = new Set();
+    const names = [];
+    let ground = !!(r && r.ground);
+    const events = (r && Array.isArray(r.digitalEvents)) ? r.digitalEvents : [];
+    events.forEach(ev=>{
+      const name = ev && (ev.channel || ev.name || '');
+      const type = safeNorm(ev && ev.type || '');
+      const rising = ev && (ev.to === 1 || ev.to === true || ev.to == null);
+      const tripLike = /TRIP|OPERATE|SHOT/.test(safeNorm(name)) || /TRIP|OPERATE/.test(type);
+      if(!tripLike || !rising) return;
+      const p = phaseFromName(name);
+      if(p){ phases.add(p); names.push(name); }
+      if(isGroundTripName(name)){ ground = true; names.push(name); }
+    });
+    return { phases:[...phases].sort(), ground, names:[...new Set(names)] };
+  }
+  function applyAbcnHotfix(r){
+    if(!r || !Array.isArray(r.phases)) return r;
+    const dig = detectDigitalTripConclusion(r);
+    const oldPhases = r.phases.slice();
+    const oldType = r.type;
+    const digitalHasAllABC = ['A','B','C'].every(p=>dig.phases.indexOf(p)>=0);
+    // Chỉ nâng kết luận khi digital có Trip rõ từng pha A/B/C. Tránh ép nhầm do tên chung TRIP.
+    if(digitalHasAllABC){
+      r.analogPhasesBeforeDigitalAssist = oldPhases;
+      r.digitalTripPhases = phaseLabel(dig.phases, dig.ground);
+      r.digitalTripChannels = dig.names;
+      r.ground = !!(r.ground || dig.ground);
+      r.phases = phaseLabel(['A','B','C'], r.ground);
+      r.type = classifyFromTrip(['A','B','C'], r.ground) || r.type;
+      r.confidence = 'Cao';
+      r.notes = Array.isArray(r.notes) ? r.notes : [];
+      const oldLabel = phaseLabel(oldPhases, !!r.ground).join('-') || 'chưa rõ';
+      const newLabel = r.phases.join('-');
+      if(oldLabel !== newLabel || oldType !== r.type){
+        r.notes.unshift('V9.5.2: Analog/RMS ban đầu nhận '+oldLabel+', nhưng digital có Trip rõ A/B/C'+(r.ground?' và tín hiệu đất/N':'')+' nên kết luận hiển thị ưu tiên '+newLabel+'. Các kênh digital liên quan: '+(dig.names.join(', ')||'không ghi tên')+'.');
+      }
+    }
+    return r;
+  }
+
+  if (typeof analyzeFaultCore === 'function') {
+    const prevAnalyzeFaultCore = analyzeFaultCore;
+    analyzeFaultCore = function(){
+      const r = prevAnalyzeFaultCore.apply(this, arguments);
+      return applyAbcnHotfix(r);
+    };
+  }
+
+  if (typeof renderFaultAnalysis === 'function') {
+    const prevRenderFaultAnalysis = renderFaultAnalysis;
+    renderFaultAnalysis = function(){
+      prevRenderFaultAnalysis.apply(this, arguments);
+      try{
+        const r = state && state.faultAnalysis;
+        if(!r || !Array.isArray(r.digitalTripPhases) || !r.digitalTripPhases.length) return;
+        const summary = document.getElementById('faultSummary');
+        if(summary && !summary.querySelector('[data-abcn-hotfix-row="1"]')){
+          const tbl = summary.querySelector('tbody');
+          if(tbl){
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-abcn-hotfix-row','1');
+            tr.innerHTML = '<td>Kết luận đối chiếu digital</td><td><b>'+String(r.digitalTripPhases.join('-')).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;'}[c]||c;})+'</b><br><span class="tiny">Analog/RMS ban đầu: '+String((r.analogPhasesBeforeDigitalAssist||[]).join('-')||'chưa rõ').replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;'}[c]||c;})+'</span></td>';
+            tbl.appendChild(tr);
+          }
+        }
+      }catch(e){ console.warn('ABCN hotfix render note skipped:', e); }
+    };
+  }
+})();
+</script>
+
+
+<script>
+// ===== V9.6.1 HOTFIX: hiển thị dòng/áp sự cố theo sơ cấp/thứ cấp dựa trên Primary/Secondary và P/S trong CFG =====
+(function(){
+  'use strict';
+  const VERSION='V9.6.1-CTPT-PRIMARY-SECONDARY-DISPLAY-FIX';
+  window.COMTRADE_CTPT_HOTFIX_VERSION=VERSION;
+  const LS_MODE='comtrade_v96_fault_analog_display_mode';
+  const DEFAULT_MODE='primary_auto';
+
+  function byId(id){ return document.getElementById(id); }
+  function getState(){ try{ return (typeof state !== 'undefined') ? state : null; }catch(e){ return null; } }
+  function safeNorm(s){
+    try{ if(typeof normText==='function') return normText(s); }catch(e){}
+    return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  }
+  function unesc(s){ const d=document.createElement('textarea'); d.innerHTML=String(s==null?'':s); return d.value; }
+  function strip(s){ return unesc(String(s==null?'':s).replace(/<[^>]*>/g,'')).trim(); }
+  function numFromCell(v){
+    let s=strip(v).replace(/\s+/g,'');
+    if(!s) return NaN;
+    // fmt() của bản gốc dùng locale vi-VN: 2.788,952 hoặc 4,648253
+    if(/^-?\d{1,3}(?:\.\d{3})+,\d+$/.test(s)) s=s.replace(/\./g,'').replace(',', '.');
+    else if(/,/.test(s) && !/\./.test(s)) s=s.replace(',', '.');
+    else if(/,/.test(s) && /\./.test(s)) s=s.replace(/\./g,'').replace(',', '.');
+    const m=s.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/i);
+    return m?Number(m[0]):NaN;
+  }
+  function fmtLocal(v,d){
+    if(!Number.isFinite(v)) return '';
+    const av=Math.abs(v);
+    const digits=(d==null)?(av>=100?3:6):d;
+    if(av!==0&&(av<1e-4||av>=1e8)) return Number(v).toExponential(4);
+    return Number(v).toLocaleString('vi-VN',{maximumFractionDigits:digits});
+  }
+  function isI(ch,label){
+    try{ if(typeof isCurrentChannel==='function' && isCurrentChannel(ch)) return true; }catch(e){}
+    const s=safeNorm((ch&&ch.unit)||'')+' '+safeNorm((ch&&ch.id)||'')+' '+safeNorm(label||'');
+    return /(^|\s)(A|KA|AMP|AMPERE)(\s|$)/.test(s) || /\bI[A-Z0-9\-]*\b/.test(s) || /\bDONG\b/.test(s);
+  }
+  function isV(ch,label){
+    try{ if(typeof isVoltageChannel==='function' && isVoltageChannel(ch)) return true; }catch(e){}
+    const s=safeNorm((ch&&ch.unit)||'')+' '+safeNorm((ch&&ch.id)||'')+' '+safeNorm(label||'');
+    return /(^|\s)(V|KV|VOLT)(\s|$)/.test(s) || /\b[UV][A-Z0-9\-]*\b/.test(s) || /\bAP\b/.test(s);
+  }
+  function channelByName(name){
+    const st=getState(), cfg=st&&st.cfg;
+    if(!cfg||!cfg.analog) return null;
+    const target=strip(name);
+    let idx=cfg.analog.findIndex(ch=>String(ch.id||'')===target);
+    if(idx<0){ const nt=safeNorm(target); idx=cfg.analog.findIndex(ch=>safeNorm(ch.id||'')===nt); }
+    if(idx<0) return null;
+    return {idx,ch:cfg.analog[idx]};
+  }
+  function ratioPrimary(ch){
+    const p=Number(ch&&ch.primary), s=Number(ch&&ch.secondary);
+    if(Number.isFinite(p)&&Number.isFinite(s)&&s!==0&&p!==0) return p/s;
+    return 1;
+  }
+  function psFlag(ch){ return safeNorm(ch&&ch.ps||'').replace(/[^PS]/g,''); }
+  function factorToMode(ch, mode){
+    const r=ratioPrimary(ch), ps=psFlag(ch);
+    if(mode==='secondary') return ps==='P' ? 1/Math.max(r,1e-12) : 1;
+    // primary_auto hoặc primary_raw: nếu CFG báo S thì a*raw+b đang là thứ cấp, cần nhân P/S.
+    return ps==='S' ? r : 1;
+  }
+  function displayUnit(ch,label,mode,kind,valueAbs){
+    let unit=strip(ch&&ch.unit||'');
+    const secondary = mode==='secondary';
+    const suffix = secondary ? ' thứ cấp' : ' sơ cấp';
+    if(mode==='primary_auto' && !secondary){
+      if(kind==='I' && /^A$/i.test(unit) && Number.isFinite(valueAbs) && valueAbs>=1000) return {unit:'kA'+suffix, scale:1/1000};
+      if(kind==='V' && /^V$/i.test(unit) && Number.isFinite(valueAbs) && valueAbs>=1000) return {unit:'kV'+suffix, scale:1/1000};
+    }
+    return {unit:(unit||'')+suffix, scale:1};
+  }
+  function roleName(label){
+    const s=safeNorm(strip(label));
+    if(/\bIA\b|^IA\b/.test(s)) return 'Ia';
+    if(/\bIB\b|^IB\b/.test(s)) return 'Ib';
+    if(/\bIC\b|^IC\b/.test(s)) return 'Ic';
+    if(/\b(IE|IN|IG|3I0|I0)\b/.test(s)) return 'Ie';
+    if(/\b(VA|UA)\b|^VA\b|^UA\b/.test(s)) return 'Va';
+    if(/\b(VB|UB)\b|^VB\b|^UB\b/.test(s)) return 'Vb';
+    if(/\b(VC|UC)\b|^VC\b|^UC\b/.test(s)) return 'Vc';
+    if(/\b(VE|VN|VG|VX|UE|UN|UG|UX|3U0|3V0|U0|V0)\b/.test(s)) return 'Ve';
+    return '';
+  }
+  function currentMode(){ return byId('v96AnalogDisplayMode')?.value || localStorage.getItem(LS_MODE) || DEFAULT_MODE; }
+  function deepRows(rows){ return (rows||[]).map(r=>Array.isArray(r)?r.slice():r); }
+  function signature(rows){ return JSON.stringify((rows||[]).map(r=>[strip(r[0]),strip(r[1]),strip(r[2]),strip(r[3]),strip(r[4]),strip(r[6])]).slice(0,60)); }
+
+  function applyDisplayMode(r){
+    if(!r || !Array.isArray(r.valueRows)) return r;
+    const mode=currentMode();
+    const curSig=signature(r.valueRows);
+    // Chỉ cập nhật raw khi bảng hiện tại không phải bảng vừa quy đổi lần trước.
+    if(!r.v96RawValueRows || curSig !== r.v96LastConvertedSignature){
+      r.v96RawValueRows=deepRows(r.valueRows);
+      r.v96RawSignature=curSig;
+    }
+    const raw=deepRows(r.v96RawValueRows||r.valueRows);
+    const converted=[];
+    raw.forEach(row=>{
+      if(!Array.isArray(row) || row.length<7){ converted.push(row); return; }
+      const found=channelByName(row[1]);
+      if(!found){ converted.push(row); return; }
+      const ch=found.ch;
+      const label=strip(row[0]);
+      const kind=isI(ch,label)?'I':(isV(ch,label)?'V':'');
+      if(!kind){ converted.push(row); return; }
+      const factor=factorToMode(ch,mode);
+      const vals=[numFromCell(row[2]),numFromCell(row[3]),numFromCell(row[4])].map(x=>Number.isFinite(x)?x*factor:NaN);
+      const maxAbs=Math.max(...vals.map(x=>Math.abs(x)).filter(Number.isFinite),0);
+      const u=displayUnit(ch,label,mode,kind,maxAbs);
+      const out=row.slice();
+      out[2]=fmtLocal(vals[0]*u.scale,6);
+      out[3]=fmtLocal(vals[1]*u.scale,6);
+      out[4]=fmtLocal(vals[2]*u.scale,6);
+      out[6]=u.unit;
+      converted.push(out);
+    });
+    r.valueRows=converted;
+    r.v96LastConvertedSignature=signature(converted);
+    r.v96DisplayMode=mode;
+    r.v96UnitNote = mode==='secondary'
+      ? 'V9.6.1: Bảng giá trị đang hiển thị THỨ CẤP theo CFG. Nếu kênh có P/S = S thì đây là giá trị sau scale a×raw+b trong DAT, chưa nhân CT/VT.'
+      : 'V9.6.1: Bảng giá trị đã quy đổi SƠ CẤP theo Primary/Secondary và cờ P/S trong CFG. Nếu chọn tự đổi kA/kV, giá trị lớn sẽ được rút gọn đơn vị.';
+    r.notes=Array.isArray(r.notes)?r.notes:[];
+    if(!r.notes.some(x=>String(x).indexOf('V9.6')===0)) r.notes.unshift(r.v96UnitNote);
+    else r.notes=r.notes.map(x=>String(x).indexOf('V9.6')===0?r.v96UnitNote:x);
+    const compact={};
+    converted.forEach(row=>{
+      const role=roleName(row[0]); if(!role || compact[role]) return;
+      compact[role]={role,label:role,channel:strip(row[1]),pre:numFromCell(row[2]),fault:numFromCell(row[3]),post:numFromCell(row[4]),ratio:numFromCell(row[5]),ratioText:strip(row[5]),unit:strip(row[6]),displayMode:mode};
+    });
+    r.v96MetricsCompact=compact;
+    return r;
+  }
+
+  function forceApplyAndRender(){
+    const st=getState();
+    if(st&&st.faultAnalysis){ applyDisplayMode(st.faultAnalysis); if(typeof renderFaultAnalysis==='function') renderFaultAnalysis(); }
+    updateCtptStatus();
+  }
+  function addControls(){
+    const host=byId('faultResultStatus');
+    if(!host || byId('v96CtptBox')) return;
+    const box=document.createElement('div');
+    box.id='v96CtptBox';
+    box.className='v95-param-note';
+    box.style.marginTop='10px';
+    const saved=localStorage.getItem(LS_MODE)||DEFAULT_MODE;
+    box.innerHTML='<b>Quy đổi đơn vị dòng/áp sự cố</b><div class="grid two" style="margin-top:8px"><div><label>Hiển thị bảng giá trị RMS</label><select id="v96AnalogDisplayMode"><option value="primary_auto">Sơ cấp theo CT/VT trong CFG, tự đổi kA/kV</option><option value="primary_raw">Sơ cấp theo CT/VT trong CFG, giữ A/V</option><option value="secondary">Thứ cấp theo a×raw+b trong DAT</option></select></div><div class="tiny" style="padding-top:28px">CFG có trường Primary/Secondary và P/S. Nếu P/S = S, giá trị a×raw+b là thứ cấp; muốn dòng/áp sơ cấp phải nhân Primary/Secondary.</div></div><div class="toolbar" style="margin-top:8px"><button id="v96ApplyCtptBtn" type="button">Áp dụng / cập nhật bảng</button></div><div id="v96CtptStatus" class="tiny" style="margin-top:6px"></div>';
+    host.insertAdjacentElement('afterend',box);
+    const sel=byId('v96AnalogDisplayMode');
+    if(sel){ sel.value=saved; sel.onchange=function(){ localStorage.setItem(LS_MODE,sel.value); forceApplyAndRender(); }; }
+    const btn=byId('v96ApplyCtptBtn');
+    if(btn) btn.onclick=forceApplyAndRender;
+    updateCtptStatus();
+  }
+  function updateCtptStatus(){
+    const st=getState(), cfg=st&&st.cfg, el=byId('v96CtptStatus');
+    if(!el) return;
+    if(!cfg){ el.textContent='Chưa nạp CFG.'; return; }
+    const currents=(cfg.analog||[]).filter(ch=>isI(ch,''));
+    const voltages=(cfg.analog||[]).filter(ch=>isV(ch,''));
+    const cr=currents.map(ratioPrimary).filter(x=>Number.isFinite(x)&&x!==1);
+    const vr=voltages.map(ratioPrimary).filter(x=>Number.isFinite(x)&&x!==1);
+    const firstC=cr.length?cr[0]:1, firstV=vr.length?vr[0]:1;
+    el.textContent='Tỉ số đọc từ CFG: dòng ≈ '+fmtLocal(firstC,6)+'/1; áp ≈ '+fmtLocal(firstV,6)+'/1. Chế độ hiện tại: '+(currentMode()==='secondary'?'thứ cấp':'sơ cấp')+'.';
+  }
+  function appendUnitNoteAfterRender(){
+    try{
+      const st=getState(), r=st&&st.faultAnalysis;
+      const box=byId('faultValueTable');
+      let div=byId('v96FaultUnitNote');
+      if(!r||!box) return;
+      if(!div){ div=document.createElement('div'); div.id='v96FaultUnitNote'; div.className='v91-note v92-fixed'; div.style.marginTop='8px'; box.insertAdjacentElement('afterend',div); }
+      div.textContent=r.v96UnitNote||'';
+    }catch(e){}
+  }
+
+  if(typeof analyzeFaultCore==='function'){
+    const prev=analyzeFaultCore;
+    analyzeFaultCore=function(){
+      const r=prev.apply(this,arguments);
+      if(r && Array.isArray(r.valueRows)){
+        r.v96RawValueRows=deepRows(r.valueRows);
+        r.v96RawSignature=signature(r.valueRows);
+        r.v96LastConvertedSignature='';
+      }
+      return applyDisplayMode(r);
+    };
+  }
+  if(typeof renderFaultAnalysis==='function'){
+    const prevRender=renderFaultAnalysis;
+    renderFaultAnalysis=function(){
+      const st=getState();
+      if(st&&st.faultAnalysis){ applyDisplayMode(st.faultAnalysis); }
+      prevRender.apply(this,arguments);
+      addControls();
+      updateCtptStatus();
+      appendUnitNoteAfterRender();
+    };
+  }
+  if(typeof makeFaultReportHtml==='function'){
+    const old=makeFaultReportHtml;
+    makeFaultReportHtml=function(){ const st=getState(); if(st&&st.faultAnalysis){ applyDisplayMode(st.faultAnalysis); } return old.apply(this,arguments); };
+  }
+  if(typeof makeFaultReportText==='function'){
+    const old=makeFaultReportText;
+    makeFaultReportText=function(){ const st=getState(); if(st&&st.faultAnalysis){ applyDisplayMode(st.faultAnalysis); } return old.apply(this,arguments); };
+  }
+  window.v96ApplyCtptDisplay=applyDisplayMode;
+  window.addEventListener('load',()=>{ addControls(); setTimeout(()=>{addControls();updateCtptStatus();},500); });
+})();
+</script>
+
+<script>
+// ===== V9.7 HOTFIX: nền V5 ổn định + đơn vị dùng chung + RMS/Peak + báo cáo khớp giao diện =====
+(function(){
+  'use strict';
+  const VERSION='V9.7.0-FROM-V5-GLOBAL-UNIT-RMS-PEAK-REPORT-SYNC';
+  window.COMTRADE_V97_VERSION=VERSION;
+  const LS_UNIT='comtrade_v96_fault_analog_display_mode';
+  const LS_MEASURE='comtrade_v97_fault_measure_mode';
+  const DEFAULT_UNIT='primary_auto';
+  const DEFAULT_MEASURE='both';
+
+  function byId(id){ return document.getElementById(id); }
+  function getState(){ try{ return (typeof state!=='undefined')?state:null; }catch(e){ return null; } }
+  function ehtml(s){ try{ return esc(s); }catch(e){ return String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c)); } }
+  function strip(s){ const d=document.createElement('textarea'); d.innerHTML=String(s==null?'':s).replace(/<[^>]*>/g,''); return d.value.trim(); }
+  function norm(s){ try{ if(typeof normText==='function') return normText(s); }catch(e){} return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
+  function fmtN(v,d){ if(!Number.isFinite(v)) return ''; try{ return fmt(v,d==null?6:d); }catch(e){ return Number(v).toLocaleString('vi-VN',{maximumFractionDigits:d==null?6:d}); } }
+  function parseNum(v){ let s=strip(v).replace(/\s+/g,''); if(!s) return NaN; if(/^-?\d{1,3}(?:\.\d{3})+,\d+$/.test(s)) s=s.replace(/\./g,'').replace(',', '.'); else if(s.includes(',')&&!s.includes('.')) s=s.replace(',', '.'); else if(s.includes(',')&&s.includes('.')) s=s.replace(/\./g,'').replace(',', '.'); const m=s.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/i); return m?Number(m[0]):NaN; }
+  function htmlTable(headers, rows){ return '<table><thead><tr>'+headers.map(h=>'<th>'+ehtml(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+ehtml(strip(c))+'</td>').join('')+'</tr>').join('')+'</tbody></table>'; }
+  function uiTable(headers, rows){ return '<table><thead><tr>'+headers.map(h=>'<th>'+ehtml(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+ehtml(strip(c))+'</td>').join('')+'</tr>').join('')+'</tbody></table>'; }
+
+  function unitMode(){ return byId('v96AnalogDisplayMode')?.value || localStorage.getItem(LS_UNIT) || DEFAULT_UNIT; }
+  function measureMode(){ return byId('v97MeasureMode')?.value || localStorage.getItem(LS_MEASURE) || DEFAULT_MEASURE; }
+  function ratio(ch){ const p=Number(ch&&ch.primary), s=Number(ch&&ch.secondary); return (Number.isFinite(p)&&Number.isFinite(s)&&s!==0&&p!==0)?p/s:1; }
+  function psFlag(ch){ return norm(ch&&ch.ps||'').replace(/[^PS]/g,''); }
+  function isI(ch,label){ try{ if(typeof isCurrentChannel==='function' && isCurrentChannel(ch)) return true; }catch(e){} const s=norm((ch&&ch.unit)||'')+' '+norm((ch&&ch.id)||'')+' '+norm(label||''); return /(^|\s)(A|KA|AMP|AMPERE)(\s|$)/.test(s)||/\bI[A-Z0-9\-]*\b/.test(s)||/\bDONG\b/.test(s); }
+  function isV(ch,label){ try{ if(typeof isVoltageChannel==='function' && isVoltageChannel(ch)) return true; }catch(e){} const s=norm((ch&&ch.unit)||'')+' '+norm((ch&&ch.id)||'')+' '+norm(label||''); return /(^|\s)(V|KV|VOLT)(\s|$)/.test(s)||/\b[UV][A-Z0-9\-]*\b/.test(s)||/\bAP\b/.test(s); }
+  function kindByRow(row,ch){ const label=strip(row&&row[0]); if(ch){ if(isI(ch,label)) return 'I'; if(isV(ch,label)) return 'V'; } const s=norm(label+' '+strip(row&&row[1])); if(/(^|\b)(IA|IB|IC|IE|IN|IG|I0|3I0|DONG)(\b|$)/.test(s)) return 'I'; if(/(^|\b)(VA|VB|VC|VE|UA|UB|UC|UE|VN|UN|U0|3U0|AP)(\b|$)/.test(s)) return 'V'; return ''; }
+  function channelByName(name){ const st=getState(), cfg=st&&st.cfg; if(!cfg||!Array.isArray(cfg.analog)) return null; const raw=strip(name); let idx=cfg.analog.findIndex(ch=>String(ch.id||'')===raw); if(idx<0){ const n=norm(raw); idx=cfg.analog.findIndex(ch=>norm(ch.id||'')===n); } return idx>=0?{idx,ch:cfg.analog[idx]}:null; }
+  function representative(kind){ const st=getState(), cfg=st&&st.cfg; if(!cfg) return null; const arr=cfg.analog||[]; return arr.find(ch=>kind==='I'?isI(ch,''):isV(ch,''))||null; }
+  function displayMeta(ch,kind,mode){
+    const base=strip(ch&&ch.unit||''); const r=ratio(ch), ps=psFlag(ch); let f=1;
+    if(mode==='secondary') f = ps==='P' ? 1/Math.max(r,1e-12) : 1;
+    else f = ps==='S' ? r : 1;
+    if(mode==='secondary') return {factor:f,scale:1,unit:(base||(kind==='I'?'A':'V'))+' thứ cấp'};
+    if(mode==='primary_raw') return {factor:f,scale:1,unit:(base||(kind==='I'?'A':'V'))+' sơ cấp'};
+    if(kind==='I') return {factor:f,scale:/^KA$/i.test(base)?1:1/1000,unit:'kA sơ cấp'};
+    if(kind==='V') return {factor:f,scale:/^KV$/i.test(base)?1:1/1000,unit:'kV sơ cấp'};
+    return {factor:f,scale:1,unit:(base||'')+' sơ cấp'};
+  }
+  function convertValue(v,ch,kind){ const m=displayMeta(ch,kind,unitMode()); return Number.isFinite(v)?v*m.factor*m.scale:NaN; }
+  function unitFor(ch,kind){ return displayMeta(ch,kind,unitMode()).unit; }
+  function rawRows(r){ if(!r) return []; if(Array.isArray(r.v10RawRmsRows)) return r.v10RawRmsRows.map(x=>x.slice()); if(Array.isArray(r.v96RawValueRows)){ r.v10RawRmsRows=r.v96RawValueRows.map(x=>x.slice()); return r.v10RawRmsRows.map(x=>x.slice()); } if(Array.isArray(r.v962RawValueRows)){ r.v10RawRmsRows=r.v962RawValueRows.map(x=>x.slice()); return r.v10RawRmsRows.map(x=>x.slice()); } if(Array.isArray(r.valueRows)){ r.v10RawRmsRows=r.valueRows.map(x=>x.slice()); return r.v10RawRmsRows.map(x=>x.slice()); } return []; }
+  function rowChannel(row){ const found=channelByName(row&&row[1]); if(found) return found; const k=kindByRow(row,null); const rep=representative(k); return rep?{idx:-1,ch:rep}:null; }
+  function convertRmsRow(row){ const out=row.slice(); const found=rowChannel(row); const k=kindByRow(row,found&&found.ch); if(!found||!k) return out; const u=unitFor(found.ch,k); [2,3,4].forEach(i=>{ const n=parseNum(row[i]); out[i]=Number.isFinite(n)?fmtN(convertValue(n,found.ch,k),6):row[i]; }); out[6]=u; return out; }
+  function roleName(label){ const s=norm(strip(label)); if(/\bIA\b|^IA\b/.test(s)) return 'Ia'; if(/\bIB\b|^IB\b/.test(s)) return 'Ib'; if(/\bIC\b|^IC\b/.test(s)) return 'Ic'; if(/\b(IE|IN|IG|3I0|I0)\b/.test(s)) return 'Ie'; if(/\b(VA|UA)\b|^VA\b|^UA\b/.test(s)) return 'Va'; if(/\b(VB|UB)\b|^VB\b|^UB\b/.test(s)) return 'Vb'; if(/\b(VC|UC)\b|^VC\b|^UC\b/.test(s)) return 'Vc'; if(/\b(VE|VN|VG|VX|UE|UN|UG|UX|3U0|3V0|U0|V0)\b/.test(s)) return 'Ve'; return ''; }
+
+  function safeRange(r){ const st=getState(), data=st&&st.data; if(!data||!r) return null; const rate=r.rate||((typeof estimateSampleRate==='function')?estimateSampleRate():1000); const preMs=Number(r.options&&r.options.preMs)||200, postMs=Number(r.options&&r.options.postMs)||200; const preWin=(typeof samplesFromMs==='function')?samplesFromMs(preMs,rate,1):Math.max(1,Math.round(preMs*rate/1000)); const postWin=(typeof samplesFromMs==='function')?samplesFromMs(postMs,rate,1):Math.max(1,Math.round(postMs*rate/1000)); const s=Math.max(0,Math.round(r.startIndex||0)), e=Math.min(data.samples-1,Math.round(r.endIndex||s)); let pre0=Math.max(0,s-preWin), pre1=Math.max(pre0,Math.min(data.samples-1,s-1)); if(pre1<pre0){pre0=0;pre1=Math.min(data.samples-1,s);} let post0=Math.min(data.samples-1,e+1), post1=Math.min(data.samples-1,e+postWin); if(post1<post0){post0=e;post1=Math.min(data.samples-1,e+1);} return {pre0,pre1,s,e,post0,post1}; }
+  function absPeak(arr,i0,i1){ let m=NaN; if(!arr) return NaN; i0=Math.max(0,Math.round(i0||0)); i1=Math.min(arr.length-1,Math.round(i1==null?arr.length-1:i1)); for(let i=i0;i<=i1;i++){ const v=arr[i]; if(Number.isFinite(v)){ const a=Math.abs(v); if(!Number.isFinite(m)||a>m)m=a; } } return m; }
+  function arrayForRow(row){ const st=getState(), data=st&&st.data, r=st&&st.faultAnalysis; if(!data) return null; const direct=channelByName(row&&row[1]); if(direct) return {arr:data.analog[direct.idx],ch:direct.ch,kind:kindByRow(row,direct.ch)}; const s=norm(strip(row&&row[0])+' '+strip(row&&row[1])); if(/3I0|IA\+IB\+IC/.test(s) && r&&r.roles&&r.roles.I){ const ia=r.roles.I.A, ib=r.roles.I.B, ic=r.roles.I.C; if([ia,ib,ic].every(Number.isInteger)){ const out=new Float64Array(data.samples); for(let i=0;i<data.samples;i++) out[i]=(data.analog[ia][i]||0)+(data.analog[ib][i]||0)+(data.analog[ic][i]||0); return {arr:out,ch:getState().cfg.analog[ia],kind:'I'}; } } return null; }
+  function peakRowFromRaw(row,r){ const info=arrayForRow(row), rg=safeRange(r); if(!info||!rg) return null; const k=info.kind||kindByRow(row,info.ch); if(!k) return null; const vals=[absPeak(info.arr,rg.pre0,rg.pre1),absPeak(info.arr,rg.s,rg.e),absPeak(info.arr,rg.post0,rg.post1)].map(v=>convertValue(v,info.ch,k)); const ratio=(Number.isFinite(vals[0])&&Math.abs(vals[0])>1e-12&&Number.isFinite(vals[1]))?vals[1]/Math.abs(vals[0]):NaN; const label=strip(row[0]).replace(/RMS/ig,'Peak |x|'); const unit=unitFor(info.ch,k); const ratioText=k==='V'?(Number.isFinite(ratio)?fmtN(ratio*100,2)+' % Utrước':''):(Number.isFinite(ratio)?fmtN(ratio,3)+' ×':''); return [label,strip(row[1]),fmtN(vals[0],6),fmtN(vals[1],6),fmtN(vals[2],6),ratioText,unit]; }
+  function buildValueRows(r){
+    const raw=rawRows(r), rms=raw.map(convertRmsRow), peaks=raw.map(row=>peakRowFromRaw(row,r)); const meas=measureMode(); let headers, rows;
+    if(meas==='peak'){
+      headers=['Thông số','Kênh','Trước sự cố Peak |x|','Trong sự cố Peak |x|','Sau sự cố Peak |x|','Tỷ lệ Peak','Đơn vị'];
+      rows=raw.map((row,i)=>peaks[i]||convertRmsRow(row));
+    } else if(meas==='both'){
+      headers=['Thông số','Kênh','Trước RMS','Trước Peak','Trong RMS/Min-Max','Trong Peak','Sau RMS','Sau Peak','Tỷ lệ RMS','Đơn vị'];
+      rows=raw.map((row,i)=>{ const rr=rms[i]||row, pr=peaks[i]; return [strip(rr[0]),strip(rr[1]),strip(rr[2]),pr?strip(pr[2]):'',strip(rr[3]),pr?strip(pr[3]):'',strip(rr[4]),pr?strip(pr[4]):'',strip(rr[5]),strip(rr[6])]; });
+    } else {
+      headers=['Thông số','Kênh','Trước sự cố RMS','Trong sự cố RMS/Min-Max','Sau sự cố RMS','Tỷ lệ','Đơn vị']; rows=rms;
+    }
+    r.v10ValueHeaders=headers; r.v10ValueRows=rows; r.v10RmsRows=rms; r.v10PeakRows=peaks.filter(Boolean); r.v10MeasureMode=meas; r.v10UnitMode=unitMode();
+    const compact={}; (meas==='peak'?r.v10PeakRows:r.v10RmsRows).forEach(row=>{ const role=roleName(row[0]); if(!role||compact[role]) return; compact[role]={role,label:role,channel:strip(row[1]),pre:parseNum(row[2]),fault:parseNum(row[3]),post:parseNum(row[4]),ratio:parseNum(row[5]),unit:strip(row[6]),measure:meas,unitMode:unitMode()}; });
+    r.v10MetricsCompact=compact; return {headers,rows};
+  }
+  function buildSeqRows(r){ const seq=r&&r.sequence; const raw=(seq&&Array.isArray(seq.v10RawRows))?seq.v10RawRows.map(x=>x.slice()):(seq&&Array.isArray(seq.rows)?seq.rows.map(x=>x.slice()):[]); if(seq&&!seq.v10RawRows&&raw.length) seq.v10RawRows=raw.map(x=>x.slice()); const out=[]; raw.forEach(row=>{ if(!Array.isArray(row)||row.length<6){ out.push(row); return; } const label=strip(row[0]), group=strip(row[1]); const s=norm(label+' '+group); let kind=/^I|\bI[012ABC]\b/.test(s)?'I':(/^U|^V|\b[UV][012ABC]\b/.test(s)?'V':''); let found=channelByName(group); let ch=found&&found.ch; if(!ch&&kind) ch=representative(kind); if(!kind&&ch) kind=isI(ch,label)?'I':(isV(ch,label)?'V':''); if(!ch||!kind){ out.push(row); return; } const mag=parseNum(row[2]); out.push([row[0],row[1],Number.isFinite(mag)?fmtN(convertValue(mag,ch,kind),6):row[2],unitFor(ch,kind),row[3],row[4],row[5]]); }); if(seq){ seq.rowsV10=out; seq.v10UnitMode=unitMode(); } return out; }
+  function unitNote(){ const m=unitMode(), meas=measureMode(); const u=m==='secondary'?'thứ cấp a×raw+b':(m==='primary_raw'?'sơ cấp A/V':'sơ cấp đồng nhất kA/kV'); const mm=meas==='rms'?'RMS':(meas==='peak'?'Peak |x|':'RMS + Peak |x|'); return 'V9.7: Đơn vị dùng chung toàn hệ thống: '+u+'; kiểu giá trị: '+mm+'. Báo cáo HTML/CSV/JSON dùng cùng bảng đang hiển thị.'; }
+  function renderValueAndSeq(){ const st=getState(), r=st&&st.faultAnalysis; if(!r) return; const built=buildValueRows(r); const fv=byId('faultValueTable'); if(fv) fv.innerHTML=uiTable(built.headers,built.rows); let div=byId('v97FaultUnitNote'); if(fv&&!div){ div=document.createElement('div'); div.id='v97FaultUnitNote'; div.className='v91-note v92-fixed'; div.style.marginTop='8px'; fv.insertAdjacentElement('afterend',div); } if(div) div.textContent=unitNote(); const seqRows=buildSeqRows(r), seq=byId('sequenceTable'); if(seq) seq.innerHTML=seqRows.length?uiTable(['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'],seqRows):'<div class="tiny" style="padding:12px">Chưa đủ 3 pha để tính thành phần thứ tự.</div>'; const sn=byId('sequenceNote'); if(sn&&r.sequence) sn.textContent='Tính DFT quanh mẫu #'+((r.sequence.centerIndex||0)+1)+', cửa sổ '+r.sequence.windowSamples+' mẫu, f='+fmtN(r.sequence.freq||0,3)+' Hz. Đơn vị đồng bộ theo chế độ '+(unitMode()==='secondary'?'thứ cấp':(unitMode()==='primary_raw'?'sơ cấp A/V':'sơ cấp kA/kV'))+'.'; }
+
+  function ensureControls(){
+    const box=byId('v96CtptBox'); if(!box) return;
+    const sel=byId('v96AnalogDisplayMode');
+    if(sel){ const opts={primary_auto:'Sơ cấp theo CT/VT, đồng nhất kA/kV',primary_raw:'Sơ cấp theo CT/VT, đồng nhất A/V',secondary:'Thứ cấp theo a×raw+b trong DAT'}; [...sel.options].forEach(o=>{ if(opts[o.value]) o.textContent=opts[o.value]; }); const saved=localStorage.getItem(LS_UNIT)||sel.value||DEFAULT_UNIT; sel.value=saved; if(!sel.dataset.v97Bound){ sel.dataset.v97Bound='1'; sel.addEventListener('change',()=>{ localStorage.setItem(LS_UNIT,sel.value); refreshAll(); }); } const lab=sel.closest('div')?.querySelector('label'); if(lab) lab.textContent='Chế độ đơn vị dùng chung toàn hệ thống'; }
+    if(!byId('v97MeasureMode')){ const holder=document.createElement('div'); holder.innerHTML='<label>Kiểu giá trị hiển thị/báo cáo</label><select id="v97MeasureMode"><option value="rms">Chỉ RMS</option><option value="peak">Chỉ Peak |x| tức thời</option><option value="both">RMS + Peak |x| song song</option></select>';
+      const grid=box.querySelector('.grid.two'); if(grid) grid.insertBefore(holder,grid.children[1]||null); else box.appendChild(holder); const s=byId('v97MeasureMode'); s.value=localStorage.getItem(LS_MEASURE)||DEFAULT_MEASURE; s.addEventListener('change',()=>{ localStorage.setItem(LS_MEASURE,s.value); refreshAll(); }); }
+    const status=byId('v96CtptStatus'); if(status){ const cfg=getState()&&getState().cfg; if(!cfg) status.textContent='Chưa nạp CFG.'; else status.textContent=unitNote(); }
+  }
+  function refreshAll(){ ensureControls(); renderValueAndSeq(); try{ renderCursorTable(); }catch(e){} try{ drawAll(); }catch(e){} try{ renderSummary(); }catch(e){} }
+
+  function dispVal(ci,raw){ const ch=state.cfg.analog[ci]; const k=isI(ch,'')?'I':(isV(ch,'')?'V':''); return k?convertValue(raw,ch,k):raw; }
+  function dispUnit(ci){ const ch=state.cfg.analog[ci]; const k=isI(ch,'')?'I':(isV(ch,'')?'V':''); return k?unitFor(ch,k):(ch.unit||''); }
+  if(typeof drawAnalog==='function'){
+    drawAnalog=function(){ const canvas=byId('analogCanvas'); const prep=prepCanvas(canvas); const ctx=prep.ctx,w=prep.w,h=prep.h; const pad={l:55,r:16,t:56,b:32}; drawGrid(ctx,w,h,pad); const data=state.data,cfg=state.cfg, sel=[...state.selectedAnalog]; byId('analogLegend').innerHTML=''; if(!data||!sel.length){ctx.fillStyle='#a9b8d6';ctx.fillText('Chưa chọn kênh analog',pad.l+10,pad.t+20);return;} const rg=findRange(), i0=rg[0], i1=rg[1]; if(i1<=i0) return; const t0=data.times[i0], t1=data.times[i1], W=w-pad.l-pad.r,H=h-pad.t-pad.b; ctx.font='12px system-ui'; ctx.fillStyle='#a9b8d6'; ctx.fillText(fmtN(t0,6)+' s',pad.l,h-10); ctx.fillText(fmtN(t1,6)+' s',w-pad.r-95,h-10); const normalize=checked('normalizePlot'); let gmin=Infinity,gmax=-Infinity; if(!normalize){ for(const ci of sel){ const arr=data.analog[ci]; for(let i=i0;i<=i1;i++){ const v=dispVal(ci,arr[i]); if(Number.isFinite(v)){ if(v<gmin)gmin=v;if(v>gmax)gmax=v; } } } if(gmax===gmin){gmax+=1;gmin-=1;} }
+      const step=Math.max(1,Math.floor((i1-i0)/Math.max(600,W*1.4))); const legend=[]; sel.forEach((ci,n)=>{ const arr=data.analog[ci]; let min=Infinity,max=-Infinity; for(let i=i0;i<=i1;i+=step){ const v=dispVal(ci,arr[i]); if(Number.isFinite(v)){ if(v<min)min=v;if(v>max)max=v; } } if(!Number.isFinite(min)||!Number.isFinite(max)) return; if(max===min){max+=1;min-=1;} const ymin=normalize?min:gmin,ymax=normalize?max:gmax,color=COLORS[n%COLORS.length]; ctx.strokeStyle=color; ctx.lineWidth=1.4; ctx.beginPath(); let started=false; for(let i=i0;i<=i1;i+=step){ const v=dispVal(ci,arr[i]); if(!Number.isFinite(v)) continue; const x=pad.l+(data.times[i]-t0)/(t1-t0)*W; const y=pad.t+(1-(v-ymin)/(ymax-ymin))*H; if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y); } ctx.stroke(); legend.push({name:cfg.analog[ci].id,unit:dispUnit(ci),color,min,max}); }); drawCursors(ctx,w,h,pad,t0,t1); byId('analogLegend').innerHTML=legend.map(l=>'<span class="legend-item"><i class="swatch" style="background:'+l.color+'"></i>'+ehtml(l.name)+' '+ehtml(l.unit||'')+' ['+fmtN(l.min,3)+'..'+fmtN(l.max,3)+']</span>').join(''); };
+  }
+  if(typeof renderCursorTable==='function'){
+    renderCursorTable=function(){ const cfg=state.cfg,data=state.data; if(!cfg||!data){byId('cursorTable').innerHTML='<div class="tiny" style="padding:12px">Chưa có dữ liệu.</div>';return;} const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB), selectedOnly=checked('cursorSelectedOnly'); const rows=[]; rows.push(['TIME','t_s','',fmtN(data.times[ia],9),fmtN(data.times[ib],9),fmtN(data.times[ib]-data.times[ia],9)]); rows.push(['TIME','sample','',ia+1,ib+1,ib-ia]); const A=selectedOnly?[...state.selectedAnalog]:[...Array(cfg.analogCount).keys()], D=selectedOnly?[...state.selectedDigital]:[...Array(cfg.digitalCount).keys()]; for(const a of A){ const va=dispVal(a,data.analog[a][ia]), vb=dispVal(a,data.analog[a][ib]); rows.push(['Analog',a+1,cfg.analog[a].id+' ('+dispUnit(a)+')',fmtN(va,9),fmtN(vb,9),fmtN(vb-va,9)]); } for(const d of D){ const va=data.digital[d][ia]?1:0, vb=data.digital[d][ib]?1:0; rows.push(['Digital',d+1,cfg.digital[d].id,va,vb,va===vb?'không đổi':(va+' → '+vb)]); } byId('cursorTable').innerHTML=uiTable(['Loại','#','Kênh','A','B','Δ B-A'],rows); };
+  }
+  if(typeof renderSummary==='function'){
+    renderSummary=function(){ const data=state.data,cfg=state.cfg; if(!data||!cfg){byId('analogSummary').innerHTML='<div class="tiny" style="padding:12px">Chưa có dữ liệu.</div>';return;} const rows=[]; for(let ci=0;ci<cfg.analogCount;ci++){ const arr=data.analog[ci]; let mn=Infinity,mx=-Infinity,sum=0,sumsq=0,c=0,pk=0; for(let i=0;i<arr.length;i++){ const v=dispVal(ci,arr[i]); if(Number.isFinite(v)){ if(v<mn)mn=v;if(v>mx)mx=v;sum+=v;sumsq+=v*v;c++;pk=Math.max(pk,Math.abs(v)); } } rows.push([ci+1,cfg.analog[ci].id,dispUnit(ci),fmtN(mn,6),fmtN(mx,6),fmtN(c?sum/c:NaN,6),fmtN(c?Math.sqrt(sumsq/c):NaN,6),fmtN(pk,6)]); } byId('analogSummary').innerHTML=rows.length?uiTable(['#','Kênh','Đơn vị','Min','Max','Trung bình','RMS','|Peak|'],rows):'<div class="tiny" style="padding:12px">Chưa có dữ liệu.</div>'; };
+  }
+  if(typeof renderFaultAnalogReportImage==='function'){
+    renderFaultAnalogReportImage=function(r){ const data=state.data,cfg=state.cfg; if(!data||!cfg||!r)return ''; const range=faultFocusRange(r,'report'); if(!range)return ''; const chans=faultRelevantAnalogIndices(r); const width=2600,rowH=188,pad={l:240,r:80,t:92,b:72}; const height=Math.max(820,pad.t+pad.b+rowH*Math.max(1,chans.length)); const c=document.createElement('canvas'); c.width=width;c.height=height; const ctx=c.getContext('2d'); drawReportGrid(ctx,width,height,pad,range.t0,range.t1); drawReportMarkers(ctx,width,height,pad,range.t0,range.t1,r); const i0=nearestIndexByTime(data.times,range.t0), i1=nearestIndexByTime(data.times,range.t1); ctx.font='bold 22px Arial';ctx.fillStyle='#111827';ctx.fillText('Analog waveform - vùng sự cố tập trung ('+(unitMode()==='secondary'?'thứ cấp':(unitMode()==='primary_raw'?'sơ cấp A/V':'sơ cấp kA/kV'))+')',pad.l,34); ctx.font='15px Arial';ctx.fillStyle='#4b5563';ctx.fillText(fmtN(range.t0,6)+' s → '+fmtN(range.t1,6)+' s · '+chans.length+' kênh · cùng chế độ đơn vị với giao diện',pad.l,58); chans.forEach((ci,n)=>{ const ch=cfg.analog[ci],arr=data.analog[ci],yTop=pad.t+n*rowH,labelLane=drawRowMarkerLabels(ctx,width,pad,yTop,rowH,range.t0,range.t1,r,{laneH:70}); const waveTop=yTop+labelLane+10,waveBottom=yTop+rowH-16,waveH=Math.max(34,waveBottom-waveTop),yMid=waveTop+waveH/2; let mn=Infinity,mx=-Infinity; for(let i=i0;i<=i1;i++){ const v=dispVal(ci,arr[i]); if(Number.isFinite(v)){ if(v<mn)mn=v;if(v>mx)mx=v; } } if(!Number.isFinite(mn)||!Number.isFinite(mx)){mn=0;mx=1;} if(mx===mn){mx+=1;mn-=1;} ctx.strokeStyle='#e5e7eb';ctx.beginPath();ctx.moveTo(pad.l,yMid);ctx.lineTo(width-pad.r,yMid);ctx.stroke(); ctx.fillStyle='#111827';ctx.font='bold 16px Arial';ctx.fillText((ci+1)+'. '+(ch.id||''),10,waveTop+waveH*.42); ctx.font='14px Arial';ctx.fillStyle='#4b5563';ctx.fillText(fmtN(mn,4)+'..'+fmtN(mx,4)+' '+dispUnit(ci),10,waveTop+waveH*.42+22); ctx.strokeStyle=COLORS[n%COLORS.length];ctx.lineWidth=2.2;ctx.beginPath();let started=false;const step=Math.max(1,Math.floor((i1-i0)/2800)); for(let i=i0;i<=i1;i+=step){ const v=dispVal(ci,arr[i]); if(!Number.isFinite(v)) continue; const x=reportX(data.times[i],range.t0,range.t1,pad,width); const y=waveTop+(1-(v-mn)/(mx-mn))*waveH; if(!started){ctx.moveTo(x,y);started=true;} else ctx.lineTo(x,y); } ctx.stroke();ctx.strokeStyle='#d7dde8';ctx.beginPath();ctx.moveTo(pad.l,yTop+rowH);ctx.lineTo(width-pad.r,yTop+rowH);ctx.stroke(); }); return c.toDataURL('image/png'); };
+  }
+  function replaceBetween(html,start,end,repl){ const a=html.indexOf(start); if(a<0) return html; const b=html.indexOf(end,a+start.length); if(b<0) return html.slice(0,a)+repl+html.slice(a+start.length); return html.slice(0,a)+repl+html.slice(b); }
+  if(typeof makeFaultReportHtml==='function'){
+    const oldMake=makeFaultReportHtml;
+    makeFaultReportHtml=function(){ const r=ensureFaultAnalysis(); if(!r) return ''; buildValueRows(r); buildSeqRows(r); let html=oldMake.apply(this,arguments); const val='<h2>Giá trị các phần tử sự cố</h2><div class="note">'+ehtml(unitNote())+'</div>'+htmlTable(r.v10ValueHeaders||[],r.v10ValueRows||[]); const seqRows=(r.sequence&&r.sequence.rowsV10)||[]; const seq=seqRows.length?'<h2>Thành phần thứ tự và pha vector</h2>'+htmlTable(['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'],seqRows):''; html=replaceBetween(html,'<h2>Giá trị các phần tử sự cố</h2>','<h2>Dòng thời gian tác động</h2>',val+seq+'<h2>Dòng thời gian tác động</h2>'); return html; };
+  }
+  if(typeof makeFaultReportText==='function'){
+    makeFaultReportText=function(){ const r=ensureFaultAnalysis(); if(!r)return ''; buildValueRows(r); buildSeqRows(r); const lines=[]; lines.push('BÁO CÁO PHÂN TÍCH SỰ CỐ COMTRADE'); lines.push('Bộ file: '+(state.activeBase||'comtrade')); lines.push('Tạo lúc: '+new Date().toLocaleString('vi-VN')); lines.push('Chế độ: '+unitNote()); lines.push(''); (typeof faultSummaryRows==='function'?faultSummaryRows(r):[]).forEach(row=>lines.push(strip(row[0])+': '+strip(row[1]))); lines.push(''); lines.push('GIÁ TRỊ CÁC PHẦN TỬ SỰ CỐ'); lines.push((r.v10ValueHeaders||[]).join('\t')); (r.v10ValueRows||[]).forEach(x=>lines.push(x.map(strip).join('\t'))); if(r.sequence&&r.sequence.rowsV10){ lines.push(''); lines.push('THÀNH PHẦN THỨ TỰ VÀ PHA VECTOR'); lines.push(['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc','Tỷ lệ','Ghi chú'].join('\t')); r.sequence.rowsV10.forEach(x=>lines.push(x.map(strip).join('\t'))); } lines.push(''); lines.push('DÒNG THỜI GIAN TÁC ĐỘNG'); lines.push(['t(s)','Sự kiện','Kênh','Chi tiết'].join('\t')); (r.timeline||[]).forEach(x=>lines.push([fmtN(x.time,9),x.event,x.channel||'',x.detail||''].map(strip).join('\t'))); lines.push(''); lines.push('GHI CHÚ'); (r.notes||[]).forEach(x=>lines.push(strip(x))); return lines.join('\n'); };
+  }
+  if(typeof exportFaultCsv==='function'){
+    exportFaultCsv=function(){ const r=ensureFaultAnalysis(); if(!r)return; buildValueRows(r); const rows=[['section','item','channel','value1','value2','value3','value4','value5','unit_or_note'],['summary','type','',r.type,'','','','',''],['summary','phases','',r.phases.join('-'),'','','','',''],['summary','start_s','',r.startTime,'','','','',''],['summary','end_s','',r.endTime,'','','','',''],['summary','duration_ms','',r.duration*1000,'','','','',''],['unit_mode','mode','',unitNote(),'','','','','']]; (r.v10ValueRows||[]).forEach(x=>rows.push(['value',...x])); if(r.sequence&&r.sequence.rowsV10) r.sequence.rowsV10.forEach(x=>rows.push(['sequence',...x])); (r.timeline||[]).forEach(x=>rows.push(['timeline',x.event,x.channel||'',x.time,x.detail||'','','',''])); downloadText((state.activeBase||'comtrade')+'_fault_analysis_v97.csv', rows.map(rr=>rr.map(csvCell).join(',')).join('\n'), 'text/csv;charset=utf-8'); };
+  }
+  if(typeof exportFaultJson==='function'){
+    exportFaultJson=function(){ const r=ensureFaultAnalysis(); if(!r)return; buildValueRows(r); buildSeqRows(r); const obj=Object.assign({},r,{v97:{version:VERSION,unitMode:unitMode(),measureMode:measureMode(),unitNote:unitNote(),valueHeaders:r.v10ValueHeaders,valueRows:r.v10ValueRows,sequenceRows:r.sequence&&r.sequence.rowsV10,metricsCompact:r.v10MetricsCompact}}); downloadText((state.activeBase||'comtrade')+'_fault_analysis_v97.json', JSON.stringify(obj,null,2), 'application/json;charset=utf-8'); };
+  }
+  function patchLastStat(){ const r=state.faultAnalysis; if(!r) return; buildValueRows(r); const arr=state.faultStats||[]; if(!arr.length) return; const x=arr[arr.length-1]; x.v97UnitMode=unitMode(); x.v97MeasureMode=measureMode(); x.v97UnitNote=unitNote(); x.metricsCompactV97=r.v10MetricsCompact||{}; x.metricsTableV97={headers:r.v10ValueHeaders,rows:r.v10ValueRows}; localStorage.setItem('comtradeFaultStatsV9',JSON.stringify(arr)); const st=byId('statStatus'); if(st){ st.className='status good'; st.textContent='Đã lưu thống kê kèm giá trị '+(measureMode()==='both'?'RMS + Peak':measureMode())+' theo '+(unitMode()==='primary_auto'?'kA/kV sơ cấp':unitMode())+'.'; } }
+  function bindStatsAndExport(){ const b=byId('btnStatSave'); if(b&&!b.dataset.v97Bound){ b.dataset.v97Bound='1'; b.addEventListener('click',()=>setTimeout(patchLastStat,250)); } const bj=byId('btnStatExportJson'); if(bj){ bj.onclick=function(){ patchLastStat(); downloadText('comtrade_fault_statistics_v97.json',JSON.stringify({version:'V9.7-fault-statistics',exportedAt:new Date().toISOString(),unitMode:unitMode(),measureMode:measureMode(),items:state.faultStats||[]},null,2),'application/json;charset=utf-8'); }; } const bc=byId('btnStatExportCsv'); if(bc){ bc.onclick=function(){ patchLastStat(); const arr=state.faultStats||[]; const heads=['id','date','station','line','breaker','faultType','phases','location','cause','durationMs','unitMode','measureMode','metricsV97','conclusion','notes','sourceFile']; const lines=[heads.join(',')]; arr.forEach(x=>lines.push(heads.map(h=>csvCell(h==='metricsV97'?JSON.stringify(x.metricsCompactV97||x.metricsCompact||{}):(x[h]??''))).join(','))); downloadText('comtrade_fault_statistics_v97.csv',lines.join('\n'),'text/csv;charset=utf-8'); }; } }
+
+  if(typeof analyzeFaultCore==='function'){
+    const prevAnalyze=analyzeFaultCore;
+    analyzeFaultCore=function(){ const r=prevAnalyze.apply(this,arguments); if(r&&Array.isArray(r.valueRows)&&!Array.isArray(r.v10RawRmsRows)){ r.v10RawRmsRows=(r.v96RawValueRows||r.valueRows).map(x=>x.slice()); } return r; };
+  }
+  if(typeof renderFaultAnalysis==='function'){
+    const prevRender=renderFaultAnalysis;
+    renderFaultAnalysis=function(){ const ret=prevRender.apply(this,arguments); ensureControls(); renderValueAndSeq(); bindStatsAndExport(); return ret; };
+  }
+  if(typeof renderAll==='function'){
+    const prevAll=renderAll;
+    renderAll=function(){ const ret=prevAll.apply(this,arguments); ensureControls(); bindStatsAndExport(); return ret; };
+  }
+  window.v97RefreshGlobalUnits=refreshAll;
+  window.addEventListener('load',()=>{ setTimeout(()=>{ ensureControls(); refreshAll(); bindStatsAndExport(); },700); });
+})();
+</script>
+
 </body>
 </html>
