@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.9.4 PWA - HTML động đồng bộ RMS/Peak</title>
+<title>COMTRADE Offline Reader Pro V9.9.7 PWA - ZIP/RAR Offline</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,6 +13,10 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
+<!-- V9.9.7: PWA offline đầy đủ cho ZIP/RAR.
+     Để PWA đọc RAR offline, 3 file runtime phải nằm cùng thư mục và được cache bởi sw.js:
+     unarchiver.min.js, worker-bundle.js, libarchive.wasm. -->
+<script src="unarchiver.min.js"></script>
 <style>
 :root{
   --bg:#0b1020;--panel:#111a2f;--panel2:#17223b;--ink:#edf3ff;--muted:#a9b8d6;--line:#2d3d62;
@@ -152,13 +156,13 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
       </div>
 
       <div id="drop" class="drop">
-        <strong>Thả bộ file COMTRADE vào đây</strong>
-        <p>Chọn .cfg + .dat, hoặc file một-gói .cff, kèm .log/.hdr/.inf nếu có.</p>
+        <strong>Thả bộ file COMTRADE / ZIP / RAR vào đây</strong>
+        <p>Chọn .cfg + .dat, file một-gói .cff, .zip hoặc .rar chứa bộ COMTRADE; kèm .log/.hdr/.inf nếu có.</p>
         <div class="toolbar" style="justify-content:center;margin-top:10px">
           <button id="btnPickFiles">Chọn file</button>
           <button id="btnPickFolder">Chọn thư mục</button>
         </div>
-        <input id="fileInput" type="file" multiple accept=".cfg,.dat,.cff,.log,.hdr,.inf,.txt,.CFG,.DAT,.CFF,.LOG,.HDR,.INF,.TXT">
+        <input id="fileInput" type="file" multiple accept=".cfg,.dat,.cff,.zip,.rar,.log,.hdr,.inf,.txt,.CFG,.DAT,.CFF,.ZIP,.RAR,.LOG,.HDR,.INF,.TXT">
         <input id="folderInput" type="file" webkitdirectory directory multiple>
       </div>
       <div style="height:12px"></div>
@@ -207,7 +211,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
       <div class="card">
         <h3>Hướng dẫn nhanh</h3>
         <div class="tiny">
-          1) Chọn bộ <span class="kbd">ten.cfg</span> + <span class="kbd">ten.dat</span> hoặc <span class="kbd">ten.cff</span>.<br>
+          1) Chọn bộ <span class="kbd">ten.cfg</span> + <span class="kbd">ten.dat</span>, <span class="kbd">ten.cff</span>, <span class="kbd">ten.zip</span> hoặc <span class="kbd">ten.rar</span> chứa các file COMTRADE.<br>
           2) Nếu DAT không đọc đúng, thử <b>Vendor tolerant</b>, đổi endian hoặc timestamp.<br>
           3) Vào tab <b>Biểu đồ</b>, kéo thanh trượt A/B để đo thời gian và xem giá trị tức thời.<br>
           4) Vào tab <b>Phân tích sự cố</b> để nhận dạng dạng sự cố, pha sự cố, giá trị và thời gian tác động.<br>
@@ -584,7 +588,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 
       <section id="page-export" class="page">
         <div class="card"><h2>Xuất dữ liệu</h2><p class="tiny">CSV có thể mở bằng Excel. Với bản ghi rất lớn, chỉ nên xuất kênh cần thiết hoặc khoảng thời gian đã chọn.</p><div class="toolbar"><button id="btnCsvSelected">Xuất CSV kênh đang chọn</button><button id="btnCsvAllAnalog">Xuất CSV toàn bộ Analog</button><button id="btnCsvCursor">Xuất CSV mẫu tại con trỏ</button><button id="btnJsonSummary">Xuất JSON tóm tắt</button><button id="btnExportFaultHtml2">Xuất báo cáo sự cố HTML</button><button id="btnOpenFaultHtml2">Mở báo cáo sự cố</button></div></div>
-        <div class="card"><h2>Ghi chú kỹ thuật</h2><ul class="tiny"><li>Hỗ trợ file rời .CFG/.DAT và file một-gói .CFF có các section CFG/INF/HDR/DAT.</li><li>Có lõi chuyển đổi xuất lại COMTRADE 1991/1999/2013, DAT ASCII/BINARY/BINARY32/FLOAT32 và đóng gói ZIP/CFF.</li><li>Có công cụ phân tích sự cố: nhận dạng pha/dạng/thời gian sự cố, tự phóng biểu đồ vào vùng sự cố, xuất ảnh biểu đồ tập trung kích thước lớn và giá trị RMS trước/trong/sau sự cố.</li><li>Hỗ trợ DAT: ASCII, BINARY 16-bit, BINARY32, FLOAT32; có cơ chế thử endian, byte đệm/CRLF, timestamp µs/ns/ms, digital packed word/hex.</li><li>Công thức scale analog: <span class="mono">giá trị = a × raw + b</span>. FLOAT32 được coi là giá trị thực, không nhân a/b.</li><li>Biến thể mã hóa độc quyền hoặc DAT nén của từng hãng chưa thể bảo đảm nếu không có mẫu file thật để nhận diện chữ ký.</li></ul><div id="decoderNotes" class="note"></div></div>
+        <div class="card"><h2>Ghi chú kỹ thuật</h2><ul class="tiny"><li>Hỗ trợ file rời .CFG/.DAT, file một-gói .CFF, đọc trực tiếp .ZIP và .RAR khi chạy kèm bộ RAR runtime offline đã được PWA cache: unarchiver.min.js, worker-bundle.js, libarchive.wasm. Nếu thiếu runtime, chương trình báo hướng dẫn rõ ràng và vẫn đọc ZIP/CFG/DAT bình thường.</li><li>Có lõi chuyển đổi xuất lại COMTRADE 1991/1999/2013, DAT ASCII/BINARY/BINARY32/FLOAT32 và đóng gói ZIP/CFF.</li><li>Có công cụ phân tích sự cố: nhận dạng pha/dạng/thời gian sự cố, tự phóng biểu đồ vào vùng sự cố, xuất ảnh biểu đồ tập trung kích thước lớn và giá trị RMS trước/trong/sau sự cố.</li><li>Hỗ trợ DAT: ASCII, BINARY 16-bit, BINARY32, FLOAT32; có cơ chế thử endian, byte đệm/CRLF, timestamp µs/ns/ms, digital packed word/hex.</li><li>Công thức scale analog: <span class="mono">giá trị = a × raw + b</span>. FLOAT32 được coi là giá trị thực, không nhân a/b.</li><li>Biến thể mã hóa độc quyền hoặc DAT nén của từng hãng chưa thể bảo đảm nếu không có mẫu file thật để nhận diện chữ ký.</li></ul><div id="decoderNotes" class="note"></div></div>
       </section>
     </div>
   </main>
@@ -1245,7 +1249,64 @@ function renderDigitalEvents(){ const cfg=state.cfg,data=state.data; if(!cfg||!d
 function renderLogs(){ const sel=$('logSelect'); sel.innerHTML=''; if(!state.logs.length){ sel.innerHTML='<option>Không có</option>'; $('logView').textContent='Chưa có file log/hdr/inf.'; return; } state.logs.forEach((l,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=l.name; sel.appendChild(o); }); showLog(); }
 function showLog(){ if(!state.logs.length) return; const i=Number($('logSelect').value)||0; const text=state.logs[i]?.text||''; const q=$('logSearch').value.trim().toLowerCase(); if(!q){ $('logView').textContent=text; return; } const lines=text.split(/\r?\n/).filter(line=>line.toLowerCase().includes(q)); $('logView').textContent=lines.length?lines.join('\n'):'Không tìm thấy: '+q; }
 function renderDecoderNotes(){ const notes=[]; if(state.data?.parserNotes) notes.push(...state.data.parserNotes); if(state.decoderNotes?.length) notes.push(...state.decoderNotes); $('decoderNotes').textContent=notes.length?notes.join('\n'):'Chưa có ghi chú giải mã.'; }
-async function handleFiles(fileList){ const files=[...fileList]; if(!files.length)return; state.groups.clear(); state.activeBase=null; state.cfg=null; state.data=null; state.logs=[]; state.summary=[]; state.selectedAnalog.clear(); state.selectedDigital.clear(); state.cursorA=0; state.cursorB=0; state.activeCursor='A'; state.faultAnalysis=null; setStatus('Đang phân loại file...', '');
+
+function readU16(dv, off){ return dv.getUint16(off, true); }
+function readU32(dv, off){ return dv.getUint32(off, true); }
+function mimeByExt(name){ const e=extName(name); if(e==='cfg'||e==='dat'||e==='cff'||e==='log'||e==='hdr'||e==='inf'||e==='txt') return 'text/plain;charset=utf-8'; return 'application/octet-stream'; }
+function safeZipName(name){ return String(name||'').replace(/^\/+/, '').replace(/\\/g,'/'); }
+async function inflateRawBytes(bytes){
+  if(typeof DecompressionStream==='undefined') throw new Error('Trình duyệt này chưa hỗ trợ DecompressionStream để giải nén ZIP deflate. Hãy dùng Chrome/Edge mới hoặc nạp file rời.');
+  const ds=new DecompressionStream('deflate-raw');
+  const ab=await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer();
+  return new Uint8Array(ab);
+}
+async function extractZipFile(zipFile){
+  const buf=await zipFile.arrayBuffer(); const bytes=new Uint8Array(buf); const dv=new DataView(buf); const len=bytes.length;
+  let eocd=-1; const start=Math.max(0,len-22-65536);
+  for(let i=len-22;i>=start;i--){ if(readU32(dv,i)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) throw new Error('Không tìm thấy EOCD, file ZIP có thể hỏng hoặc là ZIP64/định dạng không chuẩn.');
+  const total=readU16(dv,eocd+10); const cdSize=readU32(dv,eocd+12); const cdOff=readU32(dv,eocd+16);
+  if(cdOff<=0 || cdOff>=len) throw new Error('Central directory ZIP không hợp lệ.');
+  let p=cdOff; const out=[]; const tdUtf8=new TextDecoder('utf-8',{fatal:false});
+  for(let n=0;n<total && p<cdOff+cdSize && p<len;n++){
+    if(readU32(dv,p)!==0x02014b50) break;
+    const flags=readU16(dv,p+8), method=readU16(dv,p+10), compSize=readU32(dv,p+20), fnameLen=readU16(dv,p+28), extraLen=readU16(dv,p+30), commentLen=readU16(dv,p+32), lho=readU32(dv,p+42);
+    let name=safeZipName(tdUtf8.decode(bytes.slice(p+46,p+46+fnameLen)));
+    p += 46 + fnameLen + extraLen + commentLen;
+    if(!name || name.endsWith('/')) continue;
+    const ext=extName(name); if(!['cfg','dat','cff','log','hdr','inf','txt'].includes(ext)) continue;
+    if(lho<0 || lho+30>len || readU32(dv,lho)!==0x04034b50) continue;
+    const lfNameLen=readU16(dv,lho+26), lfExtraLen=readU16(dv,lho+28); const dataStart=lho+30+lfNameLen+lfExtraLen;
+    if(dataStart+compSize>len) throw new Error('Dữ liệu nén vượt quá kích thước file ZIP ở mục '+name+'.');
+    const comp=bytes.slice(dataStart,dataStart+compSize); let data;
+    if(method===0) data=comp;
+    else if(method===8) data=await inflateRawBytes(comp);
+    else throw new Error('ZIP có mục '+name+' dùng phương thức nén '+method+' chưa hỗ trợ. Hãy nén ZIP dạng Store/Deflate hoặc giải nén trước.');
+    const parts=name.split('/'); const shortName=parts[parts.length-1] || name;
+    let f; try{ f=new File([data], shortName, {type:mimeByExt(shortName), lastModified:zipFile.lastModified||Date.now()}); }catch(e){ f=makeVirtualFile([data], shortName, mimeByExt(shortName)); }
+    f._zipPath=name; f._zipSource=zipFile.name; out.push(f);
+  }
+  if(!out.length) throw new Error('Không tìm thấy CFG/DAT/CFF/LOG/HDR/INF/TXT trong ZIP.');
+  return out;
+}
+async function expandArchiveInputs(inputFiles){
+  const result=[]; const messages=[];
+  for(const f of inputFiles){
+    const ext=extName(f.name);
+    if(ext==='zip'){
+      setStatus('Đang giải nén ZIP: '+f.name, '');
+      try{ const got=await extractZipFile(f); result.push(...got); messages.push('ZIP '+f.name+': đã giải nén '+got.length+' file dùng được.'); }
+      catch(e){ messages.push('ZIP '+f.name+': lỗi - '+e.message); result.push(makeVirtualFile(['Lỗi giải nén ZIP '+f.name+': '+e.message], baseName(f.name)+'_zip_error.log','text/plain')); }
+    } else if(ext==='rar'){
+      setStatus('Đang giải nén RAR: '+f.name, '');
+      try{ const got=await extractRarFile(f); result.push(...got); messages.push('RAR '+f.name+': đã giải nén '+got.length+' file dùng được.'); }
+      catch(e){ const msg='RAR '+f.name+': '+e.message; messages.push(msg); result.push(makeVirtualFile([msg], baseName(f.name)+'_rar_note.log','text/plain')); }
+    } else result.push(f);
+  }
+  if(messages.length){ state.decoderNotes=state.decoderNotes||[]; state.decoderNotes.push(...messages); }
+  return result;
+}
+async function handleFiles(fileList){ const rawFiles=[...fileList]; if(!rawFiles.length)return; const files=await expandArchiveInputs(rawFiles); if(!files.length)return; state.groups.clear(); state.activeBase=null; state.cfg=null; state.data=null; state.logs=[]; state.summary=[]; state.selectedAnalog.clear(); state.selectedDigital.clear(); state.cursorA=0; state.cursorB=0; state.activeCursor='A'; state.faultAnalysis=null; setStatus('Đang phân loại file...', '');
   for(const f of files){ const ext=extName(f.name); if(ext==='cff'){ try{ const ex=await extractCff(f); const b=ex.base; state.groups.set(b,{cfg:ex.cfg,dat:ex.dat,logs:ex.logs.map(l=>makeVirtualFile([l.text],l.name,'text/plain')),cff:f,cffMeta:ex.meta}); }catch(e){ state.groups.set(baseName(f.name),{cfg:null,dat:null,logs:[makeVirtualFile(['Lỗi đọc CFF: '+e.message],baseName(f.name)+'.cff_error.log','text/plain')],cff:f,cffError:e.message}); } continue; }
     if(!['cfg','dat','log','hdr','inf','txt'].includes(ext)) continue; const b=baseName(f.name); if(!state.groups.has(b)) state.groups.set(b,{cfg:null,dat:null,logs:[]}); const g=state.groups.get(b); if(ext==='cfg') g.cfg=f; else if(ext==='dat') g.dat=f; else g.logs.push(f); }
   renderGroups(); const first=[...state.groups.entries()].find(([b,g])=>g.cfg&&g.dat); if(first) await loadGroup(first[0]); else setStatus('Đã nhận file nhưng chưa tìm thấy .CFG + .DAT hoặc CFF hợp lệ.', 'warn'); }
@@ -1757,7 +1818,7 @@ initSidebarMode();
 
 <script>
 (function(){
-  const APP_VERSION='COMTRADE-PWA-V9.3.0-STAT-METRICS-COLLAPSIBLE-PANELS';
+  const APP_VERSION='COMTRADE-PWA-V9.9.7-RAR-OFFLINE-CACHED';
   let deferredPrompt=null;
   function el(id){return document.getElementById(id)}
   function toast(msg,type=''){
