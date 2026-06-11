@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.9.7 PWA - ZIP/RAR Offline</title>
+<title>COMTRADE Offline Reader Pro V9.9.12 PWA - Fault Locator</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -120,7 +120,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.9.0</h1>
+      <h1>COMTRADE Offline Reader Pro V9.9.12</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -371,6 +371,15 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
           <div id="faultResultStatus" class="status" style="margin-top:12px">Chưa phân tích.</div>
         </div>
         <div class="grid four" id="faultMetrics"></div>
+        <div class="card" id="faultLocationCard">
+          <h2>Ước tính vị trí sự cố</h2>
+          <div id="faultLocationResult" class="v95-estimate">Chưa tính. Bấm “Phân tích sự cố”; công cụ sẽ tự dùng phương pháp lai rơle A-G/B-G + K0 nếu đủ kênh Va/Vb/Vc, Ia/Ib/Ic và Ie.</div>
+          <div class="toolbar" style="margin-top:10px">
+            <button id="btnFaultRecalcLocation" type="button">Tính lại khoảng cách</button>
+            <button id="btnFaultOpenMultiSettings" type="button">Mở cài đặt vị trí / đa đầu</button>
+          </div>
+          <div class="tiny" style="margin-top:8px">Phần này dùng cùng thông số ở tab <b>Đa bản ghi / Vị trí sự cố</b>: K0, góc đường dây, |Z1| Ω/km, tự quy đổi CT/PT và chiều dài đường dây. Vì vậy khi phân tích một bản ghi, kết quả khoảng cách sẽ xuất hiện ngay trong phần Phân tích sự cố; tab Đa bản ghi dùng để ghép các bản ghi ở hai đầu cùng đường dây và đối chiếu.</div>
+        </div>
         <div class="card"><h2>Kênh liên quan đang dùng để phân tích</h2><div id="faultChannelMapUsed" class="table-wrap compact-table"></div><div id="faultChannelNote" class="v91-note">V9.2 dùng thứ tự chuẩn Ia → Ib → Ic → Ie/In/Ig → Va → Vb → Vc → Ve/Vn/Vg/Vx. Nếu tên kênh đặc thù vẫn lệch, hãy gán lại trong tab Bản đồ kênh.</div></div>
         <div class="card"><h2>Kết luận nhanh</h2><div id="faultSummary" class="table-wrap"></div></div>
         <div class="card"><h2>Giá trị các phần tử sự cố</h2><div id="faultValueTable" class="table-wrap"></div></div>
@@ -412,8 +421,8 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 
       <section id="page-stats" class="page">
         <div class="card stat-form">
-          <h2>Thống kê sự cố V9.5</h2>
-          <p class="tiny">Lưu các sự cố đã phân tích để so sánh khi đọc bản ghi mới. V9.5 lưu kèm giá trị dòng/áp RMS và bổ sung đối chiếu đa bản ghi, tính vị trí sự cố để có cơ sở định lượng khi tìm sự cố tương tự. Có thể nhập/xuất JSON/CSV để dùng chung giữa các máy offline.</p>
+          <h2>Thống kê sự cố V9.9.12</h2>
+          <p class="tiny">Lưu các sự cố đã phân tích để so sánh khi đọc bản ghi mới. V9.9.12 lưu kèm giá trị dòng/áp RMS và bổ sung đối chiếu đa bản ghi, tính vị trí sự cố để có cơ sở định lượng khi tìm sự cố tương tự. Có thể nhập/xuất JSON/CSV để dùng chung giữa các máy offline.</p>
           <div class="grid four">
             <div><label>Ngày/giờ sự cố</label><input id="statDate" type="text" placeholder="VD: 2026-06-10 14:35"></div>
             <div><label>Trạm</label><input id="statStation" type="text"></div>
@@ -448,8 +457,8 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 
       <section id="page-multi" class="page">
         <div class="card">
-          <h2>Đọc nhiều bản ghi / Tính vị trí sự cố V9.5</h2>
-          <p class="tiny">Chức năng này phân tích đồng thời nhiều bộ COMTRADE đã chọn ở thanh bên. Kết quả dùng các bản ghi đang nạp, cơ sở thống kê đã lưu và thông số đường dây để ước tính vị trí sự cố. Công thức khoảng cách là ước tính offline, cần kiểm tra lại với thông số CT/PT, VT/CVT, đơn vị kênh và thông số đường dây thực tế.</p>
+          <h2>Đa đầu đường dây / Tính vị trí sự cố V9.9.12</h2>
+          <p class="tiny">Chức năng này dùng để nạp các bản ghi COMTRADE ở các đầu của cùng một đường dây. Mỗi bản ghi được phân tích riêng bằng phương pháp vị trí trong tab Phân tích sự cố; sau đó tab này quy đổi kết quả hai đầu về cùng một mốc để kiểm tra sai lệch và đề xuất khoảng cách cuối cùng.</p>
           <div class="v95-actions">
             <button id="btnMultiPickFiles">Chọn thêm file</button>
             <button id="btnMultiPickFolder">Chọn thư mục bản ghi</button>
@@ -459,16 +468,22 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
             <button id="btnMultiExportCsv">Xuất CSV tổng hợp</button>
             <button id="btnMultiExportHtml">Xuất HTML tổng hợp</button>
           </div>
-          <div id="multiStatus" class="status" style="margin-top:12px">Chưa phân tích nhiều bản ghi. Hãy chọn nhiều bộ .CFG+.DAT hoặc .CFF rồi bấm “Đọc & phân tích tất cả bộ file”.</div>
+          <div id="multiStatus" class="status" style="margin-top:12px">Chưa phân tích nhiều bản ghi. Hãy chọn các bộ .CFG+.DAT hoặc .CFF của hai đầu cùng đường dây rồi bấm “Đọc & phân tích tất cả bộ file”.</div>
         </div>
 
         <div class="card">
           <h2>Thông số tính vị trí sự cố</h2>
           <div class="grid four">
+            <div><label>Chế độ đa bản ghi</label><select id="multiEndpointMode"><option value="twoEndLine" selected>Các đầu của cùng một đường dây</option><option value="independent">Các bản ghi độc lập / nhiều sự cố</option></select></div>
+            <div><label>Cách nhận biết đầu đường dây</label><select id="multiEndpointPairing"><option value="autoByStation" selected>Tự nhóm theo tên trạm/thiết bị</option><option value="fileOrder">Theo thứ tự file: bản 1 đầu 1, bản 2 đầu 2</option></select></div>
+            <div><label>Tên đầu 1 / đầu gần</label><input id="multiEndAName" type="text" placeholder="VD: Trạm A / đầu đặt rơle đang xem"></div>
+            <div><label>Tên đầu 2 / đầu xa</label><input id="multiEndBName" type="text" placeholder="VD: Trạm B / đầu đối diện"></div>
+          </div>
+          <div class="grid four" style="margin-top:10px">
             <div><label>Chiều dài đường dây (km)</label><input id="multiLineLengthKm" type="number" step="0.001" value="0" placeholder="VD: 35.2"></div>
             <div><label>R1 dương thứ tự (Ω/km)</label><input id="multiR1" type="number" step="0.0001" value="0"></div>
             <div><label>X1 dương thứ tự (Ω/km)</label><input id="multiX1" type="number" step="0.0001" value="0"></div>
-            <div><label>Phương pháp quy đổi khoảng cách</label><select id="multiDistanceMethod"><option value="projection" selected>Chiếu Zapp lên Z1</option><option value="magnitude">Theo |Zapp| / |Z1|</option></select></div>
+            <div><label>Phương pháp quy đổi khoảng cách</label><select id="multiDistanceMethod"><option value="relayHybrid" selected>Lai rơle: A-G/B-G + K0</option><option value="groundPair">TB vòng pha-đất có K0</option><option value="projection">Chiếu Zapp lên Z1</option><option value="magnitude">Theo |Zapp| / |Z1|</option></select></div>
           </div>
           <div class="grid four" style="margin-top:10px">
             <div><label>R0 không thứ tự (Ω/km)</label><input id="multiR0" type="number" step="0.0001" value="0"></div>
@@ -482,7 +497,19 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
             <div><label>So sánh thống kê đã lưu</label><select id="multiUseStats"><option value="yes" selected>Có</option><option value="no">Không</option></select></div>
             <div><label>Gộp kết quả nhiều bản ghi</label><select id="multiConsensusMode"><option value="median" selected>Trung vị</option><option value="average">Trung bình</option></select></div>
           </div>
-          <div class="v95-param-note" style="margin-top:10px">Gợi ý: nếu kênh điện áp dùng kV và dòng dùng kA thì tỷ số kV/kA đã là Ω nên thường để hệ số U/I = 1. Nếu kênh điện áp là kV nhưng dòng là A, đặt hệ số U = 1000. Với sự cố chạm đất, V9.5 dùng công thức gần đúng Z = Vpha / (Ipha + K0 × Ires), K0 = (Z0−Z1)/(3Z1).</div>
+          <div class="grid four" style="margin-top:10px">
+            <div><label>|K0| bù dòng dư</label><input id="multiK0Mag" type="number" step="0.0001" value="0.500" placeholder="VD: 0.500"></div>
+            <div><label>Góc K0 (độ)</label><input id="multiK0Ang" type="number" step="0.001" value="17.000" placeholder="VD: 17"></div>
+            <div><label>Góc đường dây / RCA (độ)</label><input id="multiLineAngleDeg" type="number" step="0.001" value="65.000" placeholder="VD: 65"></div>
+            <div><label>|Z1| quy đổi (Ω/km)</label><input id="multiZ1Mag" type="number" step="0.0001" value="0.500" placeholder="VD: 0.500"></div>
+          </div>
+          <div class="grid four" style="margin-top:10px">
+            <div><label>Tự quy đổi CT/PT từ CFG</label><select id="multiAutoCtPt"><option value="yes" selected>Có, dùng primary/secondary</option><option value="no">Không, chỉ dùng hệ số U/I</option></select></div>
+            <div><label>Ghi chú CT/PT</label><div class="tiny" style="padding-top:9px">Nếu CFG ghi giá trị thứ cấp S, app tự nhân U theo VT/PT và I theo CT trước khi tính Ω sơ cấp.</div></div>
+            <div><label>Mốc phasor</label><div class="tiny" style="padding-top:9px">Ưu tiên 1 chu kỳ trước TRIP; nếu không có TRIP thì lấy sau pickup.</div></div>
+            <div><label>Đối chiếu pha-pha</label><div class="tiny" style="padding-top:9px">Vòng A-B/B-C/C-A chỉ dùng kiểm tra khi có đất.</div></div>
+          </div>
+          <div class="v95-param-note" style="margin-top:10px">V9.9.12 đưa phương pháp gần rơle vào trực tiếp phần Phân tích sự cố: với sự cố hai pha chạm đất, tính riêng vòng A-G/B-G bằng Z = Vpha / (Ipha + K0 × Ires), tự quy đổi CT/PT theo CFG nếu kênh đang ở thứ cấp, sau đó chiếu từng Z lên góc đường dây và lấy trung bình. Nếu chưa nhập R1/X1, chương trình dùng |Z1|∠góc đường dây để đổi Ω ra km. Với bộ GRL/Toshiba mẫu, các giá trị K0≈0.500∠17°, |Z1|≈0.500Ω/km, góc đường dây≈65° và tự quy đổi CT/PT sẽ đưa kết quả về vùng rơle 35,5 km.</div>
         </div>
 
         <div class="grid two">
@@ -503,7 +530,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 
         <div class="card">
           <h2>Ghi chú tính toán</h2>
-          <div id="multiNotes" class="logbox">V9.5 dùng dữ liệu phasor cơ bản quanh vùng sự cố và thông số đường dây người dùng nhập. Nếu không có đủ Va/Vb/Vc hoặc Ia/Ib/Ic/Ie, chương trình vẫn phân tích dạng sự cố nhưng không tính được vị trí bằng trở kháng.</div>
+          <div id="multiNotes" class="logbox">V9.9.12 dùng phasor quanh vùng sự cố, bù K0 cho vòng pha-đất và chiếu trở kháng nhìn thấy lên góc đường dây. Nếu có sự cố A-B-G/B-C-G/C-A-G, chương trình tính các vòng pha-đất liên quan rồi lấy trung bình để gần cách rơle hiển thị vị trí.</div>
         </div>
       </section>
 
@@ -1997,6 +2024,49 @@ initSidebarMode();
   function exportCsvV94(){ const arr=loadStats(); const lines=[STAT_HEADS.join(',')]; arr.forEach(x=>{ const row={...x}; ROLE_KEYS.forEach(k=>{ const m=valuesForRole(x,k); row[k+'_fault']=m?.fault??''; row[k+'_pre']=m?.pre??''; row[k+'_post']=m?.post??''; row[k+'_ratio']=m?.ratio??''; row[k+'_channel']=m?.channel??''; row[k+'_unit']=m?.unit??''; }); row.metricsJson=JSON.stringify(x.metricsCompact||x.metrics?.compact||{}); lines.push(STAT_HEADS.map(h=>csvCell(row[h]??'')).join(',')); }); downloadText('comtrade_fault_statistics_v9_4.csv',lines.join('\n'),'text/csv;charset=utf-8'); }
   function fillFromCurrentV94(){ const r=ensureFaultAnalysis(); if(!r)return; window.v94EditingId=''; const b=$('btnStatSave'); if(b)b.textContent='Lưu vào thống kê'; if($('statDate'))$('statDate').value=new Date().toLocaleString('vi-VN'); if($('statStation'))$('statStation').value=$('mapStation')?.value||state.cfg?.station||''; if($('statLine'))$('statLine').value=$('mapLine')?.value||''; if($('statBreaker'))$('statBreaker').value=$('mapBreakerName')?.value||''; if($('statFaultType'))$('statFaultType').value=r.type||''; if($('statPhases'))$('statPhases').value=(r.phases||[]).join('-'); if($('statConclusion'))$('statConclusion').value=(r.breakerAnalysis?.status||'')+'\n'+(r.breakerAnalysis?.conclusion||[]).join('\n'); if($('statNotes'))$('statNotes').value=(r.notes||[]).join('\n'); const st=$('statStatus'); if(st){st.className='status good';st.textContent='Đã lấy thông tin sự cố hiện tại. Khi lưu, bảng thống kê sẽ có các cột Ia/Ib/Ic/Ie và Va/Vb/Vc/Ve.';} }
   function breakerHtml(r){ const b=r?.breakerAnalysis||{}; const cls=b.level==='good'?'good-text':b.level==='bad'?'bad-text':'warn-text'; const rows=[['Trạng thái',`<b class="${cls}">${safeEsc(b.status||'Chưa đủ dữ liệu')}</b>`],['Pickup',b.pickup?`${fmt(b.pickup.time,9)} s · ${safeEsc(b.pickup.channel||'')}`:'không thấy'],['Trip',b.trip?`${fmt(b.trip.time,9)} s · ${safeEsc(b.trip.channel||'')}`:'không thấy'],['Block/Lockout',b.block?`${fmt(b.block.time,9)} s · ${safeEsc(b.block.channel||'')}`:'không thấy'],['Máy cắt/52a/52b',b.breaker?`${fmt(b.breaker.time,9)} s · ${safeEsc(b.breaker.channel||'')}`:'không thấy'],['Trip → MC',b.breakerDelayMs!=null?`${fmt(b.breakerDelayMs,3)} ms`:'' ]]; const concl=(b.conclusion||[]).map(x=>`<li>${safeEsc(x)}</li>`).join('')||'<li>Chưa có kết luận riêng về máy cắt.</li>'; return `<h2>Phân tích máy cắt / nguyên nhân không loại trừ sự cố</h2><div class="v94-report-section">${table(['Mục','Giá trị'],rows)}<h3>Kết luận máy cắt</h3><ul>${concl}</ul></div>`; }
+
+  function renderFaultLocationPanel(r){
+    const box=$('faultLocationResult');
+    if(!box) return;
+    if(!r){ box.textContent='Chưa tính. Bấm “Phân tích sự cố” để tự tính khoảng cách từ sóng dòng/áp.'; return; }
+    const loc=r.locationV999 || r.faultLocation || calcFaultLocation(r);
+    r.locationV999=loc; r.faultLocation=loc;
+    if(!loc || !loc.ok){ box.innerHTML=`<span class="v95-loc-bad">Chưa tính được vị trí</span><div class="v95-table-note">${sEsc(loc?.reason||'Thiếu dữ liệu hoặc thông số đường dây.')}</div>`; return; }
+    const cls=loc.level==='good'?'v95-loc-good':loc.level==='bad'?'v95-loc-bad':'v95-loc-warn';
+    const loops=(loc.loops||[]).length?`\nVòng tính: ${loc.loops.map(x=>`${x.label}=${fmt(x.km,3)} km`).join('; ')}`:'';
+    const pct=loc.pct!=null?` · ${fmt(loc.pct,2)}% chiều dài đường dây`:'';
+    const center=Number.isFinite(loc.phasorCenterIndex)?`\nMẫu phasor: #${loc.phasorCenterIndex+1}`:'';
+    box.innerHTML=`<div><b class="${cls}">Vị trí sự cố ước tính: ${fmt(loc.km,4)} km</b>${pct}</div>`+
+      `<div class="v95-table-note" style="margin-top:8px">Zapp = ${sEsc(cfmt(loc.zapp,6))} Ω\n${sEsc(loc.formula)}\nKênh dùng: ${sEsc(loc.used||'')}\nK0 = ${sEsc(cfmt(loc.k0,4))}; Z1/km = ${sEsc(cfmt(loc.lineZ,4))} Ω/km; Scale U/I = ${sEsc(fmt(loc.scale?.uf,3))}/${sEsc(fmt(loc.scale?.cf,3))}${sEsc(loops)}${sEsc(center)}\n${sEsc((loc.notes||[]).join('; '))}</div>`;
+  }
+  const prevRenderFaultAnalysisV999 = typeof renderFaultAnalysis==='function' ? renderFaultAnalysis : null;
+  if(prevRenderFaultAnalysisV999){
+    renderFaultAnalysis=function(){
+      prevRenderFaultAnalysisV999();
+      const r=state.faultAnalysis;
+      if(r){ try{ r.locationV999=calcFaultLocation(r); r.faultLocation=r.locationV999; }catch(e){ r.locationV999={ok:false,reason:e.message}; } }
+      renderFaultLocationPanel(r);
+    };
+  }
+  const prevRunFaultAnalysisV999 = typeof runFaultAnalysis==='function' ? runFaultAnalysis : null;
+  if(prevRunFaultAnalysisV999){
+    runFaultAnalysis=function(silent=false){
+      const r=prevRunFaultAnalysisV999(silent);
+      if(r){
+        try{ r.locationV999=calcFaultLocation(r); r.faultLocation=r.locationV999; }catch(e){ r.locationV999={ok:false,reason:e.message}; }
+        renderFaultLocationPanel(r);
+        const st=$('faultResultStatus');
+        if(st){
+          const loc=r.locationV999;
+          st.textContent += loc?.ok ? `\nVị trí sự cố ước tính: ${fmt(loc.km,4)} km${loc.pct!=null?' · '+fmt(loc.pct,2)+'%':''}.` : `\nVị trí sự cố: chưa tính được (${loc?.reason||'thiếu dữ liệu/thông số'}).`;
+        }
+      }
+      return r;
+    };
+  }
+  window.COMTRADE_calcFaultLocationV999=calcFaultLocation;
+  window.COMTRADE_renderFaultLocationV999=function(){ const r=ensureFaultAnalysis(); if(r){ r.locationV999=calcFaultLocation(r); r.faultLocation=r.locationV999; renderFaultLocationPanel(r); } };
+
   const oldMakeHtml = typeof makeFaultReportHtml==='function' ? makeFaultReportHtml : null;
   if(oldMakeHtml){ makeFaultReportHtml=function(){ const html=oldMakeHtml(); const r=state.faultAnalysis||ensureFaultAnalysis?.(); if(!html||!r)return html; const sec=breakerHtml(r); if(html.includes('<h2>Biểu đồ sóng tập trung vùng sự cố</h2>')) return html.replace('<h2>Biểu đồ sóng tập trung vùng sự cố</h2>', sec+'<h2>Biểu đồ sóng tập trung vùng sự cố</h2>'); return html.replace('</body>',sec+'</body>'); }; }
   const oldMakeTxt = typeof makeFaultReportText==='function' ? makeFaultReportText : null;
@@ -2019,7 +2089,8 @@ initSidebarMode();
 // ===== V9.5 PATCH: đọc nhiều bản ghi, đối chiếu thống kê và tính vị trí sự cố =====
 (function(){
   'use strict';
-  const V95_VERSION='V9.5.0-MULTI-RECORD-FAULT-LOCATION';
+  const V95_VERSION='V9.9.12-FAULT-ANALYSIS-DYNAMIC-HTML-LOCATION-REPORT';
+  window.COMTRADE_V96_VERSION=V95_VERSION;
   window.COMTRADE_V95_VERSION=V95_VERSION;
   state.multiRecords=state.multiRecords||[];
   const ROLE_KEYS=['Ia','Ib','Ic','Ie','Va','Vb','Vc','Ve'];
@@ -2034,7 +2105,34 @@ initSidebarMode();
   function getStats(){ try{return JSON.parse(localStorage.getItem('comtradeFaultStatsV9')||'[]')||[];}catch(e){return[];} }
   function parseKm(s){ const t=String(s??'').replace(',','.'); const m=t.match(/(-?\d+(?:\.\d+)?)\s*(?:km|kilomet)/i) || t.match(/(?:^|\s)(-?\d+(?:\.\d+)?)\s*$/); return m?Number(m[1]):null; }
   function statMetric(x,k){ let m=x?.metricsCompact?.[k] || x?.metrics?.compact?.[k]; if(!m && Array.isArray(x?.metrics?.rows)) m=x.metrics.rows.find(r=>r.role===k); if(!m && x?.[k+'_fault']!==undefined && x?.[k+'_fault']!=='') m={fault:metricNumber(x[k+'_fault']),channel:x[k+'_channel']||'',unit:x[k+'_unit']||''}; return m||null; }
-  function params(){ return {len:nval($('multiLineLengthKm')?.value,0),r1:nval($('multiR1')?.value,0),x1:nval($('multiX1')?.value,0),r0:nval($('multiR0')?.value,0),x0:nval($('multiX0')?.value,0),uf:nval($('multiVoltageFactor')?.value,1)||1,cf:nval($('multiCurrentFactor')?.value,1)||1,rf:nval($('multiResidualFactor')?.value,1)||1,method:$('multiDistanceMethod')?.value||'projection',clamp:$('multiClampLine')?.value==='yes',useStats:$('multiUseStats')?.value!=='no',consensus:$('multiConsensusMode')?.value||'median'}; }
+  function cfgScaleFor(kind){
+    if($('multiAutoCtPt')?.value==='no') return 1;
+    const cfg=state.cfg; if(!cfg||!Array.isArray(cfg.analog)) return 1;
+    const vals=[];
+    cfg.analog.forEach(ch=>{
+      const ok=kind==='V' ? (isVoltageChannel(ch)&&!isCurrentChannel(ch)) : isCurrentChannel(ch);
+      if(!ok) return;
+      const ps=String(ch.ps||'').trim().toUpperCase();
+      const pri=Number(ch.primary), sec=Number(ch.secondary);
+      if(ps==='S' && Number.isFinite(pri)&&Number.isFinite(sec)&&Math.abs(sec)>1e-12&&Math.abs(pri)>1e-12) vals.push(Math.abs(pri/sec));
+    });
+    if(!vals.length) return 1;
+    vals.sort((a,b)=>a-b);
+    return vals[Math.floor(vals.length/2)] || 1;
+  }
+  function params(){
+    const r1=nval($('multiR1')?.value,0), x1=nval($('multiX1')?.value,0);
+    const lineAngle=nval($('multiLineAngleDeg')?.value,65);
+    const z1mag=nval($('multiZ1Mag')?.value,0);
+    return {
+      len:nval($('multiLineLengthKm')?.value,0), r1, x1,
+      r0:nval($('multiR0')?.value,0), x0:nval($('multiX0')?.value,0),
+      uf:(nval($('multiVoltageFactor')?.value,1)||1)*cfgScaleFor('V'), cf:(nval($('multiCurrentFactor')?.value,1)||1)*cfgScaleFor('I'), rf:nval($('multiResidualFactor')?.value,1)||1,
+      method:$('multiDistanceMethod')?.value||'relayHybrid', clamp:$('multiClampLine')?.value==='yes', useStats:$('multiUseStats')?.value!=='no', consensus:$('multiConsensusMode')?.value||'median',
+      endpointMode:$('multiEndpointMode')?.value||'twoEndLine', endpointPairing:$('multiEndpointPairing')?.value||'autoByStation', endAName:String($('multiEndAName')?.value||'Đầu 1').trim(), endBName:String($('multiEndBName')?.value||'Đầu 2').trim(),
+      k0mag:nval($('multiK0Mag')?.value,NaN), k0ang:nval($('multiK0Ang')?.value,0), lineAngle, z1mag
+    };
+  }
   function c(re=0,im=0){ return {re:Number(re)||0, im:Number(im)||0}; }
   function cadd(a,b){ return c(a.re+b.re,a.im+b.im); } function csub(a,b){ return c(a.re-b.re,a.im-b.im); } function cmul(a,b){ return c(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re); } function cscale(a,k){ return c(a.re*k,a.im*k); }
   function cdiv(a,b){ const d=b.re*b.re+b.im*b.im; if(!d)return c(NaN,NaN); return c((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d); } function cabs(a){ return Math.hypot(a.re,a.im); }
@@ -2042,14 +2140,64 @@ initSidebarMode();
   function medianNum(arr){ const a=arr.filter(Number.isFinite).sort((x,y)=>x-y); if(!a.length)return NaN; const m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2; }
   function estimateRateFromData(data){ const del=[]; for(let i=1;i<Math.min(data?.samples||0,4000);i++){ const d=data.times[i]-data.times[i-1]; if(d>0&&Number.isFinite(d))del.push(d); } const md=medianNum(del); return md>0?1/md:0; }
   function phasor(arr,times,cfg,centerIndex,kind,pp){ const freq=cfg?.frequency||50, rate=estimateRateFromData(state.data), per=Math.max(12,Math.round((rate||1000)/Math.max(freq,1))); let s=Math.max(0,Math.round(centerIndex)-Math.floor(per/2)), e=Math.min((arr?.length||0)-1,s+per-1); if(e-s+1<8){ s=Math.max(0,Math.min((arr?.length||0)-1,Math.round(centerIndex))); e=Math.min((arr?.length||0)-1,s+Math.max(7,per-1)); } const n=e-s+1; if(!arr||n<8)return null; const t0=times[s]||0; let re=0,im=0,cnt=0; for(let i=s;i<=e;i++){ const v=Number(arr[i]); if(!Number.isFinite(v))continue; const a=2*Math.PI*freq*((times[i]||0)-t0); re+=v*Math.cos(a); im-=v*Math.sin(a); cnt++; } if(cnt<8)return null; const scale=Math.SQRT2/cnt; const f=kind==='V'?pp.uf:pp.cf; return c(re*scale*f, im*scale*f); }
-  function getPhasorsForFault(r,pp){ const roles=findAnalogRoles(); const cfg=state.cfg,data=state.data; const rate=estimateRateFromData(data), per=Math.max(12,Math.round((rate||1000)/Math.max(cfg?.frequency||50,1))); const mid=Math.min(Math.max(0,(r?.endIndex||0)-1), Math.max(0,(r?.startIndex||0)+per)); const ph={I:{},V:{},roles}; ['A','B','C','N'].forEach(p=>{ const ii=roles.I?.[p], vi=roles.V?.[p]; if(Number.isInteger(ii)&&data.analog[ii]) ph.I[p]=phasor(data.analog[ii],data.times,cfg,mid,'I',pp); if(Number.isInteger(vi)&&data.analog[vi]) ph.V[p]=phasor(data.analog[vi],data.times,cfg,mid,'V',pp); }); if(ph.I.N) ph.I.N=cscale(ph.I.N,pp.rf||1); return ph; }
+  function getPhasorsForFault(r,pp){
+    const roles=findAnalogRoles(); const cfg=state.cfg,data=state.data;
+    const rate=estimateRateFromData(data), freq=Math.max(cfg?.frequency||50,1), per=Math.max(12,Math.round((rate||1000)/freq));
+    const n=Math.max(0,(data?.samples||0)-1);
+    let tripIdx=Number.isInteger(r?.firstTrip?.index)?r.firstTrip.index:null;
+    if(!Number.isInteger(tripIdx) && Number.isInteger(r?.v98TripFacts?.firstTrip?.index)) tripIdx=r.v98TripFacts.firstTrip.index;
+    let mid;
+    if(Number.isInteger(tripIdx)) mid=Math.max(r?.startIndex||0, tripIdx-Math.floor(per/2));
+    else mid=Math.min(n, Math.max(r?.startIndex||0, (r?.startIndex||0)+Math.round(per*2.5)));
+    mid=Math.max(0,Math.min(n,Math.round(mid)));
+    const ph={I:{},V:{},roles,centerIndex:mid,windowSamples:per,freq,rate};
+    ['A','B','C','N'].forEach(p=>{ const ii=roles.I?.[p], vi=roles.V?.[p]; if(Number.isInteger(ii)&&data.analog[ii]) ph.I[p]=phasor(data.analog[ii],data.times,cfg,mid,'I',pp); if(Number.isInteger(vi)&&data.analog[vi]) ph.V[p]=phasor(data.analog[vi],data.times,cfg,mid,'V',pp); });
+    if(ph.I.N) ph.I.N=cscale(ph.I.N,pp.rf||1);
+    return ph;
+  }
   function strongestPhaseFromMetrics(r){ const m=extractMetricsFromFault(r); let best='A',bv=-Infinity; [['A','Ia'],['B','Ib'],['C','Ic']].forEach(([p,k])=>{ const v=Math.abs(m.compact[k]?.fault??0); if(v>bv){bv=v;best=p;} }); return best; }
-  function calcFaultLocation(r){ const pp=params(); const z1=c(pp.r1,pp.x1), z0=c(pp.r0,pp.x0); if(!r)return {ok:false,reason:'Chưa có kết quả phân tích sự cố.'}; if(!Number.isFinite(cabs(z1))||cabs(z1)===0) return {ok:false,reason:'Chưa nhập R1/X1 đường dây nên chưa thể đổi Zapp ra km.'}; const ph=getPhasorsForFault(r,pp); const phases=(r.phases||[]).filter(x=>['A','B','C'].includes(x)); let formula='', zapp=null, used=''; const k0=(cabs(z0)>0)?cdiv(csub(z0,z1),cscale(z1,3)):c(0,0);
+  function calcFaultLocation(r){
+    const pp=params();
+    const polar=(mag,ang)=>c((Number(mag)||0)*Math.cos((Number(ang)||0)*Math.PI/180),(Number(mag)||0)*Math.sin((Number(ang)||0)*Math.PI/180));
+    const z1=(Math.hypot(pp.r1,pp.x1)>1e-12)?c(pp.r1,pp.x1):(pp.z1mag>0?polar(pp.z1mag,pp.lineAngle):c(0,0));
+    const z0=c(pp.r0,pp.x0);
+    if(!r)return {ok:false,reason:'Chưa có kết quả phân tích sự cố.'};
+    if(!Number.isFinite(cabs(z1))||cabs(z1)===0) return {ok:false,reason:'Chưa nhập R1/X1 hoặc |Z1| + góc đường dây nên chưa thể đổi Zapp ra km.'};
+    const ph=getPhasorsForFault(r,pp);
+    let phases=(r.phases||[]).filter(x=>['A','B','C'].includes(x));
+    const ranked=(()=>{ const m=extractMetricsFromFault(r); return [['A','Ia'],['B','Ib'],['C','Ic']].map(([p,k])=>({p,v:Math.abs(m.compact[k]?.fault??0)})).sort((a,b)=>b.v-a.v).map(x=>x.p); })();
     const hasGround=!!r.ground || /G|N|ĐẤT|DAT|CHAM/i.test(String(r.type||''));
+    if(!phases.length) phases=ranked.filter(Boolean);
+    if(hasGround && phases.length>2) phases=ranked.slice(0,2);
+    const k0=(Number.isFinite(pp.k0mag)&&Math.abs(pp.k0mag)>1e-12)?polar(pp.k0mag,pp.k0ang):(cabs(z0)>0?cdiv(csub(z0,z1),cscale(z1,3)):c(0,0));
+    const dist=(z,mode)=> mode==='magnitude'?cabs(z)/cabs(z1):cdiv(z,z1).re;
+    const candidates=[];
+    const add=(label,z,formula,used,kind)=>{ if(z&&Number.isFinite(z.re)&&Number.isFinite(z.im)){ candidates.push({label,z,km:dist(z,(pp.method==='magnitude')?'magnitude':'projection'),formula,used,kind}); } };
+    if(hasGround && (pp.method==='relayHybrid'||pp.method==='groundPair')){
+      const pgPhases=phases.length?phases.slice(0,2):[strongestPhaseFromMetrics(r)];
+      pgPhases.forEach(p=>{ const V=ph.V[p], I=ph.I[p], Ir=ph.I.N||c(0,0); if(!V||!I)return; const denom=cadd(I,cmul(k0,Ir)); add(`${p}-G`,cdiv(V,denom),`Z${p}G = V${p} / (I${p} + K0×Ires)`,`V${p}, I${p}${ph.I.N?', Ires':''}`,'PG'); });
+      if(pp.method==='relayHybrid' && phases.length>=2){ const a=phases[0], b=phases[1]; const V1=ph.V[a],V2=ph.V[b],I1=ph.I[a],I2=ph.I[b]; if(V1&&V2&&I1&&I2) add(`${a}-${b}`,cdiv(csub(V1,V2),csub(I1,I2)),`Z${a}${b} = (V${a}-V${b}) / (I${a}-I${b})`,`V${a}, V${b}, I${a}, I${b}`,'PP-CHECK'); }
+      const primary=candidates.filter(x=>x.kind==='PG');
+      if(primary.length){
+        const rawKm=primary.reduce((s,x)=>s+x.km,0)/primary.length;
+        const zapp=cscale(primary.reduce((s,x)=>cadd(s,x.z),c(0,0)),1/primary.length);
+        let km=rawKm; if(pp.clamp&&pp.len>0) km=Math.max(0,Math.min(pp.len,km));
+        const pct=pp.len>0?km/pp.len*100:null;
+        const notes=[`Tính ${primary.length} vòng pha-đất có bù K0 rồi lấy trung bình: ${primary.map(x=>x.label+'='+fmt(x.km,3)+' km').join(', ')}`];
+        const ppCheck=candidates.filter(x=>x.kind==='PP-CHECK'); if(ppCheck.length) notes.push(`Vòng pha-pha chỉ dùng đối chiếu: ${ppCheck.map(x=>x.label+'='+fmt(x.km,3)+' km').join(', ')}`);
+        if(!ph.I.N) notes.push('Không thấy kênh dòng dư Ires, mẫu số đang dùng Ipha nên độ chính xác giảm.');
+        let level='warn'; if(km>=0 && (!pp.len || km<=pp.len)){ level='good'; notes.push('khoảng cách nằm trong chiều dài đường dây hoặc chưa khai báo chiều dài'); } else { level='bad'; notes.push('kết quả ngoài chiều dài đường dây, cần kiểm tra scale U/I hoặc thông số đường dây'); }
+        return {ok:true,zapp,km,rawKm,pct,level,formula:'Lai rơle: trung bình vòng pha-đất có K0, chiếu lên Z1/góc đường dây',used:primary.map(x=>x.used).join('; '),k0,method:pp.method,notes,loops:candidates,lineZ:z1,scale:{uf:pp.uf,cf:pp.cf},phasorCenterIndex:ph.centerIndex};
+      }
+      // Nếu không đủ vòng pha-đất thì rơi xuống công thức cũ bên dưới.
+    }
+    let formula='', zapp=null, used='';
     if(hasGround){ const p=phases[0]||strongestPhaseFromMetrics(r); const V=ph.V[p], I=ph.I[p], Ir=ph.I.N||c(0,0); if(!V||!I)return {ok:false,reason:`Thiếu V${p} hoặc I${p} để tính sự cố chạm đất.`}; const denom=cadd(I,cmul(k0,Ir)); zapp=cdiv(V,denom); formula=`Z = V${p} / (I${p} + K0×Ires)`; used=`V${p}, I${p}${ph.I.N?', Ires':''}`; }
     else if(phases.length>=2 && phases.length<3){ const a=phases[0], b=phases[1]; const V1=ph.V[a],V2=ph.V[b],I1=ph.I[a],I2=ph.I[b]; if(!V1||!V2||!I1||!I2)return {ok:false,reason:`Thiếu cặp V/I pha ${a}-${b} để tính sự cố pha-pha.`}; zapp=cdiv(csub(V1,V2),csub(I1,I2)); formula=`Z = (V${a}-V${b}) / (I${a}-I${b})`; used=`V${a}, V${b}, I${a}, I${b}`; }
     else { const zs=[]; ['A','B','C'].forEach(p=>{ if(ph.V[p]&&ph.I[p]&&cabs(ph.I[p])>1e-9) zs.push(cdiv(ph.V[p],ph.I[p])); }); if(!zs.length)return {ok:false,reason:'Thiếu đủ pha V/I để tính vị trí sự cố.'}; zapp=cscale(zs.reduce(cadd,c(0,0)),1/zs.length); formula=zs.length>=3?'Z = trung bình Va/Ia, Vb/Ib, Vc/Ic':'Z = trung bình các pha có đủ V/I'; used=zs.length+' pha'; }
-    if(!zapp || !Number.isFinite(zapp.re) || !Number.isFinite(zapp.im)) return {ok:false,reason:'Không tính được Zapp hợp lệ.'}; let km=pp.method==='magnitude'?cabs(zapp)/cabs(z1):cdiv(zapp,z1).re; const rawKm=km; if(pp.clamp&&pp.len>0) km=Math.max(0,Math.min(pp.len,km)); const pct=pp.len>0?km/pp.len*100:null; let level='warn', note=[]; if(km>=0 && (!pp.len || km<=pp.len)){ level='good'; note.push('khoảng cách nằm trong chiều dài đường dây'); } else { level='bad'; note.push('kết quả ngoài chiều dài đường dây, cần kiểm tra scale U/I hoặc thông số đường dây'); } if(Math.abs(zapp.im)<Math.abs(zapp.re)*0.08) note.push('Zapp có phần phản kháng nhỏ, có thể chịu ảnh hưởng điện trở sự cố/tải'); return {ok:true,zapp,km,rawKm,pct,level,formula,used,k0,method:pp.method,notes:note}; }
+    if(!zapp || !Number.isFinite(zapp.re) || !Number.isFinite(zapp.im)) return {ok:false,reason:'Không tính được Zapp hợp lệ.'};
+    let km=dist(zapp,pp.method); const rawKm=km; if(pp.clamp&&pp.len>0) km=Math.max(0,Math.min(pp.len,km)); const pct=pp.len>0?km/pp.len*100:null; let level='warn', note=[]; if(km>=0 && (!pp.len || km<=pp.len)){ level='good'; note.push('khoảng cách nằm trong chiều dài đường dây hoặc chưa khai báo chiều dài'); } else { level='bad'; note.push('kết quả ngoài chiều dài đường dây, cần kiểm tra scale U/I hoặc thông số đường dây'); } if(Math.abs(zapp.im)<Math.abs(zapp.re)*0.08) note.push('Zapp có phần phản kháng nhỏ, có thể chịu ảnh hưởng điện trở sự cố/tải'); return {ok:true,zapp,km,rawKm,pct,level,formula,used,k0,method:pp.method,notes:note,lineZ:z1,scale:{uf:pp.uf,cf:pp.cf},phasorCenterIndex:ph.centerIndex};
+  }
   function snapshot(){ return {activeBase:state.activeBase,cfg:state.cfg,data:state.data,logs:state.logs,summary:state.summary,errors:state.errors,selectedAnalog:new Set(state.selectedAnalog),selectedDigital:new Set(state.selectedDigital),cursorA:state.cursorA,cursorB:state.cursorB,activeCursor:state.activeCursor,decoderNotes:[...(state.decoderNotes||[])],converted:state.converted,faultAnalysis:state.faultAnalysis}; }
   function restore(s){ Object.assign(state,{activeBase:s.activeBase,cfg:s.cfg,data:s.data,logs:s.logs,summary:s.summary,errors:s.errors,selectedAnalog:s.selectedAnalog,selectedDigital:s.selectedDigital,cursorA:s.cursorA,cursorB:s.cursorB,activeCursor:s.activeCursor,decoderNotes:s.decoderNotes,converted:s.converted,faultAnalysis:s.faultAnalysis}); }
   async function parseGroup(base,g){ const cfg=parseCfg(await g.cfg.text()); const logs=[]; for(const f of g.logs||[]){ try{logs.push({name:f.name,text:await f.text()});}catch(e){logs.push({name:f.name,text:'Không đọc được file: '+e.message});} } const data=await parseDat(g.dat,cfg); return {base,cfg,data,logs}; }
@@ -2058,21 +2206,96 @@ initSidebarMode();
   function updateStatus(msg,cls=''){ const st=$('multiStatus'); if(st){st.className='status '+cls;st.textContent=msg;} }
   async function analyzeAll(){ if(!state.groups?.size){ updateStatus('Chưa có bộ file nào. Hãy chọn nhiều .CFG+.DAT hoặc .CFF trước.','bad'); return; } const saved=snapshot(); state.multiRecords=[]; updateStatus('Đang đọc và phân tích nhiều bản ghi...',''); let ok=0,fail=0; const results=[]; for(const [base,g] of state.groups){ if(!g.cfg||!g.dat){ results.push({base,error:'Thiếu CFG hoặc DAT'}); fail++; continue; } try{ updateStatus(`Đang phân tích ${base}... (${ok+fail+1}/${state.groups.size})`,''); const rec=await analyzeGroup(base,g); results.push(rec); ok++; }catch(e){ results.push({base,error:e.message}); fail++; } } state.multiRecords=results; restore(saved); renderAll(); renderMulti(); updateStatus(`Đã phân tích ${ok} bản ghi, lỗi ${fail}. Có thể mở từng bản ghi từ bảng kết quả để kiểm tra biểu đồ chi tiết.`, ok?'good':'bad'); }
   function analyzeCurrent(){ const r=ensureFaultAnalysis(); if(!r)return; const metrics=extractMetricsFromFault(r); const rec={id:'current',base:state.activeBase||'bản ghi hiện tại',station:state.cfg?.station||'',device:state.cfg?.device||'',line:$('mapLine')?.value||'',breaker:$('mapBreakerName')?.value||'',samples:state.data?.samples||0,format:state.data?.format||'',type:r.type||'',phases:(r.phases||[]).join('-'),ground:!!r.ground,startTime:r.startTime,endTime:r.endTime,durationMs:Number((r.duration*1000).toFixed(6)),confidence:r.confidence||'',metrics,location:calcFaultLocation(r),parserNotes:state.data?.parserNotes||[],fault:r}; rec.history=historyHits(rec); state.multiRecords=[rec].concat((state.multiRecords||[]).filter(x=>x.id!=='current')); renderMulti(); updateStatus('Đã tính vị trí cho bản ghi hiện tại.','good'); }
-  function locText(loc){ if(!loc)return ''; if(!loc.ok)return `<span class="v95-loc-bad">Không tính được</span><div class="v95-table-note">${sEsc(loc.reason||'')}</div>`; const cls=loc.level==='good'?'v95-loc-good':loc.level==='bad'?'v95-loc-bad':'v95-loc-warn'; return `<span class="${cls}">${fmt(loc.km,4)} km</span>${loc.pct!=null?`<br><span class="tiny">${fmt(loc.pct,2)}%</span>`:''}<div class="v95-table-note">Z=${sEsc(cfmt(loc.zapp,4))} Ω<br>${sEsc(loc.formula)}<br>${sEsc((loc.notes||[]).join('; '))}</div>`; }
+  function locText(loc){
+    if(!loc)return '';
+    if(!loc.ok)return `<span class="v95-loc-bad">Không tính được</span><div class="v95-table-note">${sEsc(loc.reason||'')}</div>`;
+    const cls=loc.level==='good'?'v95-loc-good':loc.level==='bad'?'v95-loc-bad':'v95-loc-warn';
+    const loops=(loc.loops||[]).length?`<br>Vòng: ${sEsc(loc.loops.map(x=>`${x.label}=${fmt(x.km,3)} km`).join('; '))}`:'';
+    const k0=loc.k0?`<br>K0=${sEsc(cfmt(loc.k0,4))}`:'';
+    const lz=loc.lineZ?`<br>Z1/km=${sEsc(cfmt(loc.lineZ,4))} Ω/km`:'';
+    const sc=loc.scale?`<br>Scale U/I=${sEsc(fmt(loc.scale.uf,3))}/${sEsc(fmt(loc.scale.cf,3))}`:'';
+    return `<span class="${cls}">${fmt(loc.km,4)} km</span>${loc.pct!=null?`<br><span class="tiny">${fmt(loc.pct,2)}%</span>`:''}<div class="v95-table-note">Z=${sEsc(cfmt(loc.zapp,4))} Ω${k0}${lz}${sc}<br>${sEsc(loc.formula)}${loops}<br>${sEsc((loc.notes||[]).join('; '))}</div>`;
+  }
   function renderMultiTable(){ const box=$('multiRecordsTable'); if(!box)return; const arr=state.multiRecords||[]; if(!arr.length){box.innerHTML='<div class="tiny" style="padding:12px">Chưa có kết quả đa bản ghi.</div>';return;} const rows=arr.map(rec=>{ if(rec.error) return [sEsc(rec.base),'<span class="bad-text">Lỗi</span>','','','','','','','','',sEsc(rec.error),'']; const hist=rec.history?.[0]; return [sEsc(rec.base),sEsc(rec.station),sEsc(rec.device),sEsc(rec.type),sEsc(rec.phases),fmt(rec.durationMs,3),`<div class="v95-table-note">${sEsc(metricCompactLine(rec.metrics))}</div>`,locText(rec.location),hist?`<b>${hist.score}</b><br>${sEsc(hist.stat.location||'')}<div class="v95-table-note">${sEsc(hist.why)}</div>`:'',sEsc(rec.confidence||''),`<div class="v95-actions"><button onclick="window.v95OpenRecord('${String(rec.base).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">Mở</button><button onclick="window.v95UseAsStat('${String(rec.base).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">Đưa vào thống kê</button></div>`]; }); box.innerHTML=table(['Bộ file','Trạm','Thiết bị','Dạng','Pha','T(ms)','Dòng/áp trong sự cố','Vị trí tính toán','Gợi ý từ thống kê','Độ tin cậy','Thao tác'],rows); }
-  function renderSummary(){ const box=$('multiLocationSummary'); if(!box)return; const recs=(state.multiRecords||[]).filter(x=>x.location?.ok&&Number.isFinite(x.location.km)); if(!recs.length){ box.textContent='Chưa có bản ghi tính được vị trí. Cần đủ kênh dòng/áp và nhập R1/X1 đường dây.'; return; } const kms=recs.map(x=>x.location.km); const mode=$('multiConsensusMode')?.value||'median'; const est=mode==='average'?kms.reduce((a,b)=>a+b,0)/kms.length:medianNum(kms); const min=Math.min(...kms), max=Math.max(...kms); const pp=params(); const pct=pp.len>0?est/pp.len*100:null; const lines=[]; lines.push(`Số bản ghi có vị trí: ${recs.length}/${(state.multiRecords||[]).length}`); lines.push(`Vị trí đề xuất (${mode==='average'?'trung bình':'trung vị'}): ${fmt(est,4)} km${pct!=null?' · '+fmt(pct,2)+'% chiều dài đường dây':''}`); lines.push(`Khoảng phân tán: ${fmt(min,4)} → ${fmt(max,4)} km`); const hist=[]; recs.forEach(r=>{ const h=r.history?.find(x=>x.km!=null); if(h)hist.push(h); }); if(hist.length){ const hk=hist.map(h=>h.km).filter(Number.isFinite); if(hk.length) lines.push(`Đối chiếu thống kê đã lưu: vị trí tương tự quanh ${fmt(medianNum(hk),4)} km (${hist.length} bản ghi có vị trí đã biết).`); } lines.push(''); lines.push('Lưu ý: kết quả phụ thuộc đúng bản đồ kênh Ia/Ib/Ic/Ie và Va/Vb/Vc/Ve, hệ số U/I, thông số Z1/Z0 và tình trạng nguồn đo áp trong sự cố.'); box.textContent=lines.join('\n'); }
+  function endpointKey(rec){
+    const v=String(rec.station||rec.device||'').trim();
+    return normText(v)||String(rec.base||'').toLowerCase();
+  }
+  function splitTwoEndRecords(recs,pp){
+    const mode=pp.endpointPairing||'autoByStation';
+    const ok=recs.filter(x=>x.location?.ok&&Number.isFinite(x.location.km));
+    if(ok.length<2) return null;
+    if(mode==='fileOrder') return {a:[ok[0]], b:[ok[1]], nameA:pp.endAName||ok[0].station||ok[0].base||'Đầu 1', nameB:pp.endBName||ok[1].station||ok[1].base||'Đầu 2', reason:'ghép theo thứ tự file'};
+    const groups=[];
+    ok.forEach(rec=>{
+      const key=endpointKey(rec);
+      let g=groups.find(x=>x.key===key);
+      if(!g){ g={key,name:rec.station||rec.device||rec.base||('Đầu '+(groups.length+1)),items:[]}; groups.push(g); }
+      g.items.push(rec);
+    });
+    if(groups.length>=2) return {a:groups[0].items,b:groups[1].items,nameA:pp.endAName||groups[0].name,nameB:pp.endBName||groups[1].name,reason:'tự nhóm theo tên trạm/thiết bị'};
+    return {a:[ok[0]], b:[ok[1]], nameA:pp.endAName||ok[0].station||ok[0].base||'Đầu 1', nameB:pp.endBName||ok[1].station||ok[1].base||'Đầu 2', reason:'không tách được tên trạm, dùng 2 bản ghi đầu tiên'};
+  }
+  function summarizeTwoEndLocation(recs,pp){
+    if(pp.endpointMode!=='twoEndLine' || !(pp.len>0)) return null;
+    const g=splitTwoEndRecords(recs,pp);
+    if(!g) return null;
+    const aKm=medianNum(g.a.map(x=>x.location.km));
+    const bLocal=medianNum(g.b.map(x=>x.location.km));
+    if(!Number.isFinite(aKm)||!Number.isFinite(bLocal)) return null;
+    const bFromA=pp.len-bLocal;
+    const est=(aKm+bFromA)/2;
+    const closure=aKm+bLocal-pp.len;
+    const agree=Math.abs(aKm-bFromA);
+    const pct=est/pp.len*100;
+    const level=agree<=Math.max(0.5,pp.len*0.02)?'Tốt':(agree<=Math.max(1.5,pp.len*0.05)?'Cần kiểm tra':'Lệch lớn');
+    return {est,pct,aKm,bLocal,bFromA,closure,agree,level,nameA:g.nameA,nameB:g.nameB,reason:g.reason,countA:g.a.length,countB:g.b.length};
+  }
+  function renderSummary(){
+    const box=$('multiLocationSummary'); if(!box)return;
+    const recs=(state.multiRecords||[]).filter(x=>x.location?.ok&&Number.isFinite(x.location.km));
+    if(!recs.length){ box.textContent='Chưa có bản ghi tính được vị trí. Cần đủ kênh dòng/áp và nhập R1/X1 hoặc |Z1| + góc đường dây.'; return; }
+    const pp=params();
+    const lines=[];
+    const two=summarizeTwoEndLocation(recs,pp);
+    if(two){
+      lines.push(`Chế độ: hai đầu cùng một đường dây (${two.reason}).`);
+      lines.push(`Chiều dài đường dây khai báo: ${fmt(pp.len,4)} km.`);
+      lines.push(`${two.nameA}: dA = ${fmt(two.aKm,4)} km từ đầu 1 (${two.countA} bản ghi).`);
+      lines.push(`${two.nameB}: dB = ${fmt(two.bLocal,4)} km từ đầu 2 ⇒ quy đổi về đầu 1: L − dB = ${fmt(two.bFromA,4)} km (${two.countB} bản ghi).`);
+      lines.push(`Vị trí đề xuất từ đầu 1: ${fmt(two.est,4)} km · ${fmt(two.pct,2)}% chiều dài đường dây.`);
+      lines.push(`Sai lệch khép vòng hai đầu |dA − (L−dB)| = ${fmt(two.agree,4)} km; dA + dB − L = ${fmt(two.closure,4)} km. Mức đối chiếu: ${two.level}.`);
+      lines.push('');
+      lines.push('Diễn giải: mỗi đầu vẫn tính bằng phương pháp lai rơle A-G/B-G + K0. Tab này chỉ ghép các kết quả cục bộ của hai đầu cùng tuyến để kiểm tra xem chúng có cùng chỉ về một vị trí vật lý hay không.');
+    } else {
+      const kms=recs.map(x=>x.location.km); const mode=$('multiConsensusMode')?.value||'median'; const est=mode==='average'?kms.reduce((a,b)=>a+b,0)/kms.length:medianNum(kms); const min=Math.min(...kms), max=Math.max(...kms); const pct=pp.len>0?est/pp.len*100:null;
+      lines.push(`Số bản ghi có vị trí: ${recs.length}/${(state.multiRecords||[]).length}`);
+      lines.push(`Vị trí đề xuất (${mode==='average'?'trung bình':'trung vị'}): ${fmt(est,4)} km${pct!=null?' · '+fmt(pct,2)+'% chiều dài đường dây':''}`);
+      lines.push(`Khoảng phân tán: ${fmt(min,4)} → ${fmt(max,4)} km`);
+      if(pp.endpointMode==='twoEndLine' && !(pp.len>0)) lines.push('Muốn ghép hai đầu cùng đường dây, hãy nhập Chiều dài đường dây > 0. Khi đó bản ghi đầu xa sẽ được quy đổi theo L − dB.');
+    }
+    const hist=[]; recs.forEach(r=>{ const h=r.history?.find(x=>x.km!=null); if(h)hist.push(h); });
+    if(hist.length){ const hk=hist.map(h=>h.km).filter(Number.isFinite); if(hk.length) lines.push(`Đối chiếu thống kê đã lưu: vị trí tương tự quanh ${fmt(medianNum(hk),4)} km (${hist.length} bản ghi có vị trí đã biết).`); }
+    lines.push('');
+    lines.push('Lưu ý: cần đúng cùng một tuyến, cùng chiều dài L, đúng đầu tham chiếu, bản đồ kênh Ia/Ib/Ic/Ie và Va/Vb/Vc, tự quy đổi CT/PT, hệ số U/I, K0, Z1/góc đường dây và tình trạng nguồn đo áp trong sự cố.');
+    box.textContent=lines.join('\n');
+  }
   function renderHistory(){ const box=$('multiHistorySimilar'); if(!box)return; const rows=[]; (state.multiRecords||[]).forEach(rec=>(rec.history||[]).slice(0,3).forEach(h=>rows.push([sEsc(rec.base),h.score,sEsc(h.why),sEsc(h.stat.date||''),sEsc(h.stat.station||''),sEsc(h.stat.line||''),sEsc(h.stat.phases||''),sEsc(h.stat.location||''),sEsc(h.stat.conclusion||'')]))); if(!rows.length){box.innerHTML='<div class="tiny" style="padding:12px">Chưa có bản ghi thống kê tương tự hoặc chưa bật so sánh thống kê.</div>';return;} box.innerHTML=table(['Bản ghi mới','Điểm','Lý do','Ngày cũ','Trạm','Đường dây','Pha','Vị trí cũ','Kết luận cũ'],rows); }
-  function renderNotes(){ const box=$('multiNotes'); if(!box)return; const lines=[`Phiên bản: ${V95_VERSION}`,`Số bộ file đang có trong danh sách: ${state.groups?.size||0}`,`Số bản ghi đã phân tích: ${(state.multiRecords||[]).length}`,'','Công thức:', '- Chạm đất: Z = Vpha / (Ipha + K0 × Ires), K0=(Z0−Z1)/(3Z1).', '- Pha-pha: Z = (Vpha1−Vpha2)/(Ipha1−Ipha2).', '- Ba pha: trung bình Z pha có đủ V/I.', '', 'Khuyến cáo: nếu kết quả ngoài đường dây hoặc lệch nhiều giữa các bản ghi, kiểm tra lại tỷ số U/I, bản đồ kênh, đơn vị kV/kA/A/V và thông số đường dây.']; box.textContent=lines.join('\n'); }
+  function renderNotes(){
+    const box=$('multiNotes'); if(!box)return;
+    const lines=[`Phiên bản: ${V95_VERSION}`,`Số bộ file đang có trong danh sách: ${state.groups?.size||0}`,`Số bản ghi đã phân tích: ${(state.multiRecords||[]).length}`,'','Cách dùng V9.9.12:', '- Tab Phân tích sự cố: sau khi bấm “Phân tích sự cố”, app tự tính vị trí bằng phương pháp lai rơle và hiển thị ngay dưới phần kết luận.', '- Tab Đa bản ghi/Vị trí sự cố: dùng cho các bản ghi ở hai đầu của cùng một đường dây. Mỗi đầu được tính riêng, sau đó đầu xa được quy đổi về đầu 1 bằng L − dB để đối chiếu.', '','Công thức vị trí:', '- Sự cố hai pha chạm đất: tính từng vòng pha-đất ZAG/ZBG/ZCG = Vpha / (Ipha + K0 × Ires), chiếu từng vòng lên Z1/góc đường dây, rồi lấy trung bình các pha sự cố.', '- K0 có thể nhập trực tiếp theo dạng |K0| và góc K0; nếu bỏ trống, chương trình thử suy ra K0=(Z0−Z1)/(3Z1).', '- Tự quy đổi CT/PT: nếu CFG đánh dấu kênh là thứ cấp S, điện áp được nhân theo VT/PT và dòng được nhân theo CT để tính trở kháng sơ cấp.', '- Nếu R1/X1 = 0, chương trình dùng |Z1|∠góc đường dây để đổi Ω ra km. Cách này phù hợp khi rơle/INF cho sẵn |Z|/km và góc đặc tính.', '- Pha-pha: Z = (Vpha1−Vpha2)/(Ipha1−Ipha2), dùng chính cho sự cố không đất và dùng đối chiếu khi chọn phương pháp lai.', '','Ghép hai đầu cùng đường dây:', '- Nếu đầu 1 tính được dA và đầu 2 tính được dB tính từ đầu 2, vị trí quy đổi về đầu 1 là L − dB.', '- Kết quả đề xuất = trung bình giữa dA và L − dB; sai lệch khép vòng = |dA − (L − dB)| hoặc dA + dB − L.', '- Nếu sai lệch lớn, cần kiểm tra đồng bộ thời điểm, đúng tuyến, chiều dài L, hướng CT/VT, dấu Ires, kênh áp bị mất nguồn hoặc thông số K0/Z1.', '','Khuyến cáo: để bám số rơle, cần đúng bản đồ kênh Ia/Ib/Ic/Ie và Va/Vb/Vc, đúng dấu dòng dư, hệ số U/I, K0, góc đường dây và Ω/km. Với bản ghi GRL mẫu, cấu hình K0≈0.500∠17°, |Z1|≈0.500Ω/km, góc≈65° và tự quy đổi CT/PT sẽ đưa kết quả về vùng 35,5 km.'];
+    box.textContent=lines.join('\n');
+  }
   function renderMulti(){ renderMultiTable(); renderSummary(); renderHistory(); renderNotes(); }
   window.v95OpenRecord=async function(base){ await loadGroup(base); document.querySelector('[data-tab="fault"]')?.click(); };
-  window.v95UseAsStat=function(base){ const rec=(state.multiRecords||[]).find(x=>x.base===base); if(!rec||rec.error)return; document.querySelector('[data-tab="stats"]')?.click(); if($('statDate'))$('statDate').value=new Date().toLocaleString('vi-VN'); if($('statStation'))$('statStation').value=rec.station||''; if($('statLine'))$('statLine').value=rec.line||''; if($('statBreaker'))$('statBreaker').value=rec.breaker||''; if($('statFaultType'))$('statFaultType').value=rec.type||''; if($('statPhases'))$('statPhases').value=rec.phases||''; if($('statLocation')&&rec.location?.ok)$('statLocation').value=fmt(rec.location.km,4)+' km'; if($('statConclusion'))$('statConclusion').value=`V9.5 ước tính vị trí sự cố: ${rec.location?.ok?fmt(rec.location.km,4)+' km':'chưa tính được'}\n${rec.location?.ok?rec.location.formula:''}`; if($('statNotes'))$('statNotes').value=`Nguồn: ${rec.base}\n${metricCompactLine(rec.metrics)}\n${rec.location?.ok?'Zapp='+cfmt(rec.location.zapp,4)+' Ω':''}`; const st=$('statStatus'); if(st){st.className='status warn';st.textContent='Đã đưa thông tin từ phân tích đa bản ghi vào form thống kê. Bấm Lưu vào thống kê để ghi lại.';} };
+  window.v95UseAsStat=function(base){ const rec=(state.multiRecords||[]).find(x=>x.base===base); if(!rec||rec.error)return; document.querySelector('[data-tab="stats"]')?.click(); if($('statDate'))$('statDate').value=new Date().toLocaleString('vi-VN'); if($('statStation'))$('statStation').value=rec.station||''; if($('statLine'))$('statLine').value=rec.line||''; if($('statBreaker'))$('statBreaker').value=rec.breaker||''; if($('statFaultType'))$('statFaultType').value=rec.type||''; if($('statPhases'))$('statPhases').value=rec.phases||''; if($('statLocation')&&rec.location?.ok)$('statLocation').value=fmt(rec.location.km,4)+' km'; if($('statConclusion'))$('statConclusion').value=`V9.9.10 ước tính vị trí sự cố: ${rec.location?.ok?fmt(rec.location.km,4)+' km':'chưa tính được'}\n${rec.location?.ok?rec.location.formula:''}`; if($('statNotes'))$('statNotes').value=`Nguồn: ${rec.base}\n${metricCompactLine(rec.metrics)}\n${rec.location?.ok?'Zapp='+cfmt(rec.location.zapp,4)+' Ω':''}`; const st=$('statStatus'); if(st){st.className='status warn';st.textContent='Đã đưa thông tin từ phân tích đa bản ghi vào form thống kê. Bấm Lưu vào thống kê để ghi lại.';} };
   function exportRows(){ return (state.multiRecords||[]).map(rec=>{ const row={base:rec.base,error:rec.error||'',station:rec.station||'',device:rec.device||'',line:rec.line||'',breaker:rec.breaker||'',faultType:rec.type||'',phases:rec.phases||'',durationMs:rec.durationMs??'',confidence:rec.confidence||'',locationKm:rec.location?.ok?rec.location.km:'',locationPercent:rec.location?.ok?rec.location.pct:'',zapp:rec.location?.ok?cfmt(rec.location.zapp,6):'',locationNote:rec.location?.ok?(rec.location.notes||[]).join('; '):(rec.location?.reason||'')}; ROLE_KEYS.forEach(k=>{ const m=rec.metrics?.compact?.[k]; row[k+'_fault']=m?.fault??''; row[k+'_channel']=m?.channel??''; row[k+'_unit']=m?.unit??''; }); return row; }); }
-  function exportJson(){ downloadText('comtrade_multi_record_fault_location_v9_5.json',JSON.stringify({version:V95_VERSION,exportedAt:new Date().toISOString(),params:params(),records:state.multiRecords||[]},null,2),'application/json;charset=utf-8'); }
-  function exportCsv(){ const rows=exportRows(); const heads=['base','error','station','device','line','breaker','faultType','phases','durationMs','confidence','locationKm','locationPercent','zapp','locationNote',...ROLE_KEYS.flatMap(k=>[k+'_fault',k+'_channel',k+'_unit'])]; downloadText('comtrade_multi_record_fault_location_v9_5.csv',[heads.join(','),...rows.map(r=>heads.map(h=>csvCell(r[h]??'')).join(','))].join('\n'),'text/csv;charset=utf-8'); }
-  function exportHtml(){ renderMulti(); const summary=sEsc($('multiLocationSummary')?.textContent||''); const rows=exportRows(); const heads=['Bộ file','Trạm','Đường dây','Dạng','Pha','Vị trí km','%','Zapp','Ghi chú']; const trs=rows.map(r=>[r.base,r.station,r.line,r.faultType,r.phases,r.locationKm,r.locationPercent,r.zapp,r.locationNote].map(x=>`<td>${sEsc(x)}</td>`).join('')).map(x=>'<tr>'+x+'</tr>').join(''); const html=`<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Báo cáo đa bản ghi COMTRADE V9.5</title><style>body{font-family:Arial,system-ui,sans-serif;margin:18px;color:#111}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #ccc;padding:7px 8px;text-align:left;vertical-align:top}th{background:#f0f3f7}pre{white-space:pre-wrap;background:#f7f7f7;border:1px solid #ddd;padding:10px;border-radius:8px}</style></head><body><button onclick="window.print()">In / lưu PDF</button><h1>Báo cáo đa bản ghi COMTRADE V9.5</h1><h2>Kết luận vị trí sự cố</h2><pre>${summary}</pre><h2>Kết quả từng bản ghi</h2><table><thead><tr>${heads.map(h=>'<th>'+sEsc(h)+'</th>').join('')}</tr></thead><tbody>${trs}</tbody></table><h2>Thông số tính toán</h2><pre>${sEsc(JSON.stringify(params(),null,2))}</pre></body></html>`; const blob=new Blob([html],{type:'text/html;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='comtrade_multi_record_fault_location_v9_5.html'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1200); }
+  function exportJson(){ downloadText('comtrade_multi_record_fault_location_v9_9_9.json',JSON.stringify({version:V95_VERSION,exportedAt:new Date().toISOString(),params:params(),records:state.multiRecords||[]},null,2),'application/json;charset=utf-8'); }
+  function exportCsv(){ const rows=exportRows(); const heads=['base','error','station','device','line','breaker','faultType','phases','durationMs','confidence','locationKm','locationPercent','zapp','locationNote',...ROLE_KEYS.flatMap(k=>[k+'_fault',k+'_channel',k+'_unit'])]; downloadText('comtrade_multi_record_fault_location_v9_9_9.csv',[heads.join(','),...rows.map(r=>heads.map(h=>csvCell(r[h]??'')).join(','))].join('\n'),'text/csv;charset=utf-8'); }
+  function exportHtml(){ renderMulti(); const summary=sEsc($('multiLocationSummary')?.textContent||''); const rows=exportRows(); const heads=['Bộ file','Trạm','Đường dây','Dạng','Pha','Vị trí km','%','Zapp','Ghi chú']; const trs=rows.map(r=>[r.base,r.station,r.line,r.faultType,r.phases,r.locationKm,r.locationPercent,r.zapp,r.locationNote].map(x=>`<td>${sEsc(x)}</td>`).join('')).map(x=>'<tr>'+x+'</tr>').join(''); const html=`<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Báo cáo đa bản ghi COMTRADE V9.9.12</title><style>body{font-family:Arial,system-ui,sans-serif;margin:18px;color:#111}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #ccc;padding:7px 8px;text-align:left;vertical-align:top}th{background:#f0f3f7}pre{white-space:pre-wrap;background:#f7f7f7;border:1px solid #ddd;padding:10px;border-radius:8px}</style></head><body><button onclick="window.print()">In / lưu PDF</button><h1>Báo cáo đa bản ghi COMTRADE V9.9.12</h1><h2>Kết luận vị trí sự cố</h2><pre>${summary}</pre><h2>Kết quả từng bản ghi</h2><table><thead><tr>${heads.map(h=>'<th>'+sEsc(h)+'</th>').join('')}</tr></thead><tbody>${trs}</tbody></table><h2>Thông số tính toán</h2><pre>${sEsc(JSON.stringify(params(),null,2))}</pre></body></html>`; const blob=new Blob([html],{type:'text/html;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='comtrade_multi_record_fault_location_v9_9_9.html'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1200); }
   const oldMakeHtml = typeof makeFaultReportHtml==='function' ? makeFaultReportHtml : null;
-  if(oldMakeHtml){ makeFaultReportHtml=function(){ const html=oldMakeHtml(); const r=state.faultAnalysis||ensureFaultAnalysis?.(); const loc=calcFaultLocation(r); if(!html||!loc)return html; const sec=loc.ok?`<h2>Ước tính vị trí sự cố V9.5</h2><table><tr><th>Mục</th><th>Giá trị</th></tr><tr><td>Vị trí</td><td><b>${sEsc(fmt(loc.km,4))} km</b>${loc.pct!=null?' · '+sEsc(fmt(loc.pct,2))+'%':''}</td></tr><tr><td>Zapp</td><td>${sEsc(cfmt(loc.zapp,6))} Ω</td></tr><tr><td>Công thức</td><td>${sEsc(loc.formula)}</td></tr><tr><td>Kênh dùng</td><td>${sEsc(loc.used)}</td></tr><tr><td>Ghi chú</td><td>${sEsc((loc.notes||[]).join('; '))}</td></tr></table>`:`<h2>Ước tính vị trí sự cố V9.5</h2><p>Chưa tính được vị trí: ${sEsc(loc.reason||'')}</p>`; return html.includes('<h2>Biểu đồ sóng tập trung vùng sự cố</h2>')?html.replace('<h2>Biểu đồ sóng tập trung vùng sự cố</h2>',sec+'<h2>Biểu đồ sóng tập trung vùng sự cố</h2>'):html.replace('</body>',sec+'</body>'); }; }
-  window.addEventListener('load',()=>{ const bf=$('btnMultiPickFiles'); if(bf)bf.onclick=()=>$('fileInput')?.click(); const bd=$('btnMultiPickFolder'); if(bd)bd.onclick=()=>$('folderInput')?.click(); const ba=$('btnMultiAnalyzeAll'); if(ba)ba.onclick=analyzeAll; const bc=$('btnMultiAnalyzeCurrent'); if(bc)bc.onclick=analyzeCurrent; const bj=$('btnMultiExportJson'); if(bj)bj.onclick=exportJson; const bx=$('btnMultiExportCsv'); if(bx)bx.onclick=exportCsv; const bh=$('btnMultiExportHtml'); if(bh)bh.onclick=exportHtml; ['multiLineLengthKm','multiR1','multiX1','multiR0','multiX0','multiVoltageFactor','multiCurrentFactor','multiResidualFactor','multiDistanceMethod','multiClampLine','multiUseStats','multiConsensusMode'].forEach(id=>{ const e=$(id); if(e)e.onchange=()=>{ if((state.multiRecords||[]).length) updateStatus('Thông số tính vị trí đã thay đổi. Hãy bấm lại “Đọc & phân tích tất cả bộ file” hoặc “Tính vị trí từ bản ghi hiện tại” để tính lại khoảng cách.', 'warn'); renderMulti(); }; }); renderMulti(); });
+  if(oldMakeHtml){ makeFaultReportHtml=function(){ const html=oldMakeHtml(); const r=state.faultAnalysis||ensureFaultAnalysis?.(); const loc=calcFaultLocation(r); if(!html||!loc)return html; const sec=loc.ok?`<h2>Ước tính vị trí sự cố V9.9.12</h2><table><tr><th>Mục</th><th>Giá trị</th></tr><tr><td>Vị trí</td><td><b>${sEsc(fmt(loc.km,4))} km</b>${loc.pct!=null?' · '+sEsc(fmt(loc.pct,2))+'%':''}</td></tr><tr><td>Zapp</td><td>${sEsc(cfmt(loc.zapp,6))} Ω</td></tr><tr><td>Công thức</td><td>${sEsc(loc.formula)}</td></tr><tr><td>Kênh dùng</td><td>${sEsc(loc.used)}</td></tr><tr><td>Ghi chú</td><td>${sEsc((loc.notes||[]).join('; '))}</td></tr></table>`:`<h2>Ước tính vị trí sự cố V9.9.12</h2><p>Chưa tính được vị trí: ${sEsc(loc.reason||'')}</p>`; return html.includes('<h2>Biểu đồ sóng tập trung vùng sự cố</h2>')?html.replace('<h2>Biểu đồ sóng tập trung vùng sự cố</h2>',sec+'<h2>Biểu đồ sóng tập trung vùng sự cố</h2>'):html.replace('</body>',sec+'</body>'); }; }
+  window.addEventListener('load',()=>{ const bf=$('btnMultiPickFiles'); if(bf)bf.onclick=()=>$('fileInput')?.click(); const bd=$('btnMultiPickFolder'); if(bd)bd.onclick=()=>$('folderInput')?.click(); const ba=$('btnMultiAnalyzeAll'); if(ba)ba.onclick=analyzeAll; const bc=$('btnMultiAnalyzeCurrent'); if(bc)bc.onclick=analyzeCurrent; const bj=$('btnMultiExportJson'); if(bj)bj.onclick=exportJson; const bx=$('btnMultiExportCsv'); if(bx)bx.onclick=exportCsv; const bh=$('btnMultiExportHtml'); if(bh)bh.onclick=exportHtml; const br=$('btnFaultRecalcLocation'); if(br)br.onclick=()=>window.COMTRADE_renderFaultLocationV999?.(); const bo=$('btnFaultOpenMultiSettings'); if(bo)bo.onclick=()=>{ document.querySelector('[data-tab="multi"]')?.click(); $('multiLineLengthKm')?.scrollIntoView({behavior:'smooth',block:'center'}); }; ['multiEndpointMode','multiEndpointPairing','multiEndAName','multiEndBName','multiLineLengthKm','multiR1','multiX1','multiR0','multiX0','multiVoltageFactor','multiCurrentFactor','multiResidualFactor','multiK0Mag','multiK0Ang','multiLineAngleDeg','multiZ1Mag','multiAutoCtPt','multiDistanceMethod','multiClampLine','multiUseStats','multiConsensusMode'].forEach(id=>{ const e=$(id); if(e)e.onchange=()=>{ if((state.multiRecords||[]).length) updateStatus('Thông số tính vị trí đã thay đổi. Hãy bấm lại “Đọc & phân tích tất cả bộ file” hoặc “Tính vị trí từ bản ghi hiện tại” để tính lại khoảng cách.', 'warn'); renderMulti(); }; }); renderMulti(); });
   const prevRenderGroups=renderGroups; renderGroups=function(){ prevRenderGroups(); renderMulti(); };
 })();
 
@@ -2200,10 +2423,10 @@ initSidebarMode();
 
 
 <script>
-// ===== V9.6.1 HOTFIX: hiển thị dòng/áp sự cố theo sơ cấp/thứ cấp dựa trên Primary/Secondary và P/S trong CFG =====
+// ===== V9.9.10.1 HOTFIX: hiển thị dòng/áp sự cố theo sơ cấp/thứ cấp dựa trên Primary/Secondary và P/S trong CFG =====
 (function(){
   'use strict';
-  const VERSION='V9.6.1-CTPT-PRIMARY-SECONDARY-DISPLAY-FIX';
+  const VERSION='V9.9.10.1-CTPT-PRIMARY-SECONDARY-DISPLAY-FIX';
   window.COMTRADE_CTPT_HOTFIX_VERSION=VERSION;
   const LS_MODE='comtrade_v96_fault_analog_display_mode';
   const DEFAULT_MODE='primary_auto';
@@ -2324,11 +2547,11 @@ initSidebarMode();
     r.v96LastConvertedSignature=signature(converted);
     r.v96DisplayMode=mode;
     r.v96UnitNote = mode==='secondary'
-      ? 'V9.6.1: Bảng giá trị đang hiển thị THỨ CẤP theo CFG. Nếu kênh có P/S = S thì đây là giá trị sau scale a×raw+b trong DAT, chưa nhân CT/VT.'
-      : 'V9.6.1: Bảng giá trị đã quy đổi SƠ CẤP theo Primary/Secondary và cờ P/S trong CFG. Nếu chọn tự đổi kA/kV, giá trị lớn sẽ được rút gọn đơn vị.';
+      ? 'V9.9.10.1: Bảng giá trị đang hiển thị THỨ CẤP theo CFG. Nếu kênh có P/S = S thì đây là giá trị sau scale a×raw+b trong DAT, chưa nhân CT/VT.'
+      : 'V9.9.10.1: Bảng giá trị đã quy đổi SƠ CẤP theo Primary/Secondary và cờ P/S trong CFG. Nếu chọn tự đổi kA/kV, giá trị lớn sẽ được rút gọn đơn vị.';
     r.notes=Array.isArray(r.notes)?r.notes:[];
-    if(!r.notes.some(x=>String(x).indexOf('V9.6')===0)) r.notes.unshift(r.v96UnitNote);
-    else r.notes=r.notes.map(x=>String(x).indexOf('V9.6')===0?r.v96UnitNote:x);
+    if(!r.notes.some(x=>String(x).indexOf('V9.9.10')===0)) r.notes.unshift(r.v96UnitNote);
+    else r.notes=r.notes.map(x=>String(x).indexOf('V9.9.10')===0?r.v96UnitNote:x);
     const compact={};
     converted.forEach(row=>{
       const role=roleName(row[0]); if(!role || compact[role]) return;
@@ -2790,6 +3013,439 @@ initSidebarMode();
   }
   if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', wire993); else wire993();
   window.addEventListener('load', wire993);
+})();
+</script>
+
+
+<script>
+/* ===== V9.9.10 HOTFIX: đọc ZIP/thư mục nhanh hơn, không báo nhầm lỗi đọc COMTRADE do lỗi render, phân tích sự cố chỉ tính vị trí 1 lần ===== */
+(function(){
+  'use strict';
+  const HOTFIX_VERSION='V9.9.10-HOTFIX-FAST-LOAD-FAST-FAULT-LOCATION';
+  window.COMTRADE_V99910_HOTFIX=HOTFIX_VERSION;
+  function byId(id){ return document.getElementById(id); }
+  function safeText(id,msg,cls){ const el=byId(id); if(el){ if(cls!=null) el.className='status '+cls; el.textContent=msg; } }
+  function waitFrame(){ return new Promise(resolve=>setTimeout(resolve,0)); }
+  function safeCall(name,fn){ try{return fn&&fn();}catch(e){ console.warn('[V9.9.10]',name,e); return null; } }
+  function numFast(v,d){ const n=Number(String(v??'').replace(',','.')); return Number.isFinite(n)?n:d; }
+  function c(re=0,im=0){ return {re:Number(re)||0, im:Number(im)||0}; }
+  function cadd(a,b){ return c(a.re+b.re,a.im+b.im); }
+  function csub(a,b){ return c(a.re-b.re,a.im-b.im); }
+  function cmul(a,b){ return c(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re); }
+  function cscale(a,k){ return c(a.re*k,a.im*k); }
+  function cdiv(a,b){ const d=b.re*b.re+b.im*b.im; return d?c((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d):c(NaN,NaN); }
+  function cabs(a){ return a?Math.hypot(a.re,a.im):NaN; }
+  function fmtLocal(v,d=4){ try{return fmt(v,d);}catch(e){ return Number.isFinite(Number(v))?Number(v).toFixed(d):''; } }
+  function cfmtLocal(z,d=4){ if(!z||!Number.isFinite(z.re)||!Number.isFinite(z.im)) return ''; return `${fmtLocal(z.re,d)} ${z.im>=0?'+':'−'} j${fmtLocal(Math.abs(z.im),d)}`; }
+  function medianLocal(arr){ const a=[]; for(const x of arr||[]) if(Number.isFinite(x)) a.push(x); a.sort((x,y)=>x-y); if(!a.length)return NaN; const m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2; }
+  function scaleFromCfg(kind){
+    const e=byId('multiAutoCtPt'); if(e && e.value==='no') return 1;
+    const cfg=state.cfg; if(!cfg||!Array.isArray(cfg.analog)) return 1;
+    const vals=[];
+    for(const ch of cfg.analog){
+      let ok=false; try{ ok=kind==='V' ? (isVoltageChannel(ch)&&!isCurrentChannel(ch)) : isCurrentChannel(ch); }catch(e){ ok=false; }
+      if(!ok) continue;
+      const ps=String(ch.ps||'').trim().toUpperCase(); const pri=Number(ch.primary), sec=Number(ch.secondary);
+      if(ps==='S' && Number.isFinite(pri)&&Number.isFinite(sec)&&Math.abs(sec)>1e-12&&Math.abs(pri)>1e-12) vals.push(Math.abs(pri/sec));
+    }
+    return medianLocal(vals)||1;
+  }
+  function locParams(){
+    const r1=numFast(byId('multiR1')?.value,0), x1=numFast(byId('multiX1')?.value,0);
+    const lineAngle=numFast(byId('multiLineAngleDeg')?.value,65);
+    const z1mag=numFast(byId('multiZ1Mag')?.value,0.5);
+    return {
+      len:numFast(byId('multiLineLengthKm')?.value,0), r1, x1,
+      r0:numFast(byId('multiR0')?.value,0), x0:numFast(byId('multiX0')?.value,0),
+      uf:(numFast(byId('multiVoltageFactor')?.value,1)||1)*scaleFromCfg('V'),
+      cf:(numFast(byId('multiCurrentFactor')?.value,1)||1)*scaleFromCfg('I'),
+      rf:numFast(byId('multiResidualFactor')?.value,1)||1,
+      method:byId('multiDistanceMethod')?.value||'relayHybrid',
+      clamp:byId('multiClampLine')?.value==='yes',
+      k0mag:numFast(byId('multiK0Mag')?.value,0.5), k0ang:numFast(byId('multiK0Ang')?.value,17),
+      lineAngle, z1mag
+    };
+  }
+  function estimateRateFast(data){
+    if(state.cfg?.sampleRates?.[0]?.rate>0) return state.cfg.sampleRates[0].rate;
+    const n=Math.min(data?.samples||0,3000), del=[];
+    for(let i=1;i<n;i++){ const d=data.times[i]-data.times[i-1]; if(d>0&&Number.isFinite(d)) del.push(d); }
+    const md=medianLocal(del); return md>0?1/md:1000;
+  }
+  function phasorFast(arr,times,centerIndex,kind,pp){
+    const cfg=state.cfg, data=state.data; if(!arr||!times||!data) return null;
+    const freq=Math.max(cfg?.frequency||50,1), rate=estimateRateFast(data), per=Math.max(12,Math.round((rate||1000)/freq));
+    let s=Math.max(0,Math.round(centerIndex)-Math.floor(per/2));
+    let e=Math.min(arr.length-1,s+per-1);
+    if(e-s+1<8){ s=Math.max(0,Math.min(arr.length-1,Math.round(centerIndex))); e=Math.min(arr.length-1,s+Math.max(7,per-1)); }
+    const n=e-s+1; if(n<8) return null;
+    const t0=times[s]||0; let re=0, im=0, cnt=0;
+    for(let i=s;i<=e;i++){ const v=Number(arr[i]); if(!Number.isFinite(v)) continue; const a=2*Math.PI*freq*((times[i]||0)-t0); re+=v*Math.cos(a); im-=v*Math.sin(a); cnt++; }
+    if(cnt<8) return null; const scale=Math.SQRT2/cnt*(kind==='V'?pp.uf:pp.cf); return c(re*scale, im*scale);
+  }
+  function metricsFromFaultFast(r){
+    const out={}; const rows=r?.valueRows||[];
+    function plain(v){ return String(v??'').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim(); }
+    function pickRole(s){ s=String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+      if(/\bIA\b|^IA\s/.test(s))return'Ia'; if(/\bIB\b|^IB\s/.test(s))return'Ib'; if(/\bIC\b|^IC\s/.test(s))return'Ic'; if(/\b(IE|IN|IG|3I0|I0)\b/.test(s))return'Ie';
+      if(/\b(VA|UA)\b|^VA\s|^UA\s/.test(s))return'Va'; if(/\b(VB|UB)\b|^VB\s|^UB\s/.test(s))return'Vb'; if(/\b(VC|UC)\b|^VC\s|^UC\s/.test(s))return'Vc'; return''; }
+    for(const row of rows){ const role=pickRole(plain(row&&row[0])); if(role&&!out[role]) out[role]={fault:numFast(plain(row[3]),NaN)}; }
+    return out;
+  }
+  function strongestPhasesFast(r){
+    const m=metricsFromFaultFast(r); return [['A','Ia'],['B','Ib'],['C','Ic']].map(([p,k])=>({p,v:Math.abs(m[k]?.fault||0)})).sort((a,b)=>b.v-a.v).map(x=>x.p);
+  }
+  function calcFaultLocationFast(r){
+    if(!r) return {ok:false,reason:'Chưa có kết quả phân tích sự cố.'};
+    if(!state.cfg||!state.data) return {ok:false,reason:'Chưa có dữ liệu COMTRADE.'};
+    const pp=locParams(); const polar=(mag,ang)=>c((Number(mag)||0)*Math.cos((Number(ang)||0)*Math.PI/180),(Number(mag)||0)*Math.sin((Number(ang)||0)*Math.PI/180));
+    const z1=(Math.hypot(pp.r1,pp.x1)>1e-12)?c(pp.r1,pp.x1):(pp.z1mag>0?polar(pp.z1mag,pp.lineAngle):c(0,0));
+    if(!Number.isFinite(cabs(z1))||cabs(z1)===0) return {ok:false,reason:'Chưa nhập R1/X1 hoặc |Z1| + góc đường dây.'};
+    const z0=c(pp.r0,pp.x0);
+    const k0=(Number.isFinite(pp.k0mag)&&Math.abs(pp.k0mag)>1e-12)?polar(pp.k0mag,pp.k0ang):(cabs(z0)>0?cdiv(csub(z0,z1),cscale(z1,3)):c(0,0));
+    let roles; try{ roles=findAnalogRoles(); }catch(e){ return {ok:false,reason:'Không nhận dạng được bản đồ kênh Ia/Ib/Ic/Ie và Va/Vb/Vc.'}; }
+    const data=state.data, cfg=state.cfg, rate=estimateRateFast(data), per=Math.max(12,Math.round((rate||1000)/Math.max(cfg?.frequency||50,1)));
+    let mid=Number.isInteger(r.firstTrip?.index)?r.firstTrip.index:(Number.isInteger(r.v98TripFacts?.firstTrip?.index)?r.v98TripFacts.firstTrip.index:null);
+    if(Number.isInteger(mid)) mid=Math.max(r.startIndex||0,mid-Math.floor(per/2)); else mid=Math.max(r.startIndex||0,(r.startIndex||0)+Math.round(per*2.5));
+    mid=Math.max(0,Math.min((data.samples||1)-1,Math.round(mid)));
+    const ph={I:{},V:{},centerIndex:mid};
+    for(const p of ['A','B','C','N']){ const ii=roles.I?.[p], vi=roles.V?.[p]; if(Number.isInteger(ii)&&data.analog[ii]) ph.I[p]=phasorFast(data.analog[ii],data.times,mid,'I',pp); if(Number.isInteger(vi)&&data.analog[vi]) ph.V[p]=phasorFast(data.analog[vi],data.times,mid,'V',pp); }
+    if(ph.I.N) ph.I.N=cscale(ph.I.N,pp.rf||1);
+    let phases=(r.phases||[]).filter(x=>/[ABC]/.test(x)); const ranked=strongestPhasesFast(r); const hasGround=!!r.ground || /G|N|ĐẤT|DAT|CHAM|EARTH|GROUND/i.test(String(r.type||''));
+    if(!phases.length) phases=ranked.slice(0,hasGround?2:3); if(hasGround&&phases.length>2) phases=ranked.slice(0,2);
+    const dist=(z,mode)=> mode==='magnitude'?cabs(z)/cabs(z1):cdiv(z,z1).re;
+    const candidates=[]; const add=(label,z,formula,used,kind)=>{ if(z&&Number.isFinite(z.re)&&Number.isFinite(z.im)) candidates.push({label,z,km:dist(z,pp.method==='magnitude'?'magnitude':'projection'),formula,used,kind}); };
+    if(hasGround && (pp.method==='relayHybrid'||pp.method==='groundPair')){
+      const pg=phases.length?phases.slice(0,2):ranked.slice(0,1);
+      for(const p of pg){ const V=ph.V[p], I=ph.I[p], Ir=ph.I.N||c(0,0); if(V&&I){ const z=cdiv(V,cadd(I,cmul(k0,Ir))); add(`${p}-G`,z,`Z${p}G = V${p} / (I${p} + K0×Ires)`,`V${p}, I${p}${ph.I.N?', Ires':''}`,'PG'); } }
+      if(pp.method==='relayHybrid' && phases.length>=2){ const a=phases[0], b=phases[1], V1=ph.V[a], V2=ph.V[b], I1=ph.I[a], I2=ph.I[b]; if(V1&&V2&&I1&&I2) add(`${a}-${b}`,cdiv(csub(V1,V2),csub(I1,I2)),`Z${a}${b}=(V${a}-V${b})/(I${a}-I${b})`,`V${a}, V${b}, I${a}, I${b}`,'PP-CHECK'); }
+      const primary=candidates.filter(x=>x.kind==='PG');
+      if(primary.length){
+        const rawKm=primary.reduce((s,x)=>s+x.km,0)/primary.length; const zapp=cscale(primary.reduce((s,x)=>cadd(s,x.z),c(0,0)),1/primary.length);
+        let km=rawKm; if(pp.clamp&&pp.len>0) km=Math.max(0,Math.min(pp.len,km)); const pct=pp.len>0?km/pp.len*100:null;
+        const notes=[`Tính ${primary.length} vòng pha-đất có bù K0 rồi lấy trung bình: ${primary.map(x=>x.label+'='+fmtLocal(x.km,3)+' km').join(', ')}`];
+        const check=candidates.filter(x=>x.kind==='PP-CHECK'); if(check.length) notes.push(`Vòng pha-pha chỉ đối chiếu: ${check.map(x=>x.label+'='+fmtLocal(x.km,3)+' km').join(', ')}`);
+        if(!ph.I.N) notes.push('Không thấy kênh dòng dư Ires, độ chính xác giảm.');
+        const level=(km>=0&&(!pp.len||km<=pp.len))?'good':'bad';
+        return {ok:true,zapp,km,rawKm,pct,level,formula:'Lai rơle: A-G/B-G + K0, chiếu lên Z1/góc đường dây',used:primary.map(x=>x.used).join('; '),k0,lineZ:z1,scale:{uf:pp.uf,cf:pp.cf},loops:candidates,notes,phasorCenterIndex:mid};
+      }
+    }
+    let zapp=null, formula='', used='';
+    if(hasGround){ const p=phases[0]||ranked[0]||'A'; if(!ph.V[p]||!ph.I[p]) return {ok:false,reason:`Thiếu V${p} hoặc I${p} để tính sự cố chạm đất.`}; zapp=cdiv(ph.V[p],cadd(ph.I[p],cmul(k0,ph.I.N||c(0,0)))); formula=`Z=V${p}/(I${p}+K0×Ires)`; used=`V${p}, I${p}${ph.I.N?', Ires':''}`; }
+    else if(phases.length>=2){ const a=phases[0], b=phases[1]; if(!ph.V[a]||!ph.V[b]||!ph.I[a]||!ph.I[b]) return {ok:false,reason:`Thiếu cặp V/I pha ${a}-${b}.`}; zapp=cdiv(csub(ph.V[a],ph.V[b]),csub(ph.I[a],ph.I[b])); formula=`Z=(V${a}-V${b})/(I${a}-I${b})`; used=`V${a},V${b},I${a},I${b}`; }
+    else return {ok:false,reason:'Chưa đủ pha V/I để tính vị trí.'};
+    const rawKm=dist(zapp,pp.method==='magnitude'?'magnitude':'projection'); let km=rawKm; if(pp.clamp&&pp.len>0) km=Math.max(0,Math.min(pp.len,km)); const pct=pp.len>0?km/pp.len*100:null;
+    return {ok:true,zapp,km,rawKm,pct,level:(km>=0&&(!pp.len||km<=pp.len))?'good':'bad',formula,used,k0,lineZ:z1,scale:{uf:pp.uf,cf:pp.cf},loops:[],notes:['Công thức dự phòng khi không đủ hai vòng pha-đất.'],phasorCenterIndex:mid};
+  }
+  window.COMTRADE_calcFaultLocationV999=calcFaultLocationFast;
+  window.COMTRADE_calcFaultLocationV999Fast=calcFaultLocationFast;
+
+  function renderLocationFast(r){
+    let box=byId('faultLocationResult');
+    if(!box){ const after=byId('faultSummary')?.closest?.('.card') || byId('faultSummary'); if(after){ const card=document.createElement('div'); card.className='card'; card.id='faultLocationCard'; card.innerHTML='<h2>Ước tính vị trí sự cố</h2><div id="faultLocationResult" class="v95-estimate">Chưa tính.</div>'; after.insertAdjacentElement('afterend',card); box=byId('faultLocationResult'); } }
+    if(!box) return;
+    if(!r){ box.textContent='Chưa tính. Bấm “Phân tích sự cố”.'; return; }
+    const loc=r.faultLocation||r.locationV999||calcFaultLocationFast(r); r.faultLocation=loc; r.locationV999=loc;
+    if(!loc.ok){ box.innerHTML='<span class="v95-loc-bad">Chưa tính được vị trí</span><div class="v95-table-note">'+esc(loc.reason||'Thiếu dữ liệu/thông số.')+'</div>'; return; }
+    const cls=loc.level==='good'?'v95-loc-good':(loc.level==='bad'?'v95-loc-bad':'v95-loc-warn');
+    const loops=loc.loops?.length?'\nVòng tính: '+loc.loops.map(x=>`${x.label}=${fmtLocal(x.km,3)} km`).join('; '):'';
+    const pct=loc.pct!=null?' · '+fmtLocal(loc.pct,2)+'% chiều dài đường dây':'';
+    box.innerHTML=`<div><b class="${cls}">Vị trí sự cố ước tính: ${fmtLocal(loc.km,4)} km</b>${pct}</div>`+
+      `<div class="v95-table-note" style="margin-top:8px">Zapp = ${esc(cfmtLocal(loc.zapp,6))} Ω\n${esc(loc.formula||'')}\nKênh dùng: ${esc(loc.used||'')}\nK0 = ${esc(cfmtLocal(loc.k0,4))}; Z1/km = ${esc(cfmtLocal(loc.lineZ,4))} Ω/km; Scale U/I = ${esc(fmtLocal(loc.scale?.uf,3))}/${esc(fmtLocal(loc.scale?.cf,3))}${esc(loops)}\n${esc((loc.notes||[]).join('; '))}</div>`;
+  }
+  window.COMTRADE_renderFaultLocationV999=function(){ const r=state.faultAnalysis||null; if(r){ r.faultLocation=calcFaultLocationFast(r); r.locationV999=r.faultLocation; } renderLocationFast(r); };
+
+  const previousRenderFaultAnalysis = typeof renderFaultAnalysis==='function' ? renderFaultAnalysis : null;
+  renderFaultAnalysis=function(){
+    let ret=null;
+    if(previousRenderFaultAnalysis){ try{ ret=previousRenderFaultAnalysis.apply(this,arguments); }catch(e){ console.warn('[V9.9.10] renderFaultAnalysis cũ bị lỗi, đã bỏ qua để không chặn đọc file:', e.message); } }
+    try{ renderLocationFast(state.faultAnalysis||null); }catch(e){ console.warn('[V9.9.10] render vị trí lỗi:',e); }
+    return ret;
+  };
+
+  runFaultAnalysis=function(silent=false){
+    const started=performance.now(); const st=byId('faultResultStatus');
+    try{
+      if(st){ st.className='status'; st.textContent='Đang phân tích sự cố và tính vị trí...'; }
+      const r=analyzeFaultCore(); state.faultAnalysis=r;
+      try{ r.faultLocation=calcFaultLocationFast(r); r.locationV999=r.faultLocation; }catch(e){ r.faultLocation={ok:false,reason:e.message}; r.locationV999=r.faultLocation; }
+      renderFaultAnalysis();
+      const didFocus=!silent && byId('faultAutoFocus')?.checked;
+      if(didFocus && typeof focusPlotOnFault==='function') safeCall('focusPlotOnFault',()=>focusPlotOnFault(r,false));
+      if(st){ const loc=r.faultLocation; st.className='status '+(r.detected?'good':'warn'); st.textContent=(r.detected?'Đã phân tích xong: ':'Phân tích bằng vùng A/B: ')+(r.type||'')+' · pha '+((r.phases||[]).join('-')||'chưa rõ')+' · thời gian '+fmtLocal((r.duration||0)*1000,6)+' ms.'+(loc?.ok?'\nVị trí sự cố ước tính: '+fmtLocal(loc.km,4)+' km'+(loc.pct!=null?' · '+fmtLocal(loc.pct,2)+'%.':' .'):'\nVị trí sự cố: chưa tính được ('+(loc?.reason||'thiếu dữ liệu')+').')+'\nThời gian xử lý: '+fmtLocal(performance.now()-started,0)+' ms.'; }
+      return r;
+    }catch(e){
+      state.faultAnalysis=null; safeCall('renderFaultAnalysis-after-error',()=>renderFaultAnalysis());
+      if(st){ st.className='status bad'; st.textContent='Lỗi phân tích sự cố: '+e.message; }
+      if(!silent) alert('Lỗi phân tích sự cố: '+e.message);
+      return null;
+    }
+  };
+
+  const oldExpand = typeof expandArchiveInputs==='function' ? expandArchiveInputs : null;
+  expandArchiveInputs=async function(rawFiles){
+    const result=[], messages=[];
+    for(const f of Array.from(rawFiles||[])){
+      const ext=extName(f.name);
+      if(ext==='zip'){
+        safeText('status','Đang giải nén ZIP: '+f.name,'');
+        try{ const got=await extractZipFile(f); for(const x of got) result.push(x); messages.push('ZIP '+f.name+': đã giải nén '+got.length+' file dùng được.'); }
+        catch(e){ messages.push('ZIP '+f.name+': lỗi - '+e.message); result.push(makeVirtualFile(['Lỗi giải nén ZIP '+f.name+': '+e.message], baseName(f.name)+'_zip_error.log','text/plain')); }
+      }else if(ext==='rar'){
+        safeText('status','Đang giải nén RAR: '+f.name,'');
+        try{ if(typeof extractRarFile!=='function') throw new Error('Thiếu runtime đọc RAR offline.'); const got=await extractRarFile(f); for(const x of got) result.push(x); messages.push('RAR '+f.name+': đã giải nén '+got.length+' file dùng được.'); }
+        catch(e){ const msg='RAR '+f.name+': '+e.message; messages.push(msg); result.push(makeVirtualFile([msg], baseName(f.name)+'_rar_note.log','text/plain')); }
+      }else result.push(f);
+      if(result.length%200===0) await waitFrame();
+    }
+    if(messages.length){ state.decoderNotes=state.decoderNotes||[]; for(const m of messages) state.decoderNotes.push(m); }
+    return result;
+  };
+
+  function renderAfterLoadLite(){
+    safeCall('renderGroups',renderGroups); safeCall('renderMetrics',renderMetrics); safeCall('renderCfgInfo',renderCfgInfo); safeCall('renderChannelTables',renderChannelTables); safeCall('renderSummary',renderSummary); safeCall('renderChecks',renderChecks); safeCall('renderDigitalEvents',renderDigitalEvents); safeCall('renderLogs',renderLogs); safeCall('setupCursor',setupCursor); safeCall('renderCursorTable',renderCursorTable); safeCall('renderDecoderNotes',renderDecoderNotes); safeCall('renderFaultAnalysis',renderFaultAnalysis);
+    const hint=byId('plotHint'); if(hint&&state.data) hint.textContent=`Đã nạp ${state.data.samples.toLocaleString('vi-VN')} mẫu. Biểu đồ sẽ chỉ vẽ khi mở tab Biểu đồ hoặc bấm Vẽ lại để tránh chậm khi đọc thư mục/ZIP lớn.`;
+  }
+
+  handleFiles=async function(fileList){
+    const rawFiles=Array.from(fileList||[]); if(!rawFiles.length) return;
+    try{
+      safeText('status','Đang mở danh sách file...','');
+      const files=await expandArchiveInputs(rawFiles); if(!files.length) return;
+      state.groups.clear(); state.activeBase=null; state.cfg=null; state.data=null; state.logs=[]; state.summary=[]; state.selectedAnalog.clear(); state.selectedDigital.clear(); state.cursorA=0; state.cursorB=0; state.activeCursor='A'; state.faultAnalysis=null;
+      safeText('status','Đang phân loại file...','');
+      let count=0;
+      for(const f of files){
+        const ext=extName(f.name);
+        if(ext==='cff'){
+          try{ const ex=await extractCff(f); const b=ex.base; state.groups.set(b,{cfg:ex.cfg,dat:ex.dat,logs:ex.logs.map(l=>makeVirtualFile([l.text],l.name,'text/plain')),cff:f,cffMeta:ex.meta}); }
+          catch(e){ state.groups.set(baseName(f.name),{cfg:null,dat:null,logs:[makeVirtualFile(['Lỗi đọc CFF: '+e.message],baseName(f.name)+'.cff_error.log','text/plain')],cff:f,cffError:e.message}); }
+        } else if(['cfg','dat','log','hdr','inf','txt'].includes(ext)){
+          const b=baseName(f.name); if(!state.groups.has(b)) state.groups.set(b,{cfg:null,dat:null,logs:[]}); const g=state.groups.get(b); if(ext==='cfg') g.cfg=f; else if(ext==='dat') g.dat=f; else g.logs.push(f);
+        }
+        count++; if(count%200===0) await waitFrame();
+      }
+      safeCall('renderGroups',renderGroups);
+      const first=Array.from(state.groups.entries()).find(([b,g])=>g.cfg&&g.dat);
+      if(first) await loadGroup(first[0]); else safeText('status','Đã nhận file nhưng chưa tìm thấy .CFG + .DAT hoặc CFF hợp lệ.','warn');
+    }catch(e){ console.error(e); safeText('status','Lỗi đọc danh sách file: '+e.message,'bad'); }
+  };
+
+  loadGroup=async function(base){
+    const g=state.groups.get(base); if(!g) return;
+    state.activeBase=base; safeCall('renderGroups',renderGroups);
+    if(!g.cfg||!g.dat){ safeText('status','Bộ '+base+' thiếu CFG hoặc DAT.','bad'); return; }
+    try{
+      safeText('status','Đang đọc CFG...','');
+      const cfgText=await g.cfg.text(); state.cfg=parseCfg(cfgText); state.decoderNotes=[]; state.logs=[];
+      for(const f of g.logs||[]){ try{ state.logs.push({name:f.name,text:await f.text()}); }catch(e){ state.logs.push({name:f.name,text:'Không đọc được file: '+e.message}); } }
+      if(g.cffMeta){ state.logs.push({name:base+'.cff_sections.txt', text:'CFF sections:\n'+g.cffMeta.sections.join('\n')+'\nDAT header: '+g.cffMeta.datHeader+'\nDAT bytes: '+g.cffMeta.datBytes}); }
+      safeText('status','Đang đọc DAT '+state.cfg.datType+'...','');
+      state.data=await parseDat(g.dat,state.cfg);
+      state.summary=buildSummary();
+      state.selectedAnalog=new Set(Array.from({length:Math.min(6,state.cfg.analogCount)},(_,i)=>i));
+      state.selectedDigital=new Set(Array.from({length:Math.min(12,state.cfg.digitalCount)},(_,i)=>i));
+      if(typeof setFullTimeInputs==='function') setFullTimeInputs();
+      state.cursorA=0; state.cursorB=state.data?Math.min(state.data.samples-1,Math.max(0,Math.round(state.data.samples/2))):0; state.activeCursor='A'; state.faultAnalysis=null;
+      let msg=`Đã đọc xong bộ ${base}\nNguồn: ${g.cff?'CFF một-file':'CFG/DAT rời'}\nCFG: ${g.cfg.name}\nDAT: ${g.dat.name}\nMẫu: ${state.data.samples.toLocaleString('vi-VN')} · Kiểu: ${state.data.format}`;
+      if(state.data.endian) msg+=` · ${state.data.endian}-endian`; if(state.data.recordBytes) msg+=` · ${state.data.recordBytes} byte/bản ghi`; if(state.data.trailingBytes) msg+=`\nCảnh báo: còn dư ${state.data.trailingBytes} byte ở cuối DAT.`; if(state.data.badRows) msg+='\nCảnh báo: có dòng/byte bất thường cần kiểm tra.'; if(state.cfg.warnings.length) msg+='\n'+state.cfg.warnings.join('\n');
+      safeText('status',msg,state.cfg.warnings.length||state.data.badRows?'warn':'good');
+      renderAfterLoadLite();
+    }catch(err){ console.error(err); safeText('status','Lỗi đọc COMTRADE: '+err.message,'bad'); }
+  };
+
+  const oldDrawAll=typeof drawAll==='function'?drawAll:null;
+  drawAll=function(){
+    try{ return oldDrawAll&&oldDrawAll(); }catch(e){ console.warn('[V9.9.10] drawAll bị lỗi, đã bỏ qua:',e.message); const hint=byId('plotHint'); if(hint) hint.textContent='Biểu đồ chưa vẽ được do dữ liệu quá lớn hoặc trình duyệt thiếu bộ nhớ. Hãy bấm “Vùng sự cố” hoặc thu hẹp khoảng thời gian rồi vẽ lại.'; }
+  };
+
+  function rewireHotfixButtons(){
+    const fi=byId('fileInput'); if(fi) fi.onchange=e=>handleFiles(e.target.files);
+    const fo=byId('folderInput'); if(fo) fo.onchange=e=>handleFiles(e.target.files);
+    const ba=byId('btnFaultAnalyze'); if(ba) ba.onclick=()=>{ safeText('faultResultStatus','Đang chuẩn bị phân tích...',''); setTimeout(()=>runFaultAnalysis(false),20); };
+    const br=byId('btnFaultRecalcLocation'); if(br) br.onclick=()=>window.COMTRADE_renderFaultLocationV999();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',rewireHotfixButtons); else rewireHotfixButtons();
+  window.addEventListener('load',rewireHotfixButtons);
+  safeCall('renderLocationFast-initial',()=>renderLocationFast(state.faultAnalysis||null));
+})();
+</script>
+
+
+<script>
+/* ===== V9.9.12 PATCH: đưa kết quả tính vị trí sự cố vào báo cáo HTML động ===== */
+(function(){
+  'use strict';
+  const PATCH_VERSION='V9.9.12-DYNAMIC-HTML-FAULT-LOCATION-REPORT';
+  window.COMTRADE_V9911_PATCH_VERSION=PATCH_VERSION;
+
+  function ep(s){return String(s==null?'':s).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c;});}
+  function fp(v,d){
+    if(v==null || !Number.isFinite(Number(v))) return '';
+    return Number(v).toLocaleString('vi-VN',{maximumFractionDigits:d==null?6:d});
+  }
+  function cp(z,d){
+    if(!z || !Number.isFinite(Number(z.re)) || !Number.isFinite(Number(z.im))) return '';
+    return fp(z.re,d==null?4:d)+' '+(z.im>=0?'+':'−')+' j'+fp(Math.abs(z.im),d==null?4:d);
+  }
+  function locOf(r){
+    if(!r) return {ok:false,reason:'Chưa có kết quả phân tích sự cố.'};
+    let loc=r.faultLocation||r.locationV999||null;
+    if((!loc || !loc.ok) && typeof window.COMTRADE_calcFaultLocationV999Fast==='function'){
+      try{ loc=window.COMTRADE_calcFaultLocationV999Fast(r); }catch(e){ loc={ok:false,reason:e.message||String(e)}; }
+    }
+    if(!loc && typeof window.COMTRADE_calcFaultLocationV999==='function'){
+      try{ loc=window.COMTRADE_calcFaultLocationV999(r); }catch(e){ loc={ok:false,reason:e.message||String(e)}; }
+    }
+    if(!loc) loc={ok:false,reason:'Không có hàm tính vị trí sự cố trong bản đang chạy.'};
+    r.faultLocation=loc; r.locationV999=loc;
+    return loc;
+  }
+  function locationSection(loc){
+    const rows=[];
+    if(loc && loc.ok){
+      rows.push(['Vị trí sự cố ước tính','<b>'+ep(fp(loc.km,4))+' km</b>'+(loc.pct!=null?' · '+ep(fp(loc.pct,2))+'% chiều dài đường dây':'')]);
+      rows.push(['Zapp',ep(cp(loc.zapp,6))+' Ω']);
+      rows.push(['Công thức',ep(loc.formula||'')]);
+      rows.push(['Kênh dùng',ep(loc.used||'')]);
+      rows.push(['K0',ep(cp(loc.k0,4))]);
+      rows.push(['Z1/km',ep(cp(loc.lineZ,4))+' Ω/km']);
+      rows.push(['Scale U/I',ep(fp(loc.scale&&loc.scale.uf,3))+' / '+ep(fp(loc.scale&&loc.scale.cf,3))]);
+      if(Array.isArray(loc.loops) && loc.loops.length){
+        rows.push(['Vòng tính',ep(loc.loops.map(function(x){return x.label+'='+fp(x.km,3)+' km';}).join('; '))]);
+      }
+      rows.push(['Ghi chú',ep((loc.notes||[]).join('; '))]);
+    }else{
+      rows.push(['Vị trí sự cố','<span class="bad">Chưa tính được</span>']);
+      rows.push(['Lý do',ep((loc&&loc.reason)||'Thiếu dữ liệu/thông số.')]);
+    }
+    const trs=rows.map(function(r){return '<tr><th>'+ep(r[0])+'</th><td>'+r[1]+'</td></tr>';}).join('');
+    return '<div class="card" id="faultLocationReport"><h2>Ước tính vị trí sự cố V9.9.12</h2><div class="muted">Phần này được chèn tự động từ kết quả tính trong tab Phân tích sự cố: vòng pha-đất có bù K0, chiếu lên Z1/góc đường dây; phù hợp để đối chiếu với số rơle như 35,5 km.</div><div class="tableWrap" style="margin-top:10px"><table><tbody>'+trs+'</tbody></table></div></div>';
+  }
+  function insertLocation(html, sec){
+    if(!html || html.indexOf('id="faultLocationReport"')>=0) return html;
+    const marker='<div class="card">\n  <h2>Kết luận và thông số sự cố</h2>';
+    if(html.indexOf(marker)>=0) return html.replace(marker, sec+'\n'+marker);
+    const marker2='<div class="card"><h2 id="metricTitle">';
+    if(html.indexOf(marker2)>=0) return html.replace(marker2, sec+'\n'+marker2);
+    return html.replace('</main>',sec+'\n</main>');
+  }
+  const oldInteractive = (typeof makeFaultInteractiveReportHtml==='function') ? makeFaultInteractiveReportHtml : null;
+  if(oldInteractive){
+    makeFaultInteractiveReportHtml=function(){
+      const r=(typeof ensureFaultAnalysis==='function') ? ensureFaultAnalysis() : (typeof state!=='undefined' ? state.faultAnalysis : null);
+      const html=oldInteractive.apply(this,arguments);
+      if(!html) return html;
+      const loc=locOf(r || (typeof state!=='undefined'?state.faultAnalysis:null));
+      return insertLocation(html, locationSection(loc));
+    };
+  }
+
+  // Khi người dùng xuất/mở HTML động sau khi vừa phân tích, cập nhật lại vị trí trước khi tạo báo cáo.
+  const oldExportDynamic=(typeof exportFaultDynamicHtml==='function') ? exportFaultDynamicHtml : null;
+  if(oldExportDynamic){
+    exportFaultDynamicHtml=function(){
+      const r=(typeof ensureFaultAnalysis==='function') ? ensureFaultAnalysis() : (typeof state!=='undefined' ? state.faultAnalysis : null);
+      if(r) locOf(r);
+      return oldExportDynamic.apply(this,arguments);
+    };
+  }
+  const oldOpenDynamic=(typeof openFaultDynamicHtml==='function') ? openFaultDynamicHtml : null;
+  if(oldOpenDynamic){
+    openFaultDynamicHtml=function(){
+      const r=(typeof ensureFaultAnalysis==='function') ? ensureFaultAnalysis() : (typeof state!=='undefined' ? state.faultAnalysis : null);
+      if(r) locOf(r);
+      return oldOpenDynamic.apply(this,arguments);
+    };
+  }
+
+  function rewireDynamicButtons9911(){
+    ['btnFaultExportHtmlDynamic','btnExportFaultHtmlDynamic2'].forEach(function(id){ const b=document.getElementById(id); if(b) b.onclick=exportFaultDynamicHtml; });
+    ['btnFaultOpenHtmlDynamic','btnOpenFaultHtmlDynamic2'].forEach(function(id){ const b=document.getElementById(id); if(b) b.onclick=openFaultDynamicHtml; });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',rewireDynamicButtons9911); else rewireDynamicButtons9911();
+  window.addEventListener('load',rewireDynamicButtons9911);
+})();
+</script>
+
+
+
+<script>
+/* ===== V9.9.12 PATCH: sửa lỗi calcFaultLocation is not defined và đồng bộ kết quả vị trí vào phân tích/báo cáo ===== */
+(function(){
+  'use strict';
+  const PATCH_VERSION='V9.9.12-CALC-LOCATION-GLOBAL-COMPAT-FIX';
+  window.COMTRADE_V99912_PATCH=PATCH_VERSION;
+  function byId(id){ return document.getElementById(id); }
+  function fmtCompat(v,d){ try{ return fmt(v,d==null?4:d); }catch(e){ return Number.isFinite(Number(v)) ? Number(v).toFixed(d==null?4:d) : ''; } }
+  function getCalc(){
+    if(typeof window.COMTRADE_calcFaultLocationV999Fast==='function') return window.COMTRADE_calcFaultLocationV999Fast;
+    if(typeof window.COMTRADE_calcFaultLocationV999==='function' && window.COMTRADE_calcFaultLocationV999!==window.calcFaultLocation) return window.COMTRADE_calcFaultLocationV999;
+    return null;
+  }
+  // Các bản vá cũ gọi trực tiếp tên calcFaultLocation trong scope global.
+  // Bản V9.9.11 chưa gắn tên này ra window nên khi bấm Phân tích sẽ báo: calcFaultLocation is not defined.
+  window.calcFaultLocation=function(r){
+    const fn=getCalc();
+    if(!fn) return {ok:false, reason:'Chưa nạp hàm tính vị trí sự cố.'};
+    return fn(r);
+  };
+  function recalcCurrent(){
+    const r=window.state && window.state.faultAnalysis;
+    if(!r) return null;
+    const loc=window.calcFaultLocation(r);
+    r.faultLocation=loc;
+    r.locationV999=loc;
+    return loc;
+  }
+  function renderPanel(){
+    try{
+      if(typeof window.COMTRADE_renderFaultLocationV999==='function') window.COMTRADE_renderFaultLocationV999();
+    }catch(e){ console.warn('[V9.9.12] render fault location:', e); }
+  }
+  function cleanStatusWithLocation(r, elapsed){
+    const st=byId('faultResultStatus');
+    if(!st || !r) return;
+    const loc=r.faultLocation||r.locationV999;
+    const base=(r.detected?'Đã phân tích xong: ':'Phân tích bằng vùng A/B: ')+(r.type||'')+' · pha '+((r.phases||[]).join('-')||'chưa rõ')+' · thời gian '+fmtCompat((r.duration||0)*1000,6)+' ms.';
+    const locLine=loc && loc.ok ? '\nVị trí sự cố ước tính: '+fmtCompat(loc.km,4)+' km'+(loc.pct!=null?' · '+fmtCompat(loc.pct,2)+'%.':' .') : '\nVị trí sự cố: chưa tính được ('+((loc&&loc.reason)||'thiếu dữ liệu/thông số')+').';
+    const timeLine=Number.isFinite(elapsed)?'\nThời gian xử lý: '+fmtCompat(elapsed,0)+' ms.':'';
+    st.className='status '+(r.detected?'good':'warn');
+    st.textContent=base+locLine+timeLine;
+  }
+  const prevRun=typeof window.runFaultAnalysis==='function' ? window.runFaultAnalysis : null;
+  if(prevRun && !prevRun.__v99912Wrapped){
+    const wrapped=function(silent=false){
+      const t0=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
+      // Bảo đảm các wrapper cũ có thể gọi calcFaultLocation ngay trong quá trình phân tích.
+      window.calcFaultLocation=window.calcFaultLocation || function(r){ const fn=getCalc(); return fn?fn(r):{ok:false,reason:'Chưa nạp hàm tính vị trí sự cố.'}; };
+      const r=prevRun.apply(this,arguments);
+      if(r){
+        try{ recalcCurrent(); }catch(e){ r.faultLocation={ok:false,reason:e.message||String(e)}; r.locationV999=r.faultLocation; }
+        renderPanel();
+        const t1=(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
+        cleanStatusWithLocation(r,t1-t0);
+      }
+      return r;
+    };
+    wrapped.__v99912Wrapped=true;
+    window.runFaultAnalysis=wrapped;
+  }
+  // Nút phân tích dùng wrapper cuối cùng, tránh gọi lại hàm cũ thiếu alias.
+  function rewire(){
+    const b=byId('btnFaultAnalyze');
+    if(b) b.onclick=function(){ const st=byId('faultResultStatus'); if(st){ st.className='status'; st.textContent='Đang phân tích sự cố và tính vị trí...'; } setTimeout(function(){ window.runFaultAnalysis(false); },20); };
+    ['btnFaultExportHtml','btnFaultOpenHtml','btnExportFaultHtml2','btnOpenFaultHtml2'].forEach(function(id){
+      const x=byId(id); if(!x) return;
+      const old=x.onclick;
+      if(old && old.__v99912HtmlWrapped) return;
+      const wrapped=function(ev){ try{ recalcCurrent(); renderPanel(); }catch(e){ console.warn('[V9.9.12] recalc before HTML report:',e); } return old?old.call(this,ev):undefined; };
+      wrapped.__v99912HtmlWrapped=true;
+      x.onclick=wrapped;
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',rewire); else rewire();
+  window.addEventListener('load',rewire);
 })();
 </script>
 
