@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.9.12 PWA - Fault Locator</title>
+<title>COMTRADE Offline Reader Pro V9.9.18 PWA - Fault Locator</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -113,6 +113,40 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 /* V9.5: đọc nhiều bản ghi và tính vị trí sự cố */
 .v95-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0}.v95-kpi .metric b{font-size:16px}.v95-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.v95-actions{display:flex;gap:8px;flex-wrap:wrap}.v95-actions button{min-width:150px}.v95-table-note{font-size:12px;color:var(--muted);white-space:normal;line-height:1.35}.v95-loc-good{color:var(--good);font-weight:800}.v95-loc-warn{color:var(--warn);font-weight:800}.v95-loc-bad{color:var(--bad);font-weight:800}.v95-param-note{border-left:4px solid var(--accent);background:#071427;border-radius:12px;padding:10px 12px;color:var(--muted);font-size:12px}.v95-small-table table{font-size:12px}.v95-small-table th,.v95-small-table td{padding:6px 7px;vertical-align:top}.v95-estimate{background:#081123;border:1px solid var(--line);border-radius:14px;padding:12px;white-space:pre-wrap}.v95-badge{display:inline-flex;align-items:center;border:1px solid var(--line);background:#0e1a31;border-radius:999px;padding:3px 8px;margin:2px;color:var(--muted);font-size:12px}.v95-current-row td{background:rgba(89,208,255,.06)!important}@media(max-width:900px){.v95-grid,.v95-kpi{grid-template-columns:1fr}.v95-actions button{min-width:100%}}
 
+
+
+/* Mobile menu LV: gom nhóm tab và cho phép ẩn/hiện khi cần */
+.tab-menu{flex:1 1 100%;min-width:280px;max-width:100%;width:100%}
+.tab-menu-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,#1f4163,#14233d);padding:10px 12px;box-shadow:0 8px 22px rgba(0,0,0,.20)}
+.tab-menu-toggle b{font-size:13px;color:#fff;background:#081123;border:1px solid rgba(89,208,255,.38);border-radius:999px;padding:4px 9px;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab-menu:not(.open) .tabs{display:none!important}
+.tab-menu.open .tab-menu-toggle{outline:1px solid rgba(89,208,255,.55)}
+.topbar .tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;width:100%;margin-top:8px}
+.tab-group{display:flex;gap:7px;flex-wrap:wrap;align-content:flex-start;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(6,16,32,.42);padding:8px;min-width:0}
+.tab-group-title{flex:0 0 100%;font-size:12px;line-height:1.25;color:var(--muted);font-weight:800;letter-spacing:.2px;margin-bottom:2px}
+.tab-group .tab,.tab-group .menu-action{flex:1 1 auto;text-align:center;white-space:normal;line-height:1.2;min-height:39px;display:flex;align-items:center;justify-content:center;width:auto;box-shadow:none}.tab-group .menu-action{border:1px solid var(--line);border-radius:999px;background:linear-gradient(180deg,var(--btn2),var(--btn));color:var(--ink);font-weight:800;padding:9px 12px}.tab-group .menu-action:hover{filter:brightness(1.09)}
+@media(max-width:1100px){.topbar .tabs{grid-template-columns:1fr}.tab-group .tab,.tab-group .menu-action{flex:1 1 calc(50% - 7px)}}
+@media(max-width:700px){
+  .topbar{align-items:stretch;padding:9px;gap:8px}
+  .tab-menu{flex:1 1 100%;min-width:0;width:100%}
+  .tab-menu-toggle{min-height:46px;position:relative;z-index:6}
+  .topbar .tabs{grid-template-columns:1fr;max-height:min(64vh,520px);overflow:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 6px;margin-top:8px}
+  .tab-group{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px}
+  .tab-group-title{grid-column:1 / -1;margin-bottom:0}
+  .tab-group .tab,.tab-group .menu-action{min-height:44px;padding:10px 8px;font-size:13px;width:100%}
+}
+@media(max-width:420px){.tab-group{grid-template-columns:1fr}.tab-menu-toggle b{max-width:46%}}
+
+/* V9.9.18: Tab hướng dẫn vận hành và lưu đồ thao tác */
+.guide-hero{background:linear-gradient(135deg,rgba(49,80,120,.55),rgba(8,17,35,.92));border:1px solid rgba(89,208,255,.35);border-radius:18px;padding:16px;margin-bottom:14px}
+.guide-hero h2{margin:0 0 8px}.guide-hero p{margin:0;color:var(--muted)}
+.guide-toc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}.guide-toc a,.guide-jump{display:flex;align-items:center;justify-content:center;min-height:38px;text-align:center;border:1px solid var(--line);border-radius:999px;background:#0b1529;color:#dbeafe;text-decoration:none;font-weight:800;padding:8px 10px}.guide-toc a:hover,.guide-jump:hover{filter:brightness(1.12)}
+.guide-flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin:10px 0 6px}.guide-step{flex:1 1 170px;min-width:150px;background:#071427;border:1px solid var(--line);border-radius:14px;padding:11px}.guide-step b{display:block;color:#fff;margin-bottom:4px}.guide-step small{display:block;color:var(--muted);line-height:1.35}.guide-step.good{border-color:rgba(94,227,146,.55)}.guide-step.warn{border-color:rgba(255,209,102,.55)}.guide-step.bad{border-color:rgba(255,107,107,.55)}.guide-arrow{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:22px;font-weight:900;min-width:24px}
+.guide-check{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.guide-check div{background:#071427;border:1px solid var(--line);border-radius:13px;padding:10px}.guide-check b{display:block;margin-bottom:5px}.guide-check ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px}.guide-kbd{display:inline-block;border:1px solid var(--line);border-radius:7px;background:#061020;color:#fff;padding:1px 6px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}.guide-note{border-left:4px solid var(--accent);background:#071427;border-radius:12px;padding:10px 12px;color:var(--muted);font-size:13px;margin-top:10px}.guide-danger{border-left-color:var(--bad)}.guide-ok{border-left-color:var(--good)}
+.guide-table table{min-width:880px}.guide-table th,.guide-table td{white-space:normal;vertical-align:top}.guide-table td:first-child{font-weight:800;color:#fff}.guide-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.guide-actions button{min-width:150px}.guide-details{border:1px solid var(--line);border-radius:14px;background:#081123;margin:10px 0;overflow:hidden}.guide-details summary{cursor:pointer;padding:11px 13px;font-weight:900;color:#fff;background:#0b1529}.guide-details .guide-details-body{padding:12px}.guide-list-tight li{margin:4px 0}.guide-flow-title{margin:12px 0 4px;font-weight:900;color:#fff}
+@media(max-width:1000px){.guide-toc,.guide-check{grid-template-columns:1fr 1fr}.guide-arrow{display:none}.guide-table table{min-width:720px}}
+@media(max-width:650px){.guide-toc,.guide-check{grid-template-columns:1fr}.guide-step{flex-basis:100%}.guide-actions button{min-width:100%}.guide-hero{padding:13px}.guide-flow{display:grid;grid-template-columns:1fr}.guide-table table{min-width:680px}}
+
 </style>
 </head>
 <body>
@@ -120,7 +154,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.9.12</h1>
+      <h1>COMTRADE Offline Reader Pro V9.9.18</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -215,7 +249,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
           2) Nếu DAT không đọc đúng, thử <b>Vendor tolerant</b>, đổi endian hoặc timestamp.<br>
           3) Vào tab <b>Biểu đồ</b>, kéo thanh trượt A/B để đo thời gian và xem giá trị tức thời.<br>
           4) Vào tab <b>Phân tích sự cố</b> để nhận dạng dạng sự cố, pha sự cố, giá trị và thời gian tác động.<br>
-          5) Xuất CSV/JSON nếu cần đưa sang Excel/phần mềm khác.
+          5) Xem tab <b>Hướng dẫn vận hành</b> để đi theo lưu đồ thao tác; xuất CSV/JSON/HTML nếu cần đưa sang Excel hoặc lưu báo cáo.
         </div>
       </div>
     </div>
@@ -223,24 +257,45 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 
   <main class="main">
     <div class="topbar">
-      <div class="tabs">
-        <div class="tab active" data-tab="overview">Tổng quan</div>
-        <div class="tab" data-tab="plot">Biểu đồ</div>
-        <div class="tab" data-tab="channels">Kênh</div>
-        <div class="tab" data-tab="events">Sự kiện số</div>
-        <div class="tab" data-tab="fault">Phân tích sự cố</div>
-        <div class="tab" data-tab="map">Bản đồ kênh</div>
-        <div class="tab" data-tab="stats">Thống kê sự cố</div>
-        <div class="tab" data-tab="multi">Đa bản ghi / Vị trí sự cố</div>
-        <div class="tab" data-tab="log">Log/HDR/INF</div>
-        <div class="tab" data-tab="convert">Chuyển đổi</div>
-        <div class="tab" data-tab="export">Xuất dữ liệu</div>
-      </div>
-      <div class="toolbar">
-        <button id="btnToggleSidebar" type="button" title="Ẩn/hiện thanh bên để mở rộng vùng xem sự cố">Ẩn thanh bên</button>
-        <button id="btnDemo">Tạo dữ liệu mẫu</button>
-        <button id="btnDemoCff">Tạo CFF mẫu</button>
-        <button id="btnPrint">In/Báo cáo PDF</button>
+      <div class="tab-menu open" id="tabMenu">
+        <button id="btnTabMenuToggle" class="tab-menu-toggle" type="button" aria-controls="tabPanel" aria-expanded="true">
+          <span>☰ Menu chức năng</span>
+          <b id="tabCurrentTitle">Tổng quan</b>
+        </button>
+        <div class="tabs" id="tabPanel">
+          <div class="tab-group">
+            <div class="tab-group-title">📌 Tổng quan dữ liệu</div>
+            <div class="tab active" data-tab="overview">Tổng quan</div>
+            <div class="tab" data-tab="plot">Biểu đồ</div>
+            <div class="tab" data-tab="channels">Kênh</div>
+            <div class="tab" data-tab="events">Sự kiện số</div>
+          </div>
+          <div class="tab-group">
+            <div class="tab-group-title">⚡ Phân tích sự cố</div>
+            <div class="tab" data-tab="fault">Phân tích sự cố</div>
+            <div class="tab" data-tab="map">Bản đồ kênh</div>
+            <div class="tab" data-tab="stats">Thống kê sự cố</div>
+            <div class="tab" data-tab="multi">Đa bản ghi / Vị trí sự cố</div>
+          </div>
+          <div class="tab-group">
+            <div class="tab-group-title">🧰 Công cụ / xuất dữ liệu</div>
+            <div class="tab" data-tab="log">Log/HDR/INF</div>
+            <div class="tab" data-tab="convert">Chuyển đổi</div>
+            <div class="tab" data-tab="export">Xuất dữ liệu</div>
+          </div>
+
+          <div class="tab-group">
+            <div class="tab-group-title">📘 Hướng dẫn</div>
+            <div class="tab" data-tab="guide">Hướng dẫn vận hành</div>
+          </div>
+          <div class="tab-group">
+            <div class="tab-group-title">⚙️ Thao tác nhanh</div>
+            <button id="btnToggleSidebar" class="menu-action" type="button" title="Ẩn/hiện thanh bên để mở rộng vùng xem sự cố">Ẩn thanh bên</button>
+            <button id="btnDemo" class="menu-action" type="button">Tạo dữ liệu mẫu</button>
+            <button id="btnDemoCff" class="menu-action" type="button">Tạo CFF mẫu</button>
+            <button id="btnPrint" class="menu-action" type="button">In/Báo cáo PDF</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -613,6 +668,206 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
         </div>
       </section>
 
+
+
+      <section id="page-guide" class="page">
+        <div class="guide-hero">
+          <h2>Hướng dẫn vận hành COMTRADE Offline Reader Pro</h2>
+          <p>Tab này dùng cho người vận hành khi đọc file COMTRADE offline: nạp file, kiểm tra kênh, phân tích sự cố, xem biểu đồ, xuất báo cáo, lưu thống kê và xử lý các lỗi thường gặp. Dữ liệu được xử lý trên máy, không gửi ra ngoài.</p>
+          <div class="guide-toc">
+            <a href="#guide-flow-main">Lưu đồ chính</a>
+            <a href="#guide-fault">Phân tích sự cố</a>
+            <a href="#guide-report">Xuất báo cáo</a>
+            <a href="#guide-troubleshoot">Xử lý lỗi</a>
+          </div>
+        </div>
+
+        <div class="card" id="guide-flow-main">
+          <h2>1. Lưu đồ vận hành tổng quát</h2>
+          <div class="guide-flow">
+            <div class="guide-step good"><b>Bước 1<br>Nạp dữ liệu</b><small>Chọn <span class="guide-kbd">.CFG + .DAT</span>, <span class="guide-kbd">.CFF</span>, <span class="guide-kbd">.ZIP</span> hoặc <span class="guide-kbd">.RAR</span>.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Bước 2<br>Kiểm tra tổng quan</b><small>Xem số mẫu, tần số, số kênh, thời gian trigger và cảnh báo giải mã.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Bước 3<br>Gán bản đồ kênh</b><small>Kiểm tra Ia/Ib/Ic/Ie, Va/Vb/Vc, Pickup, Trip, 52a/52b.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step warn"><b>Bước 4<br>Phân tích sự cố</b><small>Bấm phân tích, đối chiếu dạng sự cố, pha, RMS/Peak, timeline và máy cắt.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Bước 5<br>Xuất và lưu</b><small>Xuất HTML tĩnh/động, CSV/JSON/TXT hoặc lưu vào thống kê.</small></div>
+          </div>
+          <div class="guide-actions">
+            <button type="button" onclick="activateTab('overview')">Mở Tổng quan</button>
+            <button type="button" onclick="activateTab('map')">Mở Bản đồ kênh</button>
+            <button type="button" onclick="activateTab('fault')">Mở Phân tích sự cố</button>
+            <button type="button" onclick="activateTab('export')">Mở Xuất dữ liệu</button>
+          </div>
+          <div class="guide-note guide-ok"><b>Nguyên tắc bắt buộc:</b> luôn kiểm tra đúng bộ file, đúng bản đồ kênh và đúng chế độ đơn vị dòng/áp trước khi kết luận. Nếu kết quả bất thường, đối chiếu lại biểu đồ và dòng thời gian tác động.</div>
+        </div>
+
+        <div class="card">
+          <h2>2. Quy trình nạp file COMTRADE</h2>
+          <div class="guide-flow">
+            <div class="guide-step"><b>Chọn file/thư mục</b><small>Dùng <b>Chọn file</b>, <b>Chọn thư mục</b> hoặc kéo thả vào vùng nhận file.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Chọn bộ cần đọc</b><small>Nếu có nhiều bộ, bấm đúng nhóm file theo tên bộ trong khung “Bộ file đã nhận”.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Kiểm tra thông báo</b><small>Không có lỗi đỏ; nếu có cảnh báo DAT, chuyển sang chế độ tương thích.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step good"><b>Xem Tổng quan</b><small>Xác nhận số kênh, thời gian trigger, sample rate và thống kê analog.</small></div>
+          </div>
+          <div class="guide-check">
+            <div><b>Đúng bộ file</b><ul><li>.CFG và .DAT cùng tên gốc.</li><li>.CFF là một gói đầy đủ.</li><li>.ZIP/.RAR chứa đủ CFG/DAT.</li></ul></div>
+            <div><b>Khi DAT khó đọc</b><ul><li>Thử <b>Vendor tolerant</b>.</li><li>Đổi endian little/big.</li><li>Đổi timestamp µs/ns/ms.</li><li>Thử BINARY/BINARY32/FLOAT32.</li></ul></div>
+            <div><b>Không nên làm</b><ul><li>Không kết luận khi bản đồ kênh chưa đúng.</li><li>Không trộn file của nhiều sự cố khác nhau.</li><li>Không dùng bản cache cũ khi vừa cập nhật HTML.</li></ul></div>
+          </div>
+        </div>
+
+        <div class="card" id="guide-fault">
+          <h2>3. Quy trình phân tích sự cố</h2>
+          <div class="guide-flow">
+            <div class="guide-step"><b>Thiết lập đơn vị</b><small>Chọn sơ cấp kA/kV hoặc thứ cấp; chọn RMS, Peak hoặc RMS + Peak.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Gán kênh chính</b><small>Vào <b>Bản đồ kênh</b>, gán Ia/Ib/Ic/Ie và Va/Vb/Vc; gán Pickup/Trip/MC nếu có.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Phân tích</b><small>Vào <b>Phân tích sự cố</b>, chỉnh ngưỡng nếu cần rồi bấm <b>Phân tích sự cố</b>.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step warn"><b>Đối chiếu</b><small>Kiểm tra kết luận nhanh, bảng giá trị, thành phần thứ tự, máy cắt và timeline.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step good"><b>Chốt báo cáo</b><small>Xuất HTML/TXT/CSV/JSON hoặc lưu vào thống kê.</small></div>
+          </div>
+
+          <details class="guide-details" open>
+            <summary>3.1. Bảng cần kiểm tra trước khi kết luận</summary>
+            <div class="guide-details-body guide-table table-wrap">
+              <table>
+                <thead><tr><th>Khu vực</th><th>Ý nghĩa</th><th>Cách kiểm tra</th><th>Dấu hiệu cần chú ý</th></tr></thead>
+                <tbody>
+                  <tr><td>Kết luận nhanh</td><td>Tóm tắt dạng sự cố, pha sự cố, thời điểm đầu/cuối.</td><td>So với biểu đồ dòng/áp và digital Pickup/Trip.</td><td>Pha kết luận phải phù hợp với dòng tăng và áp sụt.</td></tr>
+                  <tr><td>Giá trị các phần tử sự cố</td><td>RMS/Peak trước, trong, sau sự cố theo đơn vị đã chọn.</td><td>Kiểm tra cột Đơn vị và chế độ RMS/Peak.</td><td>Không được lẫn A và kA trong cùng chế độ kA/kV.</td></tr>
+                  <tr><td>Thành phần thứ tự</td><td>I0/I1/I2, V0/V1/V2 và góc pha.</td><td>Dùng để xác nhận chạm đất, thứ tự nghịch và lệch pha.</td><td>I0 cao thường liên quan sự cố chạm đất.</td></tr>
+                  <tr><td>Phân tích máy cắt</td><td>Trip, trạng thái 52a/52b, thời gian mở máy cắt.</td><td>So với giới hạn thời gian máy cắt mở sau Trip.</td><td>Trip có nhưng 52a/52b không đổi là dấu hiệu cần điều tra.</td></tr>
+                  <tr><td>Dòng thời gian tác động</td><td>Thứ tự Pickup, đỉnh dòng, Trip, máy cắt mở.</td><td>Kiểm tra t(s), sự kiện, kênh và chi tiết đổi 0/1.</td><td>Timeline phải khớp với biểu đồ và log/HDR/INF.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="guide-details">
+            <summary>3.2. Lưu đồ kiểm tra trường hợp máy cắt không loại trừ sự cố</summary>
+            <div class="guide-details-body">
+              <div class="guide-flow">
+                <div class="guide-step"><b>Trip có xuất hiện?</b><small>Xem digital Trip/Operate và timeline.</small></div>
+                <div class="guide-arrow">→</div>
+                <div class="guide-step"><b>52a/52b có đổi trạng thái?</b><small>Nếu không đổi, kiểm tra mạch cắt, cuộn cắt, DC, khóa liên động.</small></div>
+                <div class="guide-arrow">→</div>
+                <div class="guide-step"><b>Dòng có giảm sau Trip?</b><small>Nếu dòng vẫn duy trì, máy cắt có thể chưa mở hoặc mở không hết pha.</small></div>
+                <div class="guide-arrow">→</div>
+                <div class="guide-step warn"><b>Đối chiếu log rơle</b><small>Kiểm tra LOCKOUT, BLOCK, DC fail, trip coil fail hoặc logic khóa.</small></div>
+                <div class="guide-arrow">→</div>
+                <div class="guide-step good"><b>Kết luận nguyên nhân</b><small>Ghi rõ bảo vệ đã tác động hay chưa, máy cắt có đáp ứng hay không.</small></div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="card">
+          <h2>4. Quy trình xem biểu đồ và kiểm tra con trỏ A/B</h2>
+          <div class="guide-flow">
+            <div class="guide-step"><b>Chọn kênh</b><small>Chọn 6 kênh analog đầu hoặc chọn theo bản đồ kênh chuẩn.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Phóng vùng sự cố</b><small>Dùng <b>Vùng sự cố</b> hoặc nhập khoảng thời gian.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Đặt A/B</b><small>Đưa A/B tới đầu/cuối sự cố hoặc tới Trip-MC.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step good"><b>Đọc Δt</b><small>Dùng bảng A/B để đo thời gian tác động, dòng/áp tại mẫu và sai khác.</small></div>
+          </div>
+          <div class="guide-note">Khi biểu đồ quá nặng, hãy chọn ít kênh hơn hoặc thu hẹp khoảng thời gian trước khi bấm vẽ lại.</div>
+        </div>
+
+        <div class="card">
+          <h2>5. Quy trình tính vị trí sự cố / đa bản ghi</h2>
+          <div class="guide-flow">
+            <div class="guide-step"><b>Nhập thông số tuyến</b><small>Chiều dài đường dây, R1/X1 hoặc |Z1|, góc đường dây, K0.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Kiểm tra CT/PT</b><small>Bật tự quy đổi CT/PT nếu CFG có Primary/Secondary và P/S.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Phân tích từng đầu</b><small>Chọn thêm file/thư mục các đầu đường dây rồi đọc & phân tích tất cả.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step warn"><b>Đối chiếu hai đầu</b><small>So sánh dA và L − dB; nếu sai lệch lớn, kiểm tra đồng bộ thời gian và chiều dòng.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step good"><b>Xuất tổng hợp</b><small>Xuất JSON/CSV/HTML tổng hợp hoặc đưa kết quả vào thống kê.</small></div>
+          </div>
+          <div class="guide-actions"><button type="button" onclick="activateTab('multi')">Mở Đa bản ghi / Vị trí sự cố</button></div>
+        </div>
+
+        <div class="card" id="guide-report">
+          <h2>6. Quy trình xuất báo cáo và lưu thống kê</h2>
+          <div class="guide-flow">
+            <div class="guide-step"><b>Kiểm tra cuối</b><small>Đơn vị dòng/áp, RMS/Peak, bản đồ kênh, timeline và kết luận.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Chọn dạng xuất</b><small>HTML tĩnh để in/lưu PDF; HTML động để xem lại biểu đồ và bảng tương tác.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Lưu dữ liệu máy</b><small>CSV/JSON/TXT dùng để đưa sang Excel hoặc lưu hồ sơ.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step good"><b>Lưu thống kê</b><small>Dùng “Lấy từ sự cố đang phân tích” rồi lưu vào cơ sở thống kê offline.</small></div>
+          </div>
+          <div class="guide-table table-wrap">
+            <table>
+              <thead><tr><th>Loại xuất</th><th>Khi nào dùng</th><th>Nội dung chính</th><th>Lưu ý</th></tr></thead>
+              <tbody>
+                <tr><td>HTML tĩnh</td><td>In, lưu PDF, gửi báo cáo nhanh.</td><td>Kết luận, bảng giá trị, thứ tự pha, timeline, phân tích máy cắt.</td><td>Không cần chạy script sau khi mở.</td></tr>
+                <tr><td>HTML động</td><td>Xem lại tương tác, con trỏ A/B, biểu đồ động.</td><td>Payload dữ liệu, biểu đồ, bảng A/B, timeline.</td><td>Nên mở bằng trình duyệt hiện đại; nếu rỗng, kiểm tra trình duyệt có chặn script nội bộ không.</td></tr>
+                <tr><td>CSV</td><td>Đưa sang Excel/phần mềm khác.</td><td>Kênh đang chọn, toàn bộ analog hoặc mẫu tại con trỏ.</td><td>Bản ghi lớn nên xuất theo kênh/khoảng thời gian cần thiết.</td></tr>
+                <tr><td>JSON</td><td>Lưu dữ liệu phân tích để tái sử dụng.</td><td>Tóm tắt cấu hình, kết quả phân tích, thống kê.</td><td>Phù hợp trao đổi giữa các máy offline.</td></tr>
+                <tr><td>TXT</td><td>Ghi chú nhanh, copy vào biên bản.</td><td>Kết luận, timeline, ghi chú phân tích.</td><td>Dung lượng nhỏ, dễ đọc.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>7. Quy trình chuyển đổi COMTRADE</h2>
+          <div class="guide-flow">
+            <div class="guide-step"><b>Đọc bản ghi nguồn</b><small>Nạp và kiểm tra bản ghi nguồn trước khi chuyển đổi.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Chọn phiên bản đích</b><small>1991, 1999 hoặc 2013; chọn ASCII/BINARY/BINARY32/FLOAT32.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step"><b>Xem CFG đích</b><small>Kiểm tra channel, scale, sample rate, timestamp.</small></div>
+            <div class="guide-arrow">→</div>
+            <div class="guide-step good"><b>Tải gói chuyển đổi</b><small>ZIP, CFF hoặc file rời tùy mục đích sử dụng.</small></div>
+          </div>
+          <div class="guide-actions"><button type="button" onclick="activateTab('convert')">Mở Chuyển đổi</button></div>
+        </div>
+
+        <div class="card" id="guide-troubleshoot">
+          <h2>8. Xử lý lỗi thường gặp</h2>
+          <div class="guide-table table-wrap">
+            <table>
+              <thead><tr><th>Hiện tượng</th><th>Nguyên nhân thường gặp</th><th>Cách xử lý</th></tr></thead>
+              <tbody>
+                <tr><td>Không thấy dữ liệu sau khi chọn file</td><td>Thiếu CFG/DAT, sai tên bộ, file nằm trong thư mục nén chưa đọc được.</td><td>Chọn lại đủ bộ; thử giải nén; kiểm tra thông báo trong khung trạng thái.</td></tr>
+                <tr><td>DAT đọc sai, biểu đồ méo</td><td>Sai endian, sai kiểu DAT, timestamp không đúng đơn vị, digital bị packed.</td><td>Thử Vendor tolerant, đổi endian, đổi DAT type, đổi timestamp µs/ns/ms.</td></tr>
+                <tr><td>Kết luận pha không hợp lý</td><td>Nhận dạng kênh tự động sai hoặc chiều/ký hiệu kênh đặc thù.</td><td>Vào Bản đồ kênh và gán thủ công Ia/Ib/Ic/Ie, Va/Vb/Vc.</td></tr>
+                <tr><td>Dòng/áp hiển thị sai đơn vị</td><td>Chưa chọn chế độ đơn vị hoặc CFG có P/S, Primary/Secondary khác chuẩn.</td><td>Kiểm tra khung Quy đổi đơn vị; chọn sơ cấp kA/kV hoặc thứ cấp rồi bấm cập nhật bảng.</td></tr>
+                <tr><td>HTML động mở ra rỗng</td><td>Trình duyệt chặn script nội bộ hoặc đang mở bản cũ trong cache.</td><td>Mở bằng tên file mới, bấm tải lại bỏ cache, hoặc dùng HTML tĩnh để in báo cáo.</td></tr>
+                <tr><td>PWA vẫn hiện bản cũ</td><td>Service worker/cache còn giữ file cũ.</td><td>Bấm Kiểm tra bản mới, Ép cập nhật phiên bản, Tải lại bỏ cache hoặc đổi tên file HTML.</td></tr>
+                <tr><td>Biểu đồ chậm hoặc treo</td><td>Bản ghi quá lớn hoặc chọn quá nhiều kênh.</td><td>Thu hẹp thời gian, chọn ít kênh, dùng Vùng sự cố hoặc tắt tự vẽ lại.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="guide-note guide-danger"><b>Chú ý an toàn vận hành:</b> kết quả của công cụ là hỗ trợ phân tích. Khi ra quyết định vận hành, cần đối chiếu thêm rơle, SCADA, hiện trường, sơ đồ bảo vệ và quy trình nội bộ.</div>
+        </div>
+
+        <div class="card">
+          <h2>9. Checklist trước khi bàn giao báo cáo</h2>
+          <div class="guide-check">
+            <div><b>Dữ liệu đầu vào</b><ul class="guide-list-tight"><li>Đúng bộ COMTRADE.</li><li>Không thiếu DAT/CFG.</li><li>Không dùng nhầm sự cố khác.</li><li>Không còn cảnh báo giải mã quan trọng.</li></ul></div>
+            <div><b>Phân tích</b><ul class="guide-list-tight"><li>Bản đồ kênh đúng.</li><li>Đơn vị dòng/áp đúng.</li><li>Timeline hợp lý.</li><li>Kết luận pha khớp biểu đồ.</li></ul></div>
+            <div><b>Báo cáo</b><ul class="guide-list-tight"><li>HTML tĩnh mở đúng.</li><li>HTML động có dữ liệu nếu cần.</li><li>CSV/JSON đã lưu nếu cần.</li><li>Đã lưu thống kê sự cố.</li></ul></div>
+          </div>
+        </div>
+      </section>
+
       <section id="page-export" class="page">
         <div class="card"><h2>Xuất dữ liệu</h2><p class="tiny">CSV có thể mở bằng Excel. Với bản ghi rất lớn, chỉ nên xuất kênh cần thiết hoặc khoảng thời gian đã chọn.</p><div class="toolbar"><button id="btnCsvSelected">Xuất CSV kênh đang chọn</button><button id="btnCsvAllAnalog">Xuất CSV toàn bộ Analog</button><button id="btnCsvCursor">Xuất CSV mẫu tại con trỏ</button><button id="btnJsonSummary">Xuất JSON tóm tắt</button><button id="btnExportFaultHtml2">Xuất báo cáo sự cố HTML</button><button id="btnOpenFaultHtml2">Mở báo cáo sự cố</button></div></div>
         <div class="card"><h2>Ghi chú kỹ thuật</h2><ul class="tiny"><li>Hỗ trợ file rời .CFG/.DAT, file một-gói .CFF, đọc trực tiếp .ZIP và .RAR khi chạy kèm bộ RAR runtime offline đã được PWA cache: unarchiver.min.js, worker-bundle.js, libarchive.wasm. Nếu thiếu runtime, chương trình báo hướng dẫn rõ ràng và vẫn đọc ZIP/CFG/DAT bình thường.</li><li>Có lõi chuyển đổi xuất lại COMTRADE 1991/1999/2013, DAT ASCII/BINARY/BINARY32/FLOAT32 và đóng gói ZIP/CFF.</li><li>Có công cụ phân tích sự cố: nhận dạng pha/dạng/thời gian sự cố, tự phóng biểu đồ vào vùng sự cố, xuất ảnh biểu đồ tập trung kích thước lớn và giá trị RMS trước/trong/sau sự cố.</li><li>Hỗ trợ DAT: ASCII, BINARY 16-bit, BINARY32, FLOAT32; có cơ chế thử endian, byte đệm/CRLF, timestamp µs/ns/ms, digital packed word/hex.</li><li>Công thức scale analog: <span class="mono">giá trị = a × raw + b</span>. FLOAT32 được coi là giá trị thực, không nhân a/b.</li><li>Biến thể mã hóa độc quyền hoặc DAT nén của từng hãng chưa thể bảo đảm nếu không có mẫu file thật để nhận diện chữ ký.</li></ul><div id="decoderNotes" class="note"></div></div>
@@ -892,7 +1147,7 @@ function faultRelevantAnalogIndices(r){ const cfg=state.cfg; const out=[]; const
 function faultRelevantDigitalIndices(r){ const cfg=state.cfg; if(!cfg||!r)return [...state.selectedDigital]; const names=new Set((r.digitalEvents||[]).map(x=>normText(x.channel||''))); const out=[]; cfg.digital.forEach((ch,i)=>{ if(names.has(normText(ch.id||''))) out.push(i); }); if(!out.length){ const opts=r.options||getFaultOptions(); cfg.digital.forEach((ch,i)=>{ const name=ch.id||''; if(hasAnyKeyword(name,opts.pickupKw)||hasAnyKeyword(name,opts.tripKw)||hasAnyKeyword(name,opts.breakerKw)) out.push(i); }); }
   if(!out.length) return [...state.selectedDigital].slice(0,12); return out.slice(0,16); }
 function selectFaultChannels(r){ if(!r||!state.cfg)return; const A=faultRelevantAnalogIndices(r), D=faultRelevantDigitalIndices(r); state.selectedAnalog=new Set(A); state.selectedDigital=new Set(D); renderChecks(); renderChannelTables(); }
-function focusPlotOnFault(r, switchToPlot=false){ if(!r||!state.data)return; const fr=faultFocusRange(r,'screen'); if(!fr)return; if(checked('faultAutoSelectChannels')) selectFaultChannels(r); setCursorIndex(r.startIndex,false,'A'); setCursorIndex(r.endIndex,false,'B'); setActiveCursor('A'); $('tStart').value=fr.t0.toFixed(6); $('tEnd').value=fr.t1.toFixed(6); drawAll(); renderCursorTable(); const hint=$('plotHint'); if(hint) hint.textContent=`Đã tự phóng biểu đồ vào vùng sự cố: ${fmt(fr.t0,6)} s → ${fmt(fr.t1,6)} s. A/B = đầu/cuối sự cố, ảnh báo cáo sẽ dùng vùng này ở độ phân giải lớn.`; if(switchToPlot){ document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab==='plot')); document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id==='page-plot')); setTimeout(()=>{ drawAll(); $('analogCanvas')?.scrollIntoView({behavior:'smooth',block:'center'}); },80); } }
+function focusPlotOnFault(r, switchToPlot=false){ if(!r||!state.data)return; const fr=faultFocusRange(r,'screen'); if(!fr)return; if(checked('faultAutoSelectChannels')) selectFaultChannels(r); setCursorIndex(r.startIndex,false,'A'); setCursorIndex(r.endIndex,false,'B'); setActiveCursor('A'); $('tStart').value=fr.t0.toFixed(6); $('tEnd').value=fr.t1.toFixed(6); drawAll(); renderCursorTable(); const hint=$('plotHint'); if(hint) hint.textContent=`Đã tự phóng biểu đồ vào vùng sự cố: ${fmt(fr.t0,6)} s → ${fmt(fr.t1,6)} s. A/B = đầu/cuối sự cố, ảnh báo cáo sẽ dùng vùng này ở độ phân giải lớn.`; if(switchToPlot){ activateTab('plot',{closeOnMobile:false}); setTimeout(()=>{ drawAll(); $('analogCanvas')?.scrollIntoView({behavior:'smooth',block:'center'}); },80); } }
 function runFaultAnalysis(silent=false){ try{ const r=analyzeFaultCore(); state.faultAnalysis=r; renderFaultAnalysis(); const didFocus=!silent && checked('faultAutoFocus'); if(didFocus) focusPlotOnFault(r,false); const st=$('faultResultStatus'); if(st){st.className='status '+(r.detected?'good':'warn'); st.textContent=(r.detected?'Đã phân tích xong: ':'Phân tích bằng vùng A/B: ')+r.type+' · pha '+(r.phases.join('-')||'chưa rõ')+' · thời gian '+fmt(r.duration*1000,6)+' ms'+(didFocus?'. Biểu đồ đã tập trung vào vùng sự cố.':'.');} return r; }catch(e){ state.faultAnalysis=null; renderFaultAnalysis(); const st=$('faultResultStatus'); if(st){st.className='status bad'; st.textContent='Lỗi phân tích sự cố: '+e.message;} if(!silent) alert('Lỗi phân tích sự cố: '+e.message); return null; } }
 function ensureFaultAnalysis(){ return state.faultAnalysis || runFaultAnalysis(true); }
 function setCursorsToFault(){ const r=ensureFaultAnalysis(); if(!r)return; setCursorIndex(r.startIndex,false,'A'); setCursorIndex(r.endIndex,true,'B'); setActiveCursor('A'); }
@@ -1399,7 +1654,14 @@ function setSidebarCollapsed(collapsed){
 }
 function toggleSidebar(){ setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed')); }
 function initSidebarMode(){ setSidebarCollapsed(localStorage.getItem('comtradeSidebarCollapsed')==='1'); const top=$('btnToggleSidebar'); if(top) top.onclick=toggleSidebar; const fl=$('btnFloatingSidebar'); if(fl) fl.onclick=toggleSidebar; }
-function bind(){ $('btnPickFiles').onclick=()=>$('fileInput').click(); $('btnPickFolder').onclick=()=>$('folderInput').click(); $('fileInput').onchange=e=>handleFiles(e.target.files); $('folderInput').onchange=e=>handleFiles(e.target.files); const drop=$('drop'); ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');})); ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');})); drop.addEventListener('drop',e=>handleFiles(e.dataTransfer.files)); document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-'+t.dataset.tab).classList.add('active'); setTimeout(drawAll,60);});
+
+function tabIsCompact(){ return window.matchMedia('(max-width:700px)').matches || document.body.classList.contains('view-mobile'); }
+function setTabMenuOpen(open){ const menu=$('tabMenu'); const btn=$('btnTabMenuToggle'); if(!menu)return; menu.classList.toggle('open',!!open); if(btn)btn.setAttribute('aria-expanded',open?'true':'false'); }
+function syncTabMenuTitle(tabName){ const active=document.querySelector(`.tab[data-tab="${tabName}"]`) || document.querySelector('.tab.active'); const title=active?active.textContent.trim():'Tổng quan'; const el=$('tabCurrentTitle'); if(el)el.textContent=title; }
+function activateTab(tabName, opts={}){ const page=$('page-'+tabName); if(!page)return; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tabName)); document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+tabName)); syncTabMenuTitle(tabName); if(opts.closeOnMobile!==false && tabIsCompact()) setTabMenuOpen(false); setTimeout(drawAll,60); }
+function initTabMenu(){ const menu=$('tabMenu'); const btn=$('btnTabMenuToggle'); if(!menu)return; if(btn)btn.onclick=()=>setTabMenuOpen(!menu.classList.contains('open')); document.querySelectorAll('#tabPanel .menu-action').forEach(b=>b.addEventListener('click',()=>{ if(tabIsCompact()) setTabMenuOpen(false); })); syncTabMenuTitle(document.querySelector('.tab.active')?.dataset.tab || 'overview'); if(tabIsCompact()) setTabMenuOpen(false); }
+
+function bind(){ $('btnPickFiles').onclick=()=>$('fileInput').click(); $('btnPickFolder').onclick=()=>$('folderInput').click(); $('fileInput').onchange=e=>handleFiles(e.target.files); $('folderInput').onchange=e=>handleFiles(e.target.files); const drop=$('drop'); ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');})); ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');})); drop.addEventListener('drop',e=>handleFiles(e.dataTransfer.files)); initTabMenu(); document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>activateTab(t.dataset.tab));
   $('btnAFirst6').onclick=()=>selectA('first'); $('btnAAll').onclick=()=>selectA('all'); $('btnAClear').onclick=()=>selectA('clear'); $('btnDFirst12').onclick=()=>selectD('first'); $('btnDAll').onclick=()=>selectD('all'); $('btnDClear').onclick=()=>selectD('clear'); $('btnFullRange').onclick=()=>{setFullTimeInputs();drawAll();}; $('btnDraw').onclick=()=>{drawAll();renderCursorTable();}; $('btnFaultFocusPlot').onclick=()=>{ const r=ensureFaultAnalysis(); if(r)focusPlotOnFault(r,false); }; $('btnWindowCursor').onclick=()=>{ const d=state.data;if(!d)return; const t=d.times[getActiveCursorIndex()]; const dur=d.times[d.samples-1]-d.times[0]; const w=Math.max(dur/50,0.02); $('tStart').value=(t-w/2).toFixed(6); $('tEnd').value=(t+w/2).toFixed(6); drawAll();}; $('btnCursorToRange').onclick=()=>{ const d=state.data;if(!d)return; const ia=clampSampleIndex(state.cursorA), ib=clampSampleIndex(state.cursorB); const t0=Math.min(d.times[ia],d.times[ib]), t1=Math.max(d.times[ia],d.times[ib]); const pad=Math.max((t1-t0)*0.15, (d.times[d.samples-1]-d.times[0])/100, 0.005); $('tStart').value=(t0-pad).toFixed(6); $('tEnd').value=(t1+pad).toFixed(6); drawAll(); }; const ctm=$('btnCursorTripMc'); if(ctm)ctm.onclick=setCursorsToTripMc; $('normalizePlot').onchange=drawAll;
   ['datProfile','endianMode','bitOrder','timestampUnit','datTypeOverride','preferTimestamp'].forEach(id=>$(id).onchange=()=>state.activeBase&&loadGroup(state.activeBase)); $('cursorRangeA').oninput=e=>setCursorIndex(+e.target.value, checked('autoDraw'), 'A'); $('cursorRangeB').oninput=e=>setCursorIndex(+e.target.value, checked('autoDraw'), 'B'); $('cursorSelectedOnly').onchange=renderCursorTable; $('btnActiveA').onclick=()=>setActiveCursor('A'); $('btnActiveB').onclick=()=>setActiveCursor('B'); $('btnCursorPrev').onclick=()=>setCursorIndex(getActiveCursorIndex()-1); $('btnCursorNext').onclick=()=>setCursorIndex(getActiveCursorIndex()+1); $('btnSwapCursors').onclick=()=>{ const t=state.cursorA; state.cursorA=state.cursorB; state.cursorB=t; setupCursor(); renderCursorTable(); drawAll(); }; $('analogCanvas').onclick=e=>canvasClickToCursor($('analogCanvas'),e); $('digitalCanvas').onclick=e=>canvasClickToCursor($('digitalCanvas'),e);
   $('logSelect').onchange=showLog; $('logSearch').oninput=showLog; $('btnCsvSelected').onclick=()=>exportCsv('selected'); $('btnCsvAllAnalog').onclick=()=>exportCsv('allA'); $('btnCsvCursor').onclick=()=>exportCsv('cursor'); $('btnJsonSummary').onclick=exportJsonSummary; $('btnConvertDownload').onclick=downloadConverted; $('btnPreviewCfg').onclick=previewConvertedCfg; $('btnDownloadConvertedDat').onclick=downloadConvertedDatOnly; ['targetRevision','targetDatType','targetPackage','targetEndian','targetTsUnit','targetDigitalAscii','targetRateMode'].forEach(id=>$(id).onchange=()=>{state.converted=null;}); $('btnPrint').onclick=()=>window.print(); $('btnDemo').onclick=makeDemo; $('btnDemoCff').onclick=makeDemoCff; $('btnFaultAnalyze').onclick=()=>runFaultAnalysis(false); $('btnFaultSetCursors').onclick=setCursorsToFault; $('btnFaultZoom').onclick=zoomFaultWindow; $('btnFaultOpenFocusedPlot').onclick=openFaultFocusedPlot; $('btnFaultExportPng').onclick=exportFaultFocusedPng; $('btnFaultExportJson').onclick=exportFaultJson; $('btnFaultExportCsv').onclick=exportFaultCsv; $('btnFaultExportHtml').onclick=exportFaultHtml; $('btnFaultOpenHtml').onclick=openFaultHtml; $('btnFaultExportTxt').onclick=exportFaultTxt; const fh2=$('btnExportFaultHtml2'); if(fh2)fh2.onclick=exportFaultHtml; const oh2=$('btnOpenFaultHtml2'); if(oh2)oh2.onclick=openFaultHtml; ['faultCurrentFactor','faultCurrentAbs','faultVoltageDrop','faultMinMs','faultPreMs','faultPostMs','faultDigitalPickup','faultDigitalTrip','faultDigitalBreaker'].forEach(id=>$(id).onchange=()=>{state.faultAnalysis=null; renderFaultAnalysis();}); ['faultAutoFocus','faultAutoSelectChannels'].forEach(id=>{ const e=$(id); if(e)e.onchange=()=>{ if(state.faultAnalysis&&id==='faultAutoSelectChannels')focusPlotOnFault(state.faultAnalysis,false); }; }); window.addEventListener('resize',()=>setTimeout(drawAll,100)); }
@@ -3443,6 +3705,580 @@ initSidebarMode();
       wrapped.__v99912HtmlWrapped=true;
       x.onclick=wrapped;
     });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',rewire); else rewire();
+  window.addEventListener('load',rewire);
+})();
+</script>
+
+<script>
+/* ===== V9.9.15 FINAL FIX: đồng bộ bảng dòng/áp trong Phân tích sự cố + HTML tĩnh/động ===== */
+(function(){
+  'use strict';
+  var PATCH_VERSION='V9.9.15-FINAL-FAULT-VALUE-TABLE-REPORT-SYNC';
+  window.COMTRADE_V9915_FINAL_FIX=PATCH_VERSION;
+
+  function byId(id){ return document.getElementById(id); }
+  function st(){ try{ return (typeof state!=='undefined')?state:null; }catch(e){ return null; } }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function txt(s){
+    var v=String(s==null?'':s).replace(/<[^>]*>/g,'');
+    try{ var d=document.createElement('textarea'); d.innerHTML=v; return d.value.trim(); }catch(e){ return v.trim(); }
+  }
+  function norm(s){
+    try{ if(typeof normText==='function') return normText(s); }catch(e){}
+    return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  }
+  function fmtN(v,d){
+    v=Number(v);
+    if(!Number.isFinite(v)) return '';
+    try{ if(typeof fmt==='function') return fmt(v,d==null?6:d); }catch(e){}
+    return v.toLocaleString('vi-VN',{maximumFractionDigits:d==null?6:d});
+  }
+  function parseN(v){
+    var s=txt(v).replace(/\s+/g,'');
+    if(!s) return NaN;
+    if(/^-?\d{1,3}(?:\.\d{3})+,\d+$/.test(s)) s=s.replace(/\./g,'').replace(',', '.');
+    else if(s.indexOf(',')>=0 && s.indexOf('.')<0) s=s.replace(',', '.');
+    else if(s.indexOf(',')>=0 && s.indexOf('.')>=0) s=s.replace(/\./g,'').replace(',', '.');
+    var m=s.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/i);
+    return m?Number(m[0]):NaN;
+  }
+  function cloneRows(rows){ return (rows||[]).map(function(r){return Array.isArray(r)?r.slice():r;}); }
+  function htmlTable(headers,rows){
+    return '<table><thead><tr>'+headers.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+esc(txt(c))+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';
+  }
+  function setLocal(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function getLocal(k,d){ try{ return localStorage.getItem(k)||d; }catch(e){ return d; } }
+  function unitMode(){ var e=byId('v96AnalogDisplayMode'); return (e&&e.value)||getLocal('comtrade_v96_fault_analog_display_mode','primary_auto'); }
+  function measureMode(){ var e=byId('v97MeasureMode'); return (e&&e.value)||getLocal('comtrade_v97_fault_measure_mode','both'); }
+  function unitNote(){
+    var u=unitMode()==='secondary'?'thứ cấp theo a×raw+b':(unitMode()==='primary_raw'?'sơ cấp thống nhất A/V':'sơ cấp thống nhất kA/kV');
+    var m=measureMode()==='rms'?'chỉ RMS':(measureMode()==='peak'?'chỉ Peak |x|':'RMS + Peak |x| song song');
+    return 'V9.9.15: Đơn vị dùng chung toàn hệ thống: '+u+'; kiểu giá trị: '+m+'. Bảng Phân tích sự cố, HTML tĩnh và HTML động dùng cùng một bộ tiêu đề/cột.';
+  }
+  function ratio(ch){ var p=Number(ch&&ch.primary), s=Number(ch&&ch.secondary); return (Number.isFinite(p)&&Number.isFinite(s)&&p!==0&&s!==0)?p/s:1; }
+  function psFlag(ch){ return norm(ch&&ch.ps||'').replace(/[^PS]/g,''); }
+  function isCurrent(ch,label,chan,unit){
+    try{ if(ch && typeof isCurrentChannel==='function' && isCurrentChannel(ch)) return true; }catch(e){}
+    var s=norm((ch&&ch.unit||'')+' '+(ch&&ch.id||'')+' '+(label||'')+' '+(chan||'')+' '+(unit||''));
+    return /(^|\b)(IA|IB|IC|IE|IN|IG|I0|3I0|CURRENT|DONG|AMP|AMPERE|A|KA)(\b|$)/.test(s) || /IA\+IB\+IC/.test(s);
+  }
+  function isVoltage(ch,label,chan,unit){
+    try{ if(ch && typeof isVoltageChannel==='function' && isVoltageChannel(ch)) return true; }catch(e){}
+    var s=norm((ch&&ch.unit||'')+' '+(ch&&ch.id||'')+' '+(label||'')+' '+(chan||'')+' '+(unit||''));
+    return /(^|\b)(VA|VB|VC|VE|VN|VG|VX|UA|UB|UC|UE|UN|UG|UX|U0|V0|3U0|3V0|VOLTAGE|VOLT|AP|V|KV)(\b|$)/.test(s) || /VA\+VB\+VC/.test(s);
+  }
+  function rowKind(row,ch){
+    var label=txt(row&&row[0]), chan=txt(row&&row[1]), unit=txt(row&&row[row.length-1]);
+    if(isCurrent(ch,label,chan,unit)) return 'I';
+    if(isVoltage(ch,label,chan,unit)) return 'V';
+    return '';
+  }
+  function channelByName(name){
+    var S=st(), cfg=S&&S.cfg; if(!cfg||!Array.isArray(cfg.analog)) return null;
+    var raw=txt(name), n=norm(raw);
+    var idx=cfg.analog.findIndex(function(ch){ return String(ch.id||'')===raw; });
+    if(idx<0) idx=cfg.analog.findIndex(function(ch){ return norm(ch.id||'')===n; });
+    return idx>=0?{idx:idx,ch:cfg.analog[idx]}:null;
+  }
+  function representative(kind){
+    var S=st(), cfg=S&&S.cfg; if(!cfg||!Array.isArray(cfg.analog)) return null;
+    for(var i=0;i<cfg.analog.length;i++){
+      var ch=cfg.analog[i];
+      if(kind==='I' && isCurrent(ch,'','','')) return {idx:i,ch:ch};
+      if(kind==='V' && isVoltage(ch,'','','')) return {idx:i,ch:ch};
+    }
+    return null;
+  }
+  function rowChannel(row,r){
+    var hit=channelByName(row&&row[1]); if(hit) return hit;
+    var label=norm(txt(row&&row[0])+' '+txt(row&&row[1]));
+    var roles=r&&r.roles;
+    var S=st(), cfg=S&&S.cfg;
+    if(cfg&&roles){
+      var idx=null;
+      if(/\bIA\b|DONG.*\bA\b/.test(label)) idx=roles.I&&roles.I.A;
+      else if(/\bIB\b|DONG.*\bB\b/.test(label)) idx=roles.I&&roles.I.B;
+      else if(/\bIC\b|DONG.*\bC\b/.test(label)) idx=roles.I&&roles.I.C;
+      else if(/\b(IE|IN|IG|I0|3I0)\b|IA\+IB\+IC/.test(label)) idx=roles.I&&roles.I.N;
+      else if(/\b(VA|UA)\b|AP.*\bA\b/.test(label)) idx=roles.V&&roles.V.A;
+      else if(/\b(VB|UB)\b|AP.*\bB\b/.test(label)) idx=roles.V&&roles.V.B;
+      else if(/\b(VC|UC)\b|AP.*\bC\b/.test(label)) idx=roles.V&&roles.V.C;
+      else if(/\b(VE|VN|VG|VX|U0|V0|3U0|3V0)\b|VA\+VB\+VC/.test(label)) idx=roles.V&&roles.V.N;
+      if(Number.isInteger(idx) && idx>=0 && idx<cfg.analog.length) return {idx:idx,ch:cfg.analog[idx]};
+    }
+    var kind = /\b(I|IA|IB|IC|IE|IN|IG|3I0|DONG)\b|IA\+IB\+IC/.test(label)?'I':(/\b(V|VA|VB|VC|UA|UB|UC|AP)\b|VA\+VB\+VC/.test(label)?'V':'');
+    return representative(kind);
+  }
+  function displayMeta(ch,kind){
+    var mode=unitMode(), base=txt(ch&&ch.unit||''), baseN=norm(base), r=ratio(ch), ps=psFlag(ch), factor=1;
+    if(mode==='secondary') factor = ps==='P' ? 1/Math.max(r,1e-12) : 1;
+    else factor = ps==='S' ? r : 1;
+    if(mode==='secondary') return {factor:factor, scale:1, unit:(base||(kind==='I'?'A':'V'))+' thứ cấp'};
+    if(mode==='primary_raw') return {factor:factor, scale:(baseN==='KA'||baseN==='KV')?1000:1, unit:(kind==='I'?'A':'V')+' sơ cấp'};
+    if(kind==='I') return {factor:factor, scale:(baseN==='KA'?1:1/1000), unit:'kA sơ cấp'};
+    if(kind==='V') return {factor:factor, scale:(baseN==='KV'?1:1/1000), unit:'kV sơ cấp'};
+    return {factor:factor, scale:1, unit:(base||'')+(mode==='secondary'?' thứ cấp':' sơ cấp')};
+  }
+  function convertVal(v,ch,kind){ var m=displayMeta(ch,kind); v=Number(v); return Number.isFinite(v)?v*m.factor*m.scale:NaN; }
+  function displayUnit(ch,kind){ return displayMeta(ch,kind).unit; }
+  function roleLabel(row,kind){
+    var label=norm(txt(row&&row[0])+' '+txt(row&&row[1]));
+    if(kind==='I'){
+      if(/\b(IE|IN|IG|I0|3I0)\b|IA\+IB\+IC|THU TU KHONG|TRUNG TINH/.test(label)) return 'Ie/In/Ig/3I0';
+      if(/\bIA\b|DONG.*\bA\b/.test(label)) return 'Ia';
+      if(/\bIB\b|DONG.*\bB\b/.test(label)) return 'Ib';
+      if(/\bIC\b|DONG.*\bC\b/.test(label)) return 'Ic';
+    }
+    if(kind==='V'){
+      if(/\b(VE|VN|VG|VX|U0|V0|3U0|3V0|UE|UN|UG|UX)\b|VA\+VB\+VC/.test(label)) return 'Ve/Vn/Vg/3V0';
+      if(/\b(VA|UA)\b|AP.*\bA\b/.test(label)) return 'Va';
+      if(/\b(VB|UB)\b|AP.*\bB\b/.test(label)) return 'Vb';
+      if(/\b(VC|UC)\b|AP.*\bC\b/.test(label)) return 'Vc';
+    }
+    return txt(row&&row[0]).replace(/\s*RMS\s*$/i,'').replace(/^Dòng\s+RMS\s+/i,'I').replace(/^Áp\s+RMS\s+/i,'V') || txt(row&&row[0]);
+  }
+  function rawRows(r){
+    if(!r) return [];
+    var src=null;
+    if(Array.isArray(r.v9915RawRows)) src=r.v9915RawRows;
+    else if(Array.isArray(r.v10RawRmsRows)) src=r.v10RawRmsRows;
+    else if(Array.isArray(r.v96RawValueRows)) src=r.v96RawValueRows;
+    else if(Array.isArray(r.v962RawValueRows)) src=r.v962RawValueRows;
+    else if(Array.isArray(r.valueRows)) src=r.valueRows;
+    src=cloneRows(src||[]);
+    // Nếu lỡ nguồn hiện tại là bảng 10 cột RMS+Peak, rút về 7 cột RMS làm nguồn.
+    src=src.map(function(row){
+      if(Array.isArray(row) && row.length>=10){ return [row[0],row[1],row[2],row[4],row[6],row[8],row[9]]; }
+      return row;
+    });
+    if(!Array.isArray(r.v9915RawRows) && src.length) r.v9915RawRows=cloneRows(src);
+    return src;
+  }
+  function convertRmsRow(row,r){
+    if(!Array.isArray(row)) return row;
+    var out=row.slice(0,7);
+    while(out.length<7) out.push('');
+    var hit=rowChannel(out,r), kind=rowKind(out,hit&&hit.ch);
+    if(!hit||!kind) return out;
+    out[0]=roleLabel(out,kind);
+    [2,3,4].forEach(function(i){ var n=parseN(out[i]); out[i]=Number.isFinite(n)?fmtN(convertVal(n,hit.ch,kind),6):''; });
+    out[6]=displayUnit(hit.ch,kind);
+    return out;
+  }
+  function windows(r){
+    var S=st(), data=S&&S.data; if(!data) return null;
+    var rate=Number(r&&r.rate); if(!Number.isFinite(rate)||rate<=0){ try{ if(typeof estimateSampleRate==='function') rate=estimateSampleRate(); }catch(e){} }
+    if(!Number.isFinite(rate)||rate<=0) rate=1000;
+    var preMs=Number(r&&r.options&&r.options.preMs); if(!Number.isFinite(preMs)) preMs=200;
+    var postMs=Number(r&&r.options&&r.options.postMs); if(!Number.isFinite(postMs)) postMs=200;
+    function smp(ms){ try{ if(typeof samplesFromMs==='function') return samplesFromMs(ms,rate,1); }catch(e){} return Math.max(1,Math.round(ms*rate/1000)); }
+    var n=data.samples||((data.times||[]).length), s0=Math.max(0,Math.min(n-1,Math.round(Number(r&&r.startIndex)||0))), e0=Math.max(0,Math.min(n-1,Math.round(Number(r&&r.endIndex)||s0)));
+    if(e0<s0){ var t=s0; s0=e0; e0=t; }
+    var pw=smp(preMs), qw=smp(postMs);
+    var pre0=Math.max(0,s0-pw), pre1=Math.max(pre0,Math.min(n-1,s0-1));
+    if(pre1<pre0){ pre0=0; pre1=Math.min(n-1,s0); }
+    var post0=Math.min(n-1,e0+1), post1=Math.min(n-1,e0+qw);
+    if(post1<post0){ post0=e0; post1=Math.min(n-1,e0+1); }
+    return {pre0:pre0,pre1:pre1,s:s0,e:e0,post0:post0,post1:post1};
+  }
+  function absPeak(arr,a,b){
+    if(!arr) return NaN; var best=NaN;
+    a=Math.max(0,Math.round(a||0)); b=Math.min(arr.length-1,Math.round(b==null?arr.length-1:b));
+    for(var i=a;i<=b;i++){ var v=Number(arr[i]); if(Number.isFinite(v)){ var av=Math.abs(v); if(!Number.isFinite(best)||av>best) best=av; } }
+    return best;
+  }
+  function rawArrayForRow(row,r){
+    var S=st(), data=S&&S.data, cfg=S&&S.cfg; if(!data||!cfg) return null;
+    var hit=rowChannel(row,r), kind=rowKind(row,hit&&hit.ch);
+    if(hit && Number.isInteger(hit.idx) && hit.idx>=0 && data.analog && data.analog[hit.idx]) return {arr:data.analog[hit.idx],ch:hit.ch,kind:kind||rowKind(row,hit.ch)};
+    var label=norm(txt(row&&row[0])+' '+txt(row&&row[1]));
+    if(/3I0|IA\+IB\+IC/.test(label) && r&&r.roles&&r.roles.I){
+      var ia=r.roles.I.A, ib=r.roles.I.B, ic=r.roles.I.C;
+      if([ia,ib,ic].every(function(x){return Number.isInteger(x)&&x>=0&&data.analog[x];})){
+        var out=new Float64Array(data.samples); for(var i=0;i<data.samples;i++) out[i]=(Number(data.analog[ia][i])||0)+(Number(data.analog[ib][i])||0)+(Number(data.analog[ic][i])||0);
+        return {arr:out,ch:cfg.analog[ia],kind:'I'};
+      }
+    }
+    return null;
+  }
+  function peakRow(row,r){
+    if(!Array.isArray(row)) return row;
+    var info=rawArrayForRow(row,r), w=windows(r);
+    var base=convertRmsRow(row,r);
+    if(!info||!w||!info.kind) return [base[0],base[1],'','','','',base[6]||''];
+    var vals=[absPeak(info.arr,w.pre0,w.pre1),absPeak(info.arr,w.s,w.e),absPeak(info.arr,w.post0,w.post1)].map(function(v){return convertVal(v,info.ch,info.kind);});
+    var ratio=(Number.isFinite(vals[0])&&Math.abs(vals[0])>1e-12&&Number.isFinite(vals[1]))?vals[1]/Math.abs(vals[0]):NaN;
+    return [base[0],base[1],fmtN(vals[0],6),fmtN(vals[1],6),fmtN(vals[2],6),Number.isFinite(ratio)?(info.kind==='V'?fmtN(ratio*100,2)+' % Utrước':fmtN(ratio,3)+' ×'):'',displayUnit(info.ch,info.kind)];
+  }
+  function buildValuePack(r){
+    var raw=rawRows(r), rms=raw.map(function(row){return convertRmsRow(row,r);}), peak=raw.map(function(row){return peakRow(row,r);});
+    var m=measureMode(), headers, rows;
+    if(m==='peak'){
+      headers=['Đại lượng','Kênh','Trước sự cố Peak |x|','Trong sự cố Peak |x|','Sau sự cố Peak |x|','Tỷ lệ Peak','Đơn vị'];
+      rows=peak;
+    }else if(m==='both'){
+      headers=['Đại lượng','Kênh','Trước sự cố RMS','Trước sự cố Peak |x|','Trong sự cố RMS (I=max, U=min)','Trong sự cố Peak |x|','Sau sự cố RMS','Sau sự cố Peak |x|','Tỷ lệ RMS','Đơn vị'];
+      rows=rms.map(function(rr,i){ var pr=peak[i]||[]; return [rr[0],rr[1],rr[2],pr[2]||'',rr[3],pr[3]||'',rr[4],pr[4]||'',rr[5],rr[6]]; });
+    }else{
+      headers=['Đại lượng','Kênh','Trước sự cố RMS','Trong sự cố RMS (I=max, U=min)','Sau sự cố RMS','Tỷ lệ RMS','Đơn vị'];
+      rows=rms;
+    }
+    if(r){
+      r.v9915ValueHeaders=headers; r.v9915ValueRows=cloneRows(rows); r.v9915RmsRows=cloneRows(rms); r.v9915PeakRows=cloneRows(peak);
+      r.v10ValueHeaders=headers; r.v10ValueRows=cloneRows(rows); r.v10RmsRows=cloneRows(rms); r.v10PeakRows=cloneRows(peak);
+      r.v10MeasureMode=measureMode(); r.v10UnitMode=unitMode(); r.v10UnitNote=unitNote(); r.v9915UnitNote=unitNote();
+    }
+    return {headers:headers,rows:rows,rms:rms,peak:peak};
+  }
+  function seqKind(label,group,unit){
+    var s=norm((label||'')+' '+(group||'')+' '+(unit||''));
+    if(/^I|\b(I0|I1|I2|IA|IB|IC|IE|IN|IG|3I0)\b|IA\+IB\+IC/.test(s)) return 'I';
+    if(/^V|^U|\b(V0|V1|V2|U0|U1|U2|VA|VB|VC|UA|UB|UC|3V0|3U0)\b|VA\+VB\+VC/.test(s)) return 'V';
+    return '';
+  }
+  function seqRawRows(r){
+    var seq=r&&r.sequence; if(!seq) return [];
+    var raw=Array.isArray(seq.v9915RawRows)?seq.v9915RawRows:(Array.isArray(seq.v10RawRows)?seq.v10RawRows:(Array.isArray(seq.rows)?seq.rows:[]));
+    raw=cloneRows(raw).map(function(row){ if(Array.isArray(row)&&row.length>=7) return [row[0],row[1],row[2],row[4],row[5],row[6]]; return row; });
+    if(!Array.isArray(seq.v9915RawRows)&&raw.length) seq.v9915RawRows=cloneRows(raw);
+    return raw;
+  }
+  function buildSeqRows(r){
+    var seq=r&&r.sequence; if(!seq) return [];
+    var rows=seqRawRows(r).map(function(row){
+      if(!Array.isArray(row)||row.length<6) return row;
+      var label=txt(row[0]), group=txt(row[1]), kind=seqKind(label,group,'');
+      var hit=channelByName(group), ch=hit&&hit.ch;
+      if(!kind && ch) kind=rowKind(row,ch);
+      if(!ch && kind){ var rep=representative(kind); ch=rep&&rep.ch; }
+      var mag=parseN(row[2]);
+      return [row[0],row[1],Number.isFinite(mag)&&ch&&kind?fmtN(convertVal(mag,ch,kind),6):row[2],ch&&kind?displayUnit(ch,kind):'',row[3],row[4],row[5]];
+    });
+    seq.rowsV9915=cloneRows(rows); seq.rowsV10=cloneRows(rows); seq.v9915UnitNote=unitNote();
+    return rows;
+  }
+  function renderTables(){
+    var S=st(), r=S&&S.faultAnalysis; if(!r) return;
+    var pack=buildValuePack(r), fv=byId('faultValueTable');
+    if(fv) fv.innerHTML=pack.rows.length?htmlTable(pack.headers,pack.rows):'<div class="tiny" style="padding:12px">Chưa có bảng giá trị.</div>';
+    var note=byId('v9915FaultUnitNote');
+    if(fv&&!note){ note=document.createElement('div'); note.id='v9915FaultUnitNote'; note.className='v91-note v92-fixed'; note.style.marginTop='8px'; fv.insertAdjacentElement('afterend',note); }
+    if(note) note.textContent=unitNote();
+    var seqRows=buildSeqRows(r), seq=byId('sequenceTable');
+    if(seq) seq.innerHTML=seqRows.length?htmlTable(['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'],seqRows):'<div class="tiny" style="padding:12px">Chưa đủ 3 pha để tính thành phần thứ tự.</div>';
+    var sn=byId('sequenceNote'); if(sn) sn.textContent='Đồng bộ đơn vị thành phần thứ tự theo chế độ đang chọn. '+unitNote();
+    var stt=byId('v96CtptStatus'); if(stt) stt.textContent=unitNote();
+  }
+  function ensureControls(){
+    var host=byId('faultResultStatus'); if(!host) return;
+    var box=byId('v96CtptBox');
+    if(!box){
+      box=document.createElement('div'); box.id='v96CtptBox'; box.className='v95-param-note'; box.style.marginTop='10px';
+      host.insertAdjacentElement('afterend',box);
+    }
+    box.innerHTML='<b>Quy đổi đơn vị dòng/áp sự cố</b><div class="grid two" style="margin-top:8px"><div><label>Chế độ đơn vị dùng chung toàn hệ thống</label><select id="v96AnalogDisplayMode"><option value="primary_auto">Sơ cấp theo CT/VT, thống nhất kA/kV</option><option value="primary_raw">Sơ cấp theo CT/VT, thống nhất A/V</option><option value="secondary">Thứ cấp theo a×raw+b trong DAT</option></select></div><div><label>Kiểu giá trị hiển thị/báo cáo</label><select id="v97MeasureMode"><option value="rms">Chỉ RMS</option><option value="peak">Chỉ Peak |x| tức thời</option><option value="both">RMS + Peak |x| song song</option></select></div></div><div class="tiny" style="margin-top:8px">CFG có trường Primary/Secondary và P/S. Nếu P/S = S, giá trị a×raw+b là thứ cấp; muốn dòng/áp sơ cấp phải nhân Primary/Secondary. Chế độ kA/kV sẽ không tự đổi riêng từng dòng theo độ lớn.</div><div class="toolbar" style="margin-top:8px"><button id="v96ApplyCtptBtn" type="button">Áp dụng / cập nhật bảng</button></div><div id="v96CtptStatus" class="tiny" style="margin-top:6px"></div>';
+    var u=byId('v96AnalogDisplayMode'), m=byId('v97MeasureMode'), btn=byId('v96ApplyCtptBtn');
+    if(u){ u.value=unitMode(); u.onchange=function(){ setLocal('comtrade_v96_fault_analog_display_mode',u.value); renderTables(); }; }
+    if(m){ m.value=measureMode(); m.onchange=function(){ setLocal('comtrade_v97_fault_measure_mode',m.value); renderTables(); }; }
+    if(btn) btn.onclick=function(){ renderTables(); };
+    var stat=byId('v96CtptStatus'); if(stat) stat.textContent=unitNote();
+  }
+  function replaceBetween(html,start,end,repl){ var a=html.indexOf(start); if(a<0) return html; var b=html.indexOf(end,a+start.length); if(b<0) return html.slice(0,a)+repl+html.slice(a+start.length); return html.slice(0,a)+repl+html.slice(b); }
+  function reportBlock(r){
+    var pack=buildValuePack(r), seq=buildSeqRows(r);
+    var block='<h2>Giá trị các phần tử sự cố</h2><div class="note">'+esc(unitNote())+'</div>'+htmlTable(pack.headers,pack.rows);
+    if(seq.length) block+='<h2>Thành phần thứ tự và pha vector</h2>'+htmlTable(['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'],seq);
+    return block;
+  }
+  function patchReportHtml(html,r){
+    if(!html||!r) return html;
+    var block=reportBlock(r);
+    if(html.indexOf('<h2>Giá trị các phần tử sự cố</h2>')>=0 && html.indexOf('<h2>Dòng thời gian tác động</h2>')>=0){
+      return replaceBetween(html,'<h2>Giá trị các phần tử sự cố</h2>','<h2>Dòng thời gian tác động</h2>',block+'<h2>Dòng thời gian tác động</h2>');
+    }
+    return html.replace('</body>',block+'</body>');
+  }
+  function prepareDynamic(r){
+    if(!r) return r;
+    buildValuePack(r); buildSeqRows(r);
+    r.v10DynamicMetricTitle = measureMode()==='rms'?'Thông số RMS trong vùng sự cố':(measureMode()==='peak'?'Thông số Peak |x| trong vùng sự cố':'Thông số RMS + Peak |x| trong vùng sự cố');
+    r.v10DynamicMetricHeaders = measureMode()==='both'
+      ? ['Đại lượng','Kênh','Đơn vị','t tại điểm đo','Giá trị tại điểm đo','Min vùng sự cố','Max vùng sự cố','Giá trị lớn nhất','t lớn nhất']
+      : (measureMode()==='rms'
+        ? ['Đại lượng','Kênh','Đơn vị','t tại max RMS','RMS tại điểm nặng nhất','Min RMS vùng sự cố','Max RMS vùng sự cố','RMS lớn nhất','t RMS lớn nhất']
+        : ['Đại lượng','Kênh','Đơn vị','t tại Peak','Giá trị tại Peak','Min vùng sự cố','Max vùng sự cố','|Đỉnh| lớn nhất','t |Đỉnh|']);
+    r.v10DynamicChartModeLabel='Chế độ HTML động: '+(measureMode()==='both'?'RMS trượt + Peak |x| tức thời':(measureMode()==='rms'?'RMS trượt':'Peak |x| tức thời'))+'; '+unitNote();
+    return r;
+  }
+
+  if(typeof analyzeFaultCore==='function'){
+    var oldAnalyze=analyzeFaultCore;
+    analyzeFaultCore=function(){
+      var r=oldAnalyze.apply(this,arguments);
+      try{ if(r && Array.isArray(r.valueRows) && !Array.isArray(r.v9915RawRows)) r.v9915RawRows=cloneRows(r.v10RawRmsRows||r.v96RawValueRows||r.valueRows); prepareDynamic(r); }catch(e){ console.warn('V9.9.15 analyze snapshot skipped',e); }
+      return r;
+    };
+  }
+  if(typeof renderFaultAnalysis==='function'){
+    var oldRender=renderFaultAnalysis;
+    renderFaultAnalysis=function(){
+      var ret=oldRender.apply(this,arguments);
+      try{ ensureControls(); renderTables(); }catch(e){ console.warn('V9.9.15 render skipped',e); }
+      return ret;
+    };
+  }
+  var oldPrepare=window.v99DynamicPrepareFaultReport;
+  window.v99DynamicPrepareFaultReport=function(r){ if(oldPrepare) try{ oldPrepare(r); }catch(e){} return prepareDynamic(r); };
+  if(typeof makeFaultReportHtml==='function'){
+    var oldMake=makeFaultReportHtml;
+    makeFaultReportHtml=function(){ var r; try{ r=ensureFaultAnalysis(); prepareDynamic(r); }catch(e){} var html=oldMake.apply(this,arguments); return patchReportHtml(html,r||((st()||{}).faultAnalysis)); };
+  }
+  if(typeof makeFaultInteractiveReportHtml==='function'){
+    var oldDyn=makeFaultInteractiveReportHtml;
+    makeFaultInteractiveReportHtml=function(){ var r; try{ r=ensureFaultAnalysis(); prepareDynamic(r); }catch(e){} var html=oldDyn.apply(this,arguments); return patchReportHtml(html,r||((st()||{}).faultAnalysis)); };
+  }
+  if(typeof makeFaultReportText==='function'){
+    makeFaultReportText=function(){
+      var r; try{ r=ensureFaultAnalysis(); prepareDynamic(r); }catch(e){}
+      if(!r) return '';
+      var p=buildValuePack(r), seq=buildSeqRows(r), lines=[];
+      lines.push('BÁO CÁO PHÂN TÍCH SỰ CỐ COMTRADE'); lines.push('Bộ file: '+(((st()||{}).activeBase)||'comtrade')); lines.push('Tạo lúc: '+new Date().toLocaleString('vi-VN')); lines.push('Chế độ: '+unitNote()); lines.push('');
+      try{ (typeof faultSummaryRows==='function'?faultSummaryRows(r):[]).forEach(function(row){ lines.push(txt(row[0])+': '+txt(row[1])); }); }catch(e){}
+      lines.push(''); lines.push('GIÁ TRỊ CÁC PHẦN TỬ SỰ CỐ'); lines.push(p.headers.join('\t')); p.rows.forEach(function(row){ lines.push(row.map(txt).join('\t')); });
+      if(seq.length){ lines.push(''); lines.push('THÀNH PHẦN THỨ TỰ VÀ PHA VECTOR'); lines.push(['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'].join('\t')); seq.forEach(function(row){ lines.push(row.map(txt).join('\t')); }); }
+      lines.push(''); lines.push('DÒNG THỜI GIAN TÁC ĐỘNG'); lines.push(['t(s)','Sự kiện','Kênh','Chi tiết'].join('\t')); (r.timeline||[]).forEach(function(x){ lines.push([fmtN(x.time,9),x.event,x.channel||'',x.detail||''].map(txt).join('\t')); });
+      lines.push(''); lines.push('GHI CHÚ'); (r.notes||[]).forEach(function(x){ lines.push(txt(x)); });
+      return lines.join('\n');
+    };
+  }
+  if(typeof exportFaultCsv==='function'){
+    exportFaultCsv=function(){ var r=ensureFaultAnalysis(); if(!r) return; prepareDynamic(r); var p=buildValuePack(r), seq=buildSeqRows(r); var rows=[['section'].concat(p.headers),['unit_mode',unitNote()]]; p.rows.forEach(function(x){ rows.push(['value'].concat(x)); }); seq.forEach(function(x){ rows.push(['sequence'].concat(x)); }); (r.timeline||[]).forEach(function(x){ rows.push(['timeline',x.event,x.channel||'',x.time,x.detail||'']); }); var csv=rows.map(function(row){ return row.map(function(c){ var s=txt(c); return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }).join(','); }).join('\n'); if(typeof downloadText==='function') downloadText((((st()||{}).activeBase)||'comtrade')+'_fault_analysis_v9915.csv',csv,'text/csv;charset=utf-8'); };
+  }
+  if(typeof exportFaultJson==='function'){
+    exportFaultJson=function(){ var r=ensureFaultAnalysis(); if(!r) return; prepareDynamic(r); var obj=Object.assign({},r,{v9915:{version:PATCH_VERSION,unitMode:unitMode(),measureMode:measureMode(),unitNote:unitNote(),valueHeaders:r.v9915ValueHeaders,valueRows:r.v9915ValueRows,sequenceRows:r.sequence&&r.sequence.rowsV9915}}); if(typeof downloadText==='function') downloadText((((st()||{}).activeBase)||'comtrade')+'_fault_analysis_v9915.json',JSON.stringify(obj,null,2),'application/json;charset=utf-8'); };
+  }
+  function wire(){
+    ensureControls(); renderTables();
+    [['btnFaultExportHtml','Xuất HTML tĩnh'],['btnFaultOpenHtml','Mở HTML tĩnh'],['btnExportFaultHtml2','Xuất báo cáo HTML tĩnh'],['btnOpenFaultHtml2','Mở báo cáo HTML tĩnh']].forEach(function(x){ var b=byId(x[0]); if(b) b.textContent=x[1]; });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wire); else wire();
+  window.addEventListener('load',function(){ setTimeout(wire,800); });
+})();
+</script>
+
+<script>
+/* ===== V9.9.17 CLEAN REPORT FIX: sửa trùng tiêu đề timeline HTML tĩnh + timeline HTML động ===== */
+(function(){
+  'use strict';
+  var PATCH_VERSION='V9.9.17-CLEAN-STATIC-DYNAMIC-TIMELINE-REPORT';
+  window.COMTRADE_V9916_REPORT_FIX=PATCH_VERSION;
+
+  function E(s){return String(s==null?'':s).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]||c;});}
+  function P(s){
+    var v=String(s==null?'':s).replace(/<[^>]*>/g,'');
+    try{ var d=document.createElement('textarea'); d.innerHTML=v; return d.value.trim(); }catch(e){ return v.trim(); }
+  }
+  function F(v,d){
+    if(v==null || !Number.isFinite(Number(v))) return '';
+    try{ if(typeof fmt==='function') return fmt(Number(v),d==null?6:d); }catch(e){}
+    return Number(v).toLocaleString('vi-VN',{maximumFractionDigits:d==null?6:d});
+  }
+  function HT(head,rows){
+    head=Array.isArray(head)?head:[]; rows=Array.isArray(rows)?rows:[];
+    return '<table><thead><tr>'+head.map(function(h){return '<th>'+E(P(h))+'</th>';}).join('')+'</tr></thead><tbody>'+rows.map(function(r){
+      r=Array.isArray(r)?r:[];
+      return '<tr>'+r.map(function(c){return '<td>'+E(P(c))+'</td>';}).join('')+'</tr>';
+    }).join('')+'</tbody></table>';
+  }
+  function csvSafe(v){ var s=P(v); return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
+  function stateObj(){ try{return (typeof state!=='undefined')?state:null;}catch(e){return null;} }
+  function prepare(r){
+    if(!r) return r;
+    try{ if(typeof window.v99DynamicPrepareFaultReport==='function') window.v99DynamicPrepareFaultReport(r); }catch(e){ console.warn('[V9.9.17] prepare report skipped',e); }
+    return r;
+  }
+  function summaryRows(r){
+    try{ if(typeof faultSummaryRows==='function') return faultSummaryRows(r).map(function(x){return x.map(P);}); }catch(e){}
+    return [['Dạng sự cố',P(r&&r.type)],['Pha',P((r&&r.phases||[]).join('-'))],['Thời gian',F((r&&r.duration||0)*1000,6)+' ms']];
+  }
+  function valuesHead(r){ return (r&&Array.isArray(r.v10ValueHeaders)&&r.v10ValueHeaders.length)?r.v10ValueHeaders:['Đại lượng','Kênh','Trước sự cố RMS','Trong sự cố RMS (I=max, U=min)','Sau sự cố RMS','Tỷ lệ RMS','Đơn vị']; }
+  function valuesRows(r){ return (r&&Array.isArray(r.v10ValueRows))?r.v10ValueRows:((r&&Array.isArray(r.valueRows))?r.valueRows:[]); }
+  function seqRows(r){ return (r&&r.sequence&&Array.isArray(r.sequence.rowsV10))?r.sequence.rowsV10:((r&&r.sequence&&Array.isArray(r.sequence.rowsV9915))?r.sequence.rowsV9915:[]); }
+  function timelineRows(r){
+    return ((r&&Array.isArray(r.timeline))?r.timeline:[]).map(function(x){ return [F(x.time,9),P(x.event),P(x.channel||''),P(x.detail||'')]; });
+  }
+  function noteText(r){ return P((r&&r.v10UnitNote)||(r&&r.v9915UnitNote)||'Đơn vị và kiểu giá trị dùng đúng theo lựa chọn trong tab Phân tích sự cố.'); }
+  function locRows(r){
+    var loc=(r&&(r.faultLocation||r.locationV999))||null;
+    if(!loc && typeof window.COMTRADE_calcFaultLocationV999Fast==='function'){
+      try{ loc=window.COMTRADE_calcFaultLocationV999Fast(r); }catch(e){}
+    }
+    if(!loc) return [];
+    if(loc.ok){
+      return [
+        ['Vị trí sự cố ước tính',F(loc.km,4)+' km'+(loc.pct!=null?' · '+F(loc.pct,2)+'% chiều dài đường dây':'')],
+        ['Công thức',P(loc.formula||'')],
+        ['Kênh dùng',P(loc.used||'')],
+        ['Ghi chú',P((loc.notes||[]).join('; '))]
+      ];
+    }
+    return [['Vị trí sự cố','Chưa tính được'],['Lý do',P(loc.reason||'Thiếu dữ liệu/thông số.')]];
+  }
+
+  // Ghi đè sạch HTML tĩnh: không gọi các wrapper cũ để tránh lặp <h2>Dòng thời gian tác động</h2>.
+  window.makeFaultReportHtml=function(){
+    var r=(typeof ensureFaultAnalysis==='function')?ensureFaultAnalysis():((stateObj()||{}).faultAnalysis);
+    if(!r) return '';
+    prepare(r);
+    var S=stateObj()||{};
+    var now=new Date().toLocaleString('vi-VN');
+    var title='Báo cáo phân tích sự cố COMTRADE - '+(S.activeBase||'comtrade');
+    var analogImg='', digitalImg='', focusText='vùng sự cố';
+    try{ if(typeof renderFaultAnalogReportImage==='function') analogImg=renderFaultAnalogReportImage(r)||''; }catch(e){ console.warn('[V9.9.17] analog report image skipped',e); }
+    try{ if(typeof renderFaultDigitalReportImage==='function') digitalImg=renderFaultDigitalReportImage(r)||''; }catch(e){ console.warn('[V9.9.17] digital report image skipped',e); }
+    try{ if(typeof faultFocusRange==='function'){ var fr=faultFocusRange(r,'report'); if(fr) focusText=F(fr.t0,6)+' s → '+F(fr.t1,6)+' s'; } }catch(e){}
+    var loc=locRows(r);
+    var seq=seqRows(r);
+    var notes=((r.notes||[]).map(function(x){return '<li>'+E(P(x))+'</li>';}).join(''))||'<li>Không có ghi chú.</li>';
+    var decoder='';
+    try{ decoder=((S.data&&S.data.parserNotes)||[]).concat(S.decoderNotes||[]).join('\n')||'Không có ghi chú giải mã.'; }catch(e){ decoder='Không có ghi chú giải mã.'; }
+    return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+E(title)+'</title><style>'+ 
+      'body{font-family:Arial,system-ui,sans-serif;margin:18px;color:#111;line-height:1.45}h1{font-size:23px;margin:0 0 6px}h2{font-size:18px;margin:22px 0 8px;border-bottom:2px solid #ddd;padding-bottom:4px}.muted{color:#666;font-size:13px}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eaf6ff;border:1px solid #b5def7;font-weight:700;margin:4px 6px 4px 0}table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0 12px}th,td{border:1px solid #ccc;padding:7px 8px;text-align:left;vertical-align:top}th{background:#f0f3f7}.imgbox{border:1px solid #bbb;border-radius:10px;padding:10px;margin:10px 0 18px;background:#fff;break-inside:avoid;overflow:auto}.imgbox b{display:block;margin-bottom:8px}.imgbox img{width:100%;min-width:980px;max-width:none;display:block;border:1px solid #e5e7eb;border-radius:6px}.imgbox a{display:block}.zoomnote{font-size:12px;color:#555;margin:4px 0 8px}pre{white-space:pre-wrap;background:#f7f7f7;border:1px solid #ddd;padding:10px;border-radius:8px}.note{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;margin:10px 0;font-size:13px}@media screen{body{max-width:1400px;margin:18px auto}}@media print{button{display:none}body{margin:8mm;max-width:none}.imgbox{page-break-inside:avoid;break-inside:avoid}table{break-inside:auto}tr{break-inside:avoid}.imgbox img{width:100%}}'+
+      '</style></head><body><button onclick="window.print()">In / lưu PDF</button><h1>'+E(title)+'</h1><div class="muted">Tạo lúc: '+E(now)+' · Báo cáo HTML tĩnh offline.</div>'+ 
+      '<p><span class="badge">'+E(r.type||'')+'</span><span class="badge">Pha: '+E((r.phases||[]).join('-')||'chưa rõ')+'</span><span class="badge">Thời gian: '+E(F((r.duration||0)*1000,6))+' ms</span><span class="badge">Độ tin cậy: '+E(r.confidence||'')+'</span></p>'+ 
+      '<h2>Kết luận nhanh</h2>'+HT(['Mục','Giá trị'],summaryRows(r))+ 
+      (loc.length?'<h2>Ước tính vị trí sự cố</h2>'+HT(['Mục','Giá trị'],loc):'')+ 
+      '<h2>Giá trị các phần tử sự cố</h2><div class="note">'+E(noteText(r))+'</div>'+HT(valuesHead(r),valuesRows(r))+ 
+      (seq.length?'<h2>Thành phần thứ tự và pha vector</h2>'+HT(['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'],seq):'')+ 
+      '<h2>Dòng thời gian tác động</h2>'+HT(['t (s)','Sự kiện','Kênh','Chi tiết'],timelineRows(r))+ 
+      '<h2>Biểu đồ sóng tập trung vùng sự cố</h2><div class="note">Ảnh biểu đồ được dựng riêng khi xuất báo cáo ở độ phân giải lớn, tự lấy vùng '+E(focusText)+'.</div>'+ 
+      (analogImg?'<div class="imgbox"><b>Analog waveform - vùng sự cố</b><div class="zoomnote">Bấm vào ảnh để mở đúng kích thước/zoom khi cần xem chi tiết.</div><a href="'+analogImg+'" target="_blank"><img src="'+analogImg+'"></a></div>':'')+ 
+      (digitalImg?'<div class="imgbox"><b>Digital/status - vùng sự cố</b><div class="zoomnote">Bấm vào ảnh để mở đúng kích thước/zoom khi cần xem chi tiết.</div><a href="'+digitalImg+'" target="_blank"><img src="'+digitalImg+'"></a></div>':'')+ 
+      '<h2>Ghi chú phân tích</h2><ul>'+notes+'</ul><h2>Thông tin giải mã</h2><pre>'+E(decoder)+'</pre></body></html>';
+  };
+
+  // Ghi đè sạch HTML động: giữ tương tác gốc, nhưng DATA.timelineRows luôn lấy từ r.timeline, không dùng bảng giá trị.
+  window.makeFaultInteractiveReportHtml=function(){
+    var r=(typeof ensureFaultAnalysis==='function')?ensureFaultAnalysis():((stateObj()||{}).faultAnalysis);
+    if(!r) return '';
+    prepare(r);
+    var pack;
+    try{ pack=(typeof seriesForInteractiveReport==='function')?seriesForInteractiveReport(r):{times:[],analog:[],digital:[]}; }catch(e){ pack={times:[],analog:[],digital:[]}; }
+    var peakRows=[];
+    try{ if(typeof buildInteractivePeakRows==='function') peakRows=buildInteractivePeakRows(r,pack)||[]; }catch(e){}
+    var round=function(v,d){ try{ if(typeof roundForExport==='function') return roundForExport(v,d); }catch(e){} return (v==null||!Number.isFinite(Number(v)))?null:Number(Number(v).toFixed(d||9)); };
+    var S=stateObj()||{};
+    var payload={
+      title:'Báo cáo HTML động phân tích sự cố COMTRADE',
+      base:S.activeBase||'comtrade',
+      created:new Date().toLocaleString('vi-VN'),
+      times:pack.times||[], analog:pack.analog||[], digital:pack.digital||[],
+      summaryRows:summaryRows(r),
+      valueRows:valuesRows(r).map(function(row){return row.map(P);}),
+      valueHeaders:valuesHead(r).map(P),
+      sequenceRows:seqRows(r).map(function(row){return row.map(P);}),
+      peakRows:(peakRows||[]).map(function(row){return row.map(P);}),
+      timelineRows:timelineRows(r),
+      notes:(r.notes||[]).map(P),
+      unitNote:noteText(r),
+      metricTitle:r.v10DynamicMetricTitle||'Thông số theo chế độ',
+      metricHeaders:(r.v10DynamicMetricHeaders||['Vai trò','Kênh','Đơn vị','t','Giá trị','Min','Max','|Đỉnh|','t |Đỉnh|']).map(P),
+      chartModeLabel:r.v10DynamicChartModeLabel||noteText(r),
+      locationRows:locRows(r),
+      markers:{
+        faultStart:round(r.startTime,9), faultEnd:round(r.endTime,9), peak:round(r.peakTime,9),
+        trip:r.firstTrip?round(r.firstTrip.time,9):null, tripChannel:r.firstTrip?String(r.firstTrip.channel||''):'',
+        breaker:r.firstBreaker?round(r.firstBreaker.time,9):null, breakerChannel:r.firstBreaker?String(r.firstBreaker.channel||''):''
+      }
+    };
+    var json=JSON.stringify(payload).replace(/<\//g,'<\\/');
+    return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+E(payload.title)+' - '+E(payload.base)+'</title><style>'+ 
+`:root{--bg:#0b1020;--panel:#111a2f;--panel2:#17223b;--ink:#edf3ff;--muted:#a9b8d6;--line:#2d3d62;--accent:#59d0ff;--good:#5ee392;--warn:#ffd166;--bad:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,#16213d 0,#0b1020 42%,#070a13 100%);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45}
+main{max-width:1500px;margin:0 auto;padding:14px}.card{background:rgba(17,26,47,.94);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0;box-shadow:0 12px 36px rgba(0,0,0,.25)}h1{margin:0;font-size:23px}h2{margin:0 0 10px;font-size:18px}.muted{color:var(--muted);font-size:13px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+button{border:0;border-radius:11px;background:linear-gradient(180deg,#315078,#243455);color:var(--ink);padding:9px 12px;font-weight:700;cursor:pointer}button:hover{filter:brightness(1.1)}button.active{outline:2px solid var(--accent)}
+.grid{display:grid;grid-template-columns:1.3fr .7fr;gap:12px}.canvasBox{background:#061020;border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}canvas{display:block;width:100%;height:330px;background:#071427;border-radius:10px;cursor:crosshair}.digital{height:360px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid rgba(255,255,255,.10);padding:7px 8px;text-align:left;vertical-align:top}th{background:#16213d;position:sticky;top:0}.tableWrap{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:12px}.pill{display:inline-block;border:1px solid var(--line);background:#0e1a31;border-radius:999px;padding:4px 8px;margin:2px;color:var(--muted)}input[type=range]{width:100%}.readout{font-weight:800;color:white}.small{font-size:12px;color:var(--muted)}.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}canvas{height:280px}.digital{height:320px}}
+@media print{body{background:#fff;color:#111}main{max-width:none}.card{box-shadow:none;border-color:#ccc;background:#fff}button,.toolbar input{display:none}canvas{border:1px solid #ddd}}`+
+      '</style></head><body><main>'+ 
+      '<div class="card"><h1>Báo cáo HTML động phân tích sự cố COMTRADE</h1><div class="muted">Bộ file: <b>'+E(payload.base)+'</b> · Tạo lúc: '+E(payload.created)+'</div><div id="markerInfo" style="margin-top:8px"></div><div id="modeInfo" class="muted" style="margin-top:8px"></div></div>'+ 
+      '<div class="card"><h2>Kết luận và thông số sự cố</h2><div id="summaryTable" class="tableWrap"></div></div>'+ 
+      '<div class="card" id="locationCard"><h2>Ước tính vị trí sự cố</h2><div id="locationTable" class="tableWrap"></div></div>'+ 
+      '<div class="card"><h2 id="metricTitle">Thông số theo chế độ</h2><div id="peakTable" class="tableWrap"></div></div>'+ 
+      '<div class="grid"><section><div class="card"><h2>Biểu đồ động</h2><div id="chartModeInfo" class="muted"></div><div class="toolbar"><button id="btnAll">Toàn bộ</button><button id="btnFault">Vùng sự cố</button><button id="btnAB">Đưa khoảng xem tới A-B</button><button id="btnTripMc">Đưa A/B tới Trip-MC</button><button id="btnSwap">Đảo A/B</button><button id="btnA" class="active">Đặt A</button><button id="btnB">Đặt B</button></div><label class="small">Con trỏ A</label><input id="rangeA" type="range" min="0" max="0" step="1" value="0"><div id="readA" class="readout"></div><label class="small">Con trỏ B</label><input id="rangeB" type="range" min="0" max="0" step="1" value="0"><div id="readB" class="readout"></div><div id="delta" class="readout"></div><div class="canvasBox"><h2>Dòng điện</h2><canvas id="canI"></canvas></div><div class="canvasBox"><h2>Điện áp</h2><canvas id="canV"></canvas></div><div class="canvasBox"><h2>Tín hiệu Digital / TRIP / MC</h2><canvas id="canD" class="digital"></canvas></div></div></section><aside><div class="card"><h2>Bảng giá trị tại A/B</h2><div id="cursorTable" class="tableWrap"></div></div><div class="card"><h2>Dòng thời gian tác động</h2><div id="timelineTable" class="tableWrap"></div></div></aside></div>'+ 
+      '<div class="card"><h2>Giá trị các phần tử sự cố</h2><div id="valueTable" class="tableWrap"></div></div>'+ 
+      '<div class="card" id="seqCardDyn"><h2>Thành phần thứ tự và pha vector</h2><div id="sequenceTableDyn" class="tableWrap"></div></div>'+ 
+      '<div class="card"><h2>Ghi chú phân tích</h2><div id="notes"></div></div>'+ 
+      '</main><script id="payload" type="application/json">'+json+'<\/script><script>'+ 
+`'use strict';
+const DATA=JSON.parse(document.getElementById('payload').textContent);
+const $=id=>document.getElementById(id);
+const COLORS=['#59d0ff','#5ee392','#ffd166','#ff6b6b','#b892ff','#ff9f1c','#2ec4b6','#e71d36','#a6e22e','#f92672','#66d9ef','#fd971f'];
+function normalizePayloadArray(x){if(Array.isArray(x))return x;if(x&&typeof x==='object'){const keys=Object.keys(x).filter(k=>/^\\d+$/.test(k)).sort((a,b)=>Number(a)-Number(b));return keys.map(k=>x[k]);}return [];}
+const times=normalizePayloadArray(DATA.times);let a=0,b=Math.max(0,times.length-1),active='A',view={i0:0,i1:Math.max(0,times.length-1)};(DATA.analog||[]).forEach(s=>{s.values=normalizePayloadArray(s.values)});(DATA.digital||[]).forEach(s=>{s.values=normalizePayloadArray(s.values)});
+function esc(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));}
+function fmt(v,d=6){if(v==null||!Number.isFinite(Number(v)))return '';return Number(v).toLocaleString('vi-VN',{maximumFractionDigits:d});}
+function idxAtTime(t){let lo=0,hi=times.length-1;while(lo<hi){const m=(lo+hi)>>1;if(times[m]<t)lo=m+1;else hi=m;}if(lo>0&&Math.abs(times[lo-1]-t)<Math.abs(times[lo]-t))return lo-1;return lo;}
+function table(head,rows){return '<table><thead><tr>'+head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
+function clamp(i){return Math.max(0,Math.min(times.length-1,Math.round(i||0)));}
+function setCursors(ia,ib){a=clamp(ia);b=clamp(ib);$('rangeA').value=a;$('rangeB').value=b;drawAll();}
+function setView(i0,i1,padFrac=.08){i0=clamp(i0);i1=clamp(i1);if(i1<i0)[i0,i1]=[i1,i0];let pad=Math.max(2,Math.round((i1-i0)*padFrac));view.i0=clamp(i0-pad);view.i1=clamp(i1+pad);drawAll();}
+function setViewTime(t0,t1,padFrac=.12){setView(idxAtTime(t0),idxAtTime(t1),padFrac);}
+function setTripMc(){const m=DATA.markers||{};const ia=m.trip!=null?idxAtTime(m.trip):idxAtTime(m.faultStart);const ib=m.breaker!=null?idxAtTime(m.breaker):idxAtTime(m.faultEnd);setCursors(ia,ib);setView(ia,ib,.8);}
+function resizeCanvas(c){const r=c.getBoundingClientRect();const ratio=window.devicePixelRatio||1;c.width=Math.max(300,Math.round(r.width*ratio));c.height=Math.max(180,Math.round(r.height*ratio));const ctx=c.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);return {ctx,w:r.width,h:r.height};}
+function drawAxes(ctx,w,h,pad,t0,t1){ctx.clearRect(0,0,w,h);ctx.fillStyle='#071427';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#2d3d62';ctx.lineWidth=1;const W=w-pad.l-pad.r,H=h-pad.t-pad.b;ctx.strokeRect(pad.l,pad.t,W,H);ctx.fillStyle='#a9b8d6';ctx.font='12px Arial';for(let k=0;k<=5;k++){const x=pad.l+W*k/5;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+H);ctx.stroke();const t=t0+(t1-t0)*k/5;ctx.fillText(fmt(t,6),x-22,h-8);}}
+function xOf(i,w,pad){return pad.l+(i-view.i0)/Math.max(1,view.i1-view.i0)*(w-pad.l-pad.r);}
+function drawCursorLines(ctx,w,h,pad){for(const [idx,col,lab] of [[a,'#fff','A'],[b,'#59d0ff','B']]){if(idx<view.i0||idx>view.i1)continue;const x=xOf(idx,w,pad);ctx.strokeStyle=col;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,h-pad.b);ctx.stroke();ctx.fillStyle=col;ctx.fillText(lab,x+3,h-pad.b-6);}}
+function drawMarkers(ctx,w,h,pad){const marks=[['START',DATA.markers.faultStart,'#ffd166'],['END',DATA.markers.faultEnd,'#ffd166'],['TRIP',DATA.markers.trip,'#ff6b6b'],['MC',DATA.markers.breaker,'#5ee392']];ctx.font='12px Arial';for(const [lab,t,col] of marks){if(t==null)continue;const i=idxAtTime(t);if(i<view.i0||i>view.i1)continue;const x=xOf(i,w,pad);ctx.strokeStyle=col;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,h-pad.b);ctx.stroke();ctx.fillStyle=col;ctx.fillText(lab,x+3,pad.t+13);}}
+function drawAnalog(canvas,seriesFilter){const c=$(canvas);const {ctx,w,h}=resizeCanvas(c);const pad={l:54,r:18,t:18,b:30};const list=DATA.analog.filter(seriesFilter);const vals=[];for(const s of list)for(let i=view.i0;i<=view.i1;i++){const v=s.values[i];if(Number.isFinite(v))vals.push(v);}let min=Math.min(...vals),max=Math.max(...vals);if(!vals.length){min=0;max=1}if(min===max){min-=1;max+=1}drawAxes(ctx,w,h,pad,times[view.i0],times[view.i1]);ctx.fillStyle='#a9b8d6';ctx.fillText(fmt(max,3),6,pad.t+8);ctx.fillText(fmt(min,3),6,h-pad.b);list.forEach((s,si)=>{ctx.strokeStyle=COLORS[si%COLORS.length];ctx.lineWidth=1.4;ctx.beginPath();let started=false;for(let i=view.i0;i<=view.i1;i++){const v=s.values[i];if(!Number.isFinite(v))continue;const x=xOf(i,w,pad);const y=pad.t+(max-v)/(max-min)*(h-pad.t-pad.b);if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);}ctx.stroke();ctx.fillStyle=COLORS[si%COLORS.length];ctx.fillText(s.role||s.name,pad.l+8,pad.t+15+si*15);});drawMarkers(ctx,w,h,pad);drawCursorLines(ctx,w,h,pad);}
+function drawDigital(){const c=$('canD');const {ctx,w,h}=resizeCanvas(c);const pad={l:160,r:18,t:18,b:30};drawAxes(ctx,w,h,pad,times[view.i0],times[view.i1]);const lanes=DATA.digital||[];const H=h-pad.t-pad.b;ctx.font='12px Arial';lanes.forEach((s,li)=>{const y0=pad.t+(li+.5)*H/Math.max(1,lanes.length),amp=Math.min(12,H/Math.max(1,lanes.length)*.35);ctx.fillStyle='#a9b8d6';ctx.fillText(s.name,8,y0+4);ctx.strokeStyle=COLORS[li%COLORS.length];ctx.lineWidth=1.6;ctx.beginPath();let started=false;for(let i=view.i0;i<=view.i1;i++){const y=y0-(s.values[i]?amp:-amp);const x=xOf(i,w,pad);if(!started){ctx.moveTo(x,y);started=true}else ctx.lineTo(x,y);}ctx.stroke();});drawMarkers(ctx,w,h,pad);drawCursorLines(ctx,w,h,pad);}
+function canvasClick(e){const rect=e.currentTarget.getBoundingClientRect();const x=e.clientX-rect.left;const pad={l:e.currentTarget.id==='canD'?160:54,r:18,t:18,b:30};const frac=(x-pad.l)/Math.max(1,rect.width-pad.l-pad.r);const idx=clamp(view.i0+frac*(view.i1-view.i0));if(active==='B')b=idx;else a=idx;drawAll();}
+function readout(){const ta=times[a],tb=times[b];$('readA').textContent='A = mẫu '+(a+1)+' · t = '+fmt(ta,9)+' s';$('readB').textContent='B = mẫu '+(b+1)+' · t = '+fmt(tb,9)+' s';$('delta').textContent='Δt(B-A) = '+fmt((tb-ta)*1000,6)+' ms';$('rangeA').value=a;$('rangeB').value=b;}
+function cursorTable(){const rows=[];rows.push(['Thời gian','s',fmt(times[a],9),fmt(times[b],9),fmt(times[b]-times[a],9)]);for(const s of DATA.analog){const va=s.values[a],vb=s.values[b];rows.push([s.role||s.name,s.unit||'',fmt(va,6),fmt(vb,6),fmt((vb??0)-(va??0),6)]);}for(const s of DATA.digital){rows.push([s.name,'digital',s.values[a],s.values[b],s.values[a]===s.values[b]?'không đổi':'đổi trạng thái']);}$('cursorTable').innerHTML=table(['Kênh','Đơn vị','A','B','B-A / nhận xét'],rows);}
+function drawAll(){if(!times.length)return;view.i0=clamp(view.i0);view.i1=clamp(view.i1);if(view.i1<=view.i0)view.i1=clamp(view.i0+1);drawAnalog('canI',s=>String(s.role||s.name).startsWith('I')||/\\bI[A-CN]|\\bI[E0G]/i.test(s.name));drawAnalog('canV',s=>String(s.role||s.name).startsWith('V')||/[UV][ABC]/i.test(s.name));drawDigital();readout();cursorTable();}
+function init(){if(!times.length){document.body.innerHTML='<main><div class="card">Không có dữ liệu biểu đồ trong báo cáo HTML.</div></main>';return;}$('rangeA').max=$('rangeB').max=times.length-1;const m=DATA.markers||{};a=m.trip!=null?idxAtTime(m.trip):idxAtTime(m.faultStart??times[0]);b=m.breaker!=null?idxAtTime(m.breaker):idxAtTime(m.faultEnd??times[times.length-1]);view={i0:0,i1:times.length-1};$('summaryTable').innerHTML=table(['Mục','Giá trị'],DATA.summaryRows||[]);if(DATA.locationRows&&DATA.locationRows.length){$('locationTable').innerHTML=table(['Mục','Giá trị'],DATA.locationRows);}else{$('locationCard').style.display='none';}$('valueTable').innerHTML=table(DATA.valueHeaders||['Đại lượng','Kênh','Trước sự cố','Trong sự cố','Sau sự cố','Tỷ lệ','Đơn vị'],DATA.valueRows||[]);if(DATA.sequenceRows&&DATA.sequenceRows.length){$('sequenceTableDyn').innerHTML=table(['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'],DATA.sequenceRows);}else{$('seqCardDyn').style.display='none';}$('metricTitle').textContent=DATA.metricTitle||'Thông số theo chế độ';$('peakTable').innerHTML=table(DATA.metricHeaders||['Vai trò','Kênh','Đơn vị','t','Giá trị','Min','Max','|Đỉnh|','t |Đỉnh|'],DATA.peakRows||[]);$('timelineTable').innerHTML=table(['t (s)','Sự kiện','Kênh','Chi tiết'],DATA.timelineRows||[]);$('notes').innerHTML='<ul>'+((DATA.notes||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>Không có ghi chú.</li>')+'</ul>';$('markerInfo').innerHTML=['FaultStart: '+fmt(m.faultStart,9)+' s','Trip: '+(m.trip!=null?fmt(m.trip,9)+' s · '+esc(m.tripChannel):'không thấy'),'MC Open/52a-52b: '+(m.breaker!=null?fmt(m.breaker,9)+' s · '+esc(m.breakerChannel):'không thấy')].map(x=>'<span class="pill">'+x+'</span>').join('');$('modeInfo').textContent=DATA.unitNote||'';$('chartModeInfo').textContent=DATA.chartModeLabel||DATA.unitNote||'';for(const id of ['canI','canV','canD'])$(id).addEventListener('click',canvasClick);$('rangeA').oninput=e=>{a=clamp(e.target.value);drawAll()};$('rangeB').oninput=e=>{b=clamp(e.target.value);drawAll()};$('btnA').onclick=()=>{active='A';$('btnA').classList.add('active');$('btnB').classList.remove('active')};$('btnB').onclick=()=>{active='B';$('btnB').classList.add('active');$('btnA').classList.remove('active')};$('btnSwap').onclick=()=>{[a,b]=[b,a];drawAll()};$('btnAll').onclick=()=>{view={i0:0,i1:times.length-1};drawAll()};$('btnFault').onclick=()=>{setViewTime(m.faultStart??times[0],m.faultEnd??times[times.length-1],.25)};$('btnAB').onclick=()=>setView(a,b,.15);$('btnTripMc').onclick=setTripMc;window.addEventListener('resize',()=>setTimeout(drawAll,80));drawAll();}
+init();`+ '<\/script></body></html>';
+  };
+
+  // TXT/CSV dùng lại đúng timeline, không lấy nhầm bảng giá trị.
+  window.makeFaultReportText=function(){
+    var r=(typeof ensureFaultAnalysis==='function')?ensureFaultAnalysis():((stateObj()||{}).faultAnalysis); if(!r) return '';
+    prepare(r);
+    var lines=['BÁO CÁO PHÂN TÍCH SỰ CỐ COMTRADE','Bộ file: '+((stateObj()||{}).activeBase||'comtrade'),'Tạo lúc: '+new Date().toLocaleString('vi-VN'),'Chế độ: '+noteText(r),''];
+    summaryRows(r).forEach(function(x){ lines.push(P(x[0])+': '+P(x[1])); });
+    lines.push('','GIÁ TRỊ CÁC PHẦN TỬ SỰ CỐ',valuesHead(r).map(P).join('\t'));
+    valuesRows(r).forEach(function(x){ lines.push(x.map(P).join('\t')); });
+    var seq=seqRows(r); if(seq.length){ lines.push('','THÀNH PHẦN THỨ TỰ VÀ PHA VECTOR',['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc','Tỷ lệ','Ghi chú'].join('\t')); seq.forEach(function(x){ lines.push(x.map(P).join('\t')); }); }
+    lines.push('','DÒNG THỜI GIAN TÁC ĐỘNG',['t(s)','Sự kiện','Kênh','Chi tiết'].join('\t'));
+    timelineRows(r).forEach(function(x){ lines.push(x.join('\t')); });
+    lines.push('','GHI CHÚ'); (r.notes||[]).forEach(function(x){ lines.push(P(x)); });
+    return lines.join('\n');
+  };
+
+  window.exportFaultCsv=function(){
+    var r=(typeof ensureFaultAnalysis==='function')?ensureFaultAnalysis():((stateObj()||{}).faultAnalysis); if(!r) return;
+    prepare(r);
+    var rows=[['section','c1','c2','c3','c4','c5','c6','c7','c8','c9','c10'],['unit_mode',noteText(r)]];
+    rows.push(['value_header'].concat(valuesHead(r).map(P)));
+    valuesRows(r).forEach(function(x){ rows.push(['value'].concat(x.map(P))); });
+    seqRows(r).forEach(function(x){ rows.push(['sequence'].concat(x.map(P))); });
+    rows.push(['timeline_header','t(s)','Sự kiện','Kênh','Chi tiết']);
+    timelineRows(r).forEach(function(x){ rows.push(['timeline'].concat(x)); });
+    var csv=rows.map(function(row){ return row.map(csvSafe).join(','); }).join('\n');
+    if(typeof downloadText==='function') downloadText(((stateObj()||{}).activeBase||'comtrade')+'_fault_analysis_v9916.csv',csv,'text/csv;charset=utf-8');
+  };
+
+  function rewire(){
+    var pairs=[
+      ['btnFaultExportHtml',typeof exportFaultHtml==='function'?exportFaultHtml:null],['btnFaultOpenHtml',typeof openFaultHtml==='function'?openFaultHtml:null],
+      ['btnExportFaultHtml2',typeof exportFaultHtml==='function'?exportFaultHtml:null],['btnOpenFaultHtml2',typeof openFaultHtml==='function'?openFaultHtml:null],
+      ['btnFaultExportHtmlDynamic',typeof exportFaultDynamicHtml==='function'?exportFaultDynamicHtml:null],['btnFaultOpenHtmlDynamic',typeof openFaultDynamicHtml==='function'?openFaultDynamicHtml:null],
+      ['btnExportFaultHtmlDynamic2',typeof exportFaultDynamicHtml==='function'?exportFaultDynamicHtml:null],['btnOpenFaultHtmlDynamic2',typeof openFaultDynamicHtml==='function'?openFaultDynamicHtml:null]
+    ];
+    pairs.forEach(function(p){ var b=document.getElementById(p[0]); if(b&&p[1]) b.onclick=p[1]; });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',rewire); else rewire();
   window.addEventListener('load',rewire);
