@@ -1,4 +1,4 @@
-COMTRADE Offline Reader Pro V9.9.23
+COMTRADE Offline Reader Pro V9.9.24
 Bản sửa: khôi phục bảng Giá trị các phần tử sự cố theo đúng dạng sự cố trong giao diện và báo cáo HTML.
 
 COMTRADE Offline Reader Pro V4 PWA - Phân tích sự cố
