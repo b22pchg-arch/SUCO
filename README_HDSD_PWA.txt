@@ -39,3 +39,11 @@ BỔ SUNG V4 - PHÂN TÍCH SỰ CỐ
 - Thêm chế độ xem: Tự động / Điện thoại / Máy tính. Chế độ được lưu trong localStorage.
 - Thêm xuất kết quả phân tích sự cố sang HTML, mở trực tiếp báo cáo HTML, xuất TXT. File HTML có nút In / lưu PDF trong trình duyệt.
 - Khi thay bản mới trong cùng thư mục localhost, hãy mở ứng dụng và bấm “Ép cập nhật phiên bản” để xóa cache cũ và nạp lại app shell.
+
+
+=== GHI CHÚ V9.9.19 ===
+- Đọc thêm Fault/Event CSV và ROA trong cùng ZIP/thư mục với CFG/DAT.
+- Tự nhận mã UTF-16LE/UTF-16BE/UTF-8 để đọc CSV Toshiba/SEL/IED.
+- Ghép Fault Phase, Trip Phase, Fault Locator và Event CSV vào dòng thời gian phân tích.
+- Lọc raw 99999 và raw ngoài min/max CFG để tránh RMS/biểu đồ sai.
+- Xếp hạng kênh L/R1/R2/Id theo biến động sự cố để tránh chỉ dùng nhầm Ia/Ib/Ic đầu tiên.

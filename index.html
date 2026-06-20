@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.9.18 PWA - Fault Locator</title>
+<title>COMTRADE Offline Reader Pro V9.9.19 PWA - Universal Fault Parser</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -154,7 +154,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.9.18</h1>
+      <h1>COMTRADE Offline Reader Pro V9.9.19</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -191,12 +191,12 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 
       <div id="drop" class="drop">
         <strong>Thả bộ file COMTRADE / ZIP / RAR vào đây</strong>
-        <p>Chọn .cfg + .dat, file một-gói .cff, .zip hoặc .rar chứa bộ COMTRADE; kèm .log/.hdr/.inf nếu có.</p>
+        <p>Chọn .cfg + .dat, file một-gói .cff, .zip hoặc .rar chứa bộ COMTRADE; kèm .log/.hdr/.inf/.csv/.roa nếu có.</p>
         <div class="toolbar" style="justify-content:center;margin-top:10px">
           <button id="btnPickFiles">Chọn file</button>
           <button id="btnPickFolder">Chọn thư mục</button>
         </div>
-        <input id="fileInput" type="file" multiple accept=".cfg,.dat,.cff,.zip,.rar,.log,.hdr,.inf,.txt,.CFG,.DAT,.CFF,.ZIP,.RAR,.LOG,.HDR,.INF,.TXT">
+        <input id="fileInput" type="file" multiple accept=".cfg,.dat,.cff,.zip,.rar,.log,.hdr,.inf,.txt,.csv,.roa,.CFG,.DAT,.CFF,.ZIP,.RAR,.LOG,.HDR,.INF,.TXT,.CSV,.ROA">
         <input id="folderInput" type="file" webkitdirectory directory multiple>
       </div>
       <div style="height:12px"></div>
@@ -245,7 +245,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
       <div class="card">
         <h3>Hướng dẫn nhanh</h3>
         <div class="tiny">
-          1) Chọn bộ <span class="kbd">ten.cfg</span> + <span class="kbd">ten.dat</span>, <span class="kbd">ten.cff</span>, <span class="kbd">ten.zip</span> hoặc <span class="kbd">ten.rar</span> chứa các file COMTRADE.<br>
+          1) Chọn bộ <span class="kbd">ten.cfg</span> + <span class="kbd">ten.dat</span>, <span class="kbd">ten.cff</span>, <span class="kbd">ten.zip</span> hoặc <span class="kbd">ten.rar</span> chứa các file COMTRADE + Event/Fault CSV/ROA nếu có.<br>
           2) Nếu DAT không đọc đúng, thử <b>Vendor tolerant</b>, đổi endian hoặc timestamp.<br>
           3) Vào tab <b>Biểu đồ</b>, kéo thanh trượt A/B để đo thời gian và xem giá trị tức thời.<br>
           4) Vào tab <b>Phân tích sự cố</b> để nhận dạng dạng sự cố, pha sự cố, giá trị và thời gian tác động.<br>
@@ -590,7 +590,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
       </section>
 
       <section id="page-log" class="page">
-        <div class="card"><h2>Log / Header / Info / CFF sections</h2><div class="grid two"><div><label>Lọc nội dung</label><input id="logSearch" type="text" placeholder="Nhập từ khóa: Trip, Fault, Pickup, 374..."></div><div><label>Chọn file văn bản</label><select id="logSelect"></select></div></div><div id="logView" class="logbox" style="margin-top:12px">Chưa có file log/hdr/inf.</div></div>
+        <div class="card"><h2>Log / Header / Info / Event CSV / Fault CSV / ROA</h2><div class="grid two"><div><label>Lọc nội dung</label><input id="logSearch" type="text" placeholder="Nhập từ khóa: Trip, Fault, Pickup, 374..."></div><div><label>Chọn file văn bản / CSV / ROA</label><select id="logSelect"></select></div></div><div id="logView" class="logbox" style="margin-top:12px">Chưa có file log/hdr/inf/csv/roa.</div></div>
       </section>
 
       <section id="page-convert" class="page">
@@ -1023,7 +1023,7 @@ async function extractCff(file){
 function buildSummary(){ const data=state.data,cfg=state.cfg; if(!data||!cfg) return []; const out=[]; const n=data.samples; for(let a=0;a<cfg.analogCount;a++){ const arr=data.analog[a]; let min=Infinity,max=-Infinity,sum=0,sum2=0,count=0; for(let i=0;i<n;i++){ const v=arr[i]; if(!Number.isFinite(v)) continue; if(v<min)min=v;if(v>max)max=v;sum+=v;sum2+=v*v;count++; } out.push({idx:a+1,id:cfg.analog[a].id,unit:cfg.analog[a].unit,min,max,avg:count?sum/count:NaN,rms:count?Math.sqrt(sum2/count):NaN,peakAbs:Math.max(Math.abs(min),Math.abs(max))}); } return out; }
 function table(headers, rows){ return `<table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
 function renderAll(){ renderGroups(); renderMetrics(); renderCfgInfo(); renderChannelTables(); renderSummary(); renderChecks(); renderDigitalEvents(); renderLogs(); setupCursor(); drawAll(); renderCursorTable(); renderDecoderNotes(); renderFaultAnalysis(); }
-function renderGroups(){ const box=$('groups'); if(!state.groups.size){box.innerHTML='<div class="tiny">Chưa có file.</div>';return;} let html=''; for(const [base,g] of state.groups){ const active=base===state.activeBase?'active':''; html+=`<div class="file-group ${active}"><b>${esc(base)}</b>`; html+=`<div class="file-row"><span>Nguồn</span><span>${g.cff?'<b>CFF một-file</b>':'file rời'}</span></div>`; html+=`<div class="file-row"><span>CFG</span><span>${g.cfg?esc(g.cfg.name)+' · '+fileSize(g.cfg.size):'<span class="bad-text">thiếu</span>'}</span></div>`; html+=`<div class="file-row"><span>DAT</span><span>${g.dat?esc(g.dat.name)+' · '+fileSize(g.dat.size):'<span class="bad-text">thiếu</span>'}</span></div>`; html+=`<div class="file-row"><span>LOG/HDR/INF</span><span>${g.logs.length?g.logs.map(f=>esc(f.name)).join('<br>'):'không có'}</span></div>`; if(g.cffMeta) html+=`<div class="file-row"><span>CFF</span><span>${esc(g.cffMeta.sections.join(' | '))}</span></div>`; html+=`<div class="toolbar" style="margin-top:8px"><button onclick="loadGroup('${base.replace(/'/g,"\\'")}')">Đọc bộ này</button></div></div>`; } box.innerHTML=html; }
+function renderGroups(){ const box=$('groups'); if(!state.groups.size){box.innerHTML='<div class="tiny">Chưa có file.</div>';return;} let html=''; for(const [base,g] of state.groups){ const active=base===state.activeBase?'active':''; html+=`<div class="file-group ${active}"><b>${esc(base)}</b>`; html+=`<div class="file-row"><span>Nguồn</span><span>${g.cff?'<b>CFF một-file</b>':'file rời'}</span></div>`; html+=`<div class="file-row"><span>CFG</span><span>${g.cfg?esc(g.cfg.name)+' · '+fileSize(g.cfg.size):'<span class="bad-text">thiếu</span>'}</span></div>`; html+=`<div class="file-row"><span>DAT</span><span>${g.dat?esc(g.dat.name)+' · '+fileSize(g.dat.size):'<span class="bad-text">thiếu</span>'}</span></div>`; html+=`<div class="file-row"><span>LOG/HDR/INF/CSV/ROA</span><span>${g.logs.length?g.logs.map(f=>esc(f.name)).join('<br>'):'không có'}</span></div>`; if(g.cffMeta) html+=`<div class="file-row"><span>CFF</span><span>${esc(g.cffMeta.sections.join(' | '))}</span></div>`; html+=`<div class="toolbar" style="margin-top:8px"><button onclick="loadGroup('${base.replace(/'/g,"\\'")}')">Đọc bộ này</button></div></div>`; } box.innerHTML=html; }
 function renderMetrics(){ const cfg=state.cfg,data=state.data; const m=$('metrics'); if(!cfg){m.innerHTML='';return;} const duration=data&&data.samples?data.times[data.samples-1]-data.times[0]:0; const items=[['Trạm',cfg.station||''],['Thiết bị',cfg.device||''],['Kênh',`${cfg.analogCount}A / ${cfg.digitalCount}D`],['DAT',data?data.format:cfg.datType],['Mẫu',data?data.samples:cfg.expectedSamples||''],['Thời lượng',data?fmt(duration,6)+' s':''],['Tần số lưới',fmt(cfg.frequency,3)+' Hz'],['Sample rate',cfg.sampleRates.map(r=>fmt(r.rate,3)+' Hz đến '+r.end).join('; ')]]; m.innerHTML=items.map(([k,v])=>`<div class="metric"><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join(''); }
 function renderCfgInfo(){ const cfg=state.cfg; if(!cfg){$('cfgInfo').innerHTML='';return;} const rows=[['Station',esc(cfg.station)],['Recording device',esc(cfg.device)],['Revision',esc(cfg.rev)],['Total channels',cfg.totalChannels],['Analog',cfg.analogCount],['Digital',cfg.digitalCount],['Nominal frequency',fmt(cfg.frequency)+' Hz'],['Sample rates',esc(cfg.sampleRates.map(r=>`${r.rate}, ${r.end}`).join(' | '))],['Start time',esc(cfg.startTime)],['Trigger time',esc(cfg.triggerTime)],['DAT type CFG',esc(cfg.datType)],['Time multiplier',fmt(cfg.timeMult,9)],['2013 time_code/local_code',esc([cfg.extra2013.timeCode,cfg.extra2013.localCode].filter(Boolean).join(', '))],['2013 tmq/leapsec',esc([cfg.extra2013.tmqCode,cfg.extra2013.leapSec].filter(Boolean).join(', '))],['Extra CFG lines',esc((cfg.extraLines||[]).join(' | '))],['Cảnh báo',cfg.warnings.length?`<span class="warn-text">${esc(cfg.warnings.join('; '))}</span>`:'']]; $('cfgInfo').innerHTML=table(['Mục','Giá trị'], rows); }
 function renderChannelTables(){ const cfg=state.cfg; if(!cfg){$('analogTable').innerHTML='';$('digitalTable').innerHTML='';return;} $('analogTable').innerHTML=table(['#','Tên kênh','Pha','Đơn vị','a','b','skew','min raw','max raw','Primary','Secondary','P/S'], cfg.analog.map(ch=>[ch.index,esc(ch.id),esc(ch.phase),esc(ch.unit),fmt(ch.a,9),fmt(ch.b,9),fmt(ch.skew,9),fmt(ch.min),fmt(ch.max),fmt(ch.primary),fmt(ch.secondary),esc(ch.ps)])); $('digitalTable').innerHTML=table(['#','Tên kênh','Pha','CCBM','Normal'], cfg.digital.map(ch=>[ch.index,esc(ch.id),esc(ch.phase),esc(ch.ccbm),ch.normal])); }
@@ -1528,13 +1528,13 @@ function applyViewMode(mode){ mode=['auto','mobile','desktop'].includes(mode)?mo
 function initViewMode(){ applyViewMode(localStorage.getItem('comtradeViewMode')||'auto'); const a=$('btnViewAuto'), m=$('btnViewMobile'), d=$('btnViewDesktop'); if(a)a.onclick=()=>applyViewMode('auto'); if(m)m.onclick=()=>applyViewMode('mobile'); if(d)d.onclick=()=>applyViewMode('desktop'); }
 
 function renderDigitalEvents(){ const cfg=state.cfg,data=state.data; if(!cfg||!data){$('digitalEvents').innerHTML='<div class="tiny" style="padding:12px">Chưa có dữ liệu.</div>';return;} const rows=[]; const maxRows=2500; for(let d=0;d<cfg.digitalCount;d++){ const arr=data.digital[d]; let prev=arr[0]; for(let i=1;i<data.samples;i++){ const v=arr[i]; if(v!==prev){ rows.push([fmt(data.times[i],6),d+1,esc(cfg.digital[d].id),prev,v,`<button onclick="setCursorIndex(${i})">Soi</button>`]); prev=v; if(rows.length>=maxRows) break; } } if(rows.length>=maxRows) break; } $('digitalEvents').innerHTML=rows.length?table(['t (s)','#','Kênh','Từ','Sang','Con trỏ'],rows):'<div class="tiny" style="padding:12px">Không thấy digital đổi trạng thái trong bản ghi.</div>'; }
-function renderLogs(){ const sel=$('logSelect'); sel.innerHTML=''; if(!state.logs.length){ sel.innerHTML='<option>Không có</option>'; $('logView').textContent='Chưa có file log/hdr/inf.'; return; } state.logs.forEach((l,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=l.name; sel.appendChild(o); }); showLog(); }
+function renderLogs(){ const sel=$('logSelect'); sel.innerHTML=''; if(!state.logs.length){ sel.innerHTML='<option>Không có</option>'; $('logView').textContent='Chưa có file log/hdr/inf/csv/roa.'; return; } state.logs.forEach((l,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=l.name; sel.appendChild(o); }); showLog(); }
 function showLog(){ if(!state.logs.length) return; const i=Number($('logSelect').value)||0; const text=state.logs[i]?.text||''; const q=$('logSearch').value.trim().toLowerCase(); if(!q){ $('logView').textContent=text; return; } const lines=text.split(/\r?\n/).filter(line=>line.toLowerCase().includes(q)); $('logView').textContent=lines.length?lines.join('\n'):'Không tìm thấy: '+q; }
 function renderDecoderNotes(){ const notes=[]; if(state.data?.parserNotes) notes.push(...state.data.parserNotes); if(state.decoderNotes?.length) notes.push(...state.decoderNotes); $('decoderNotes').textContent=notes.length?notes.join('\n'):'Chưa có ghi chú giải mã.'; }
 
 function readU16(dv, off){ return dv.getUint16(off, true); }
 function readU32(dv, off){ return dv.getUint32(off, true); }
-function mimeByExt(name){ const e=extName(name); if(e==='cfg'||e==='dat'||e==='cff'||e==='log'||e==='hdr'||e==='inf'||e==='txt') return 'text/plain;charset=utf-8'; return 'application/octet-stream'; }
+function mimeByExt(name){ const e=extName(name); if(e==='cfg'||e==='dat'||e==='cff'||e==='log'||e==='hdr'||e==='inf'||e==='txt'||e==='csv'||e==='roa') return 'text/plain;charset=utf-8'; return 'application/octet-stream'; }
 function safeZipName(name){ return String(name||'').replace(/^\/+/, '').replace(/\\/g,'/'); }
 async function inflateRawBytes(bytes){
   if(typeof DecompressionStream==='undefined') throw new Error('Trình duyệt này chưa hỗ trợ DecompressionStream để giải nén ZIP deflate. Hãy dùng Chrome/Edge mới hoặc nạp file rời.');
@@ -1556,7 +1556,7 @@ async function extractZipFile(zipFile){
     let name=safeZipName(tdUtf8.decode(bytes.slice(p+46,p+46+fnameLen)));
     p += 46 + fnameLen + extraLen + commentLen;
     if(!name || name.endsWith('/')) continue;
-    const ext=extName(name); if(!['cfg','dat','cff','log','hdr','inf','txt'].includes(ext)) continue;
+    const ext=extName(name); if(!['cfg','dat','cff','log','hdr','inf','txt','csv','roa'].includes(ext)) continue;
     if(lho<0 || lho+30>len || readU32(dv,lho)!==0x04034b50) continue;
     const lfNameLen=readU16(dv,lho+26), lfExtraLen=readU16(dv,lho+28); const dataStart=lho+30+lfNameLen+lfExtraLen;
     if(dataStart+compSize>len) throw new Error('Dữ liệu nén vượt quá kích thước file ZIP ở mục '+name+'.');
@@ -1590,7 +1590,7 @@ async function expandArchiveInputs(inputFiles){
 }
 async function handleFiles(fileList){ const rawFiles=[...fileList]; if(!rawFiles.length)return; const files=await expandArchiveInputs(rawFiles); if(!files.length)return; state.groups.clear(); state.activeBase=null; state.cfg=null; state.data=null; state.logs=[]; state.summary=[]; state.selectedAnalog.clear(); state.selectedDigital.clear(); state.cursorA=0; state.cursorB=0; state.activeCursor='A'; state.faultAnalysis=null; setStatus('Đang phân loại file...', '');
   for(const f of files){ const ext=extName(f.name); if(ext==='cff'){ try{ const ex=await extractCff(f); const b=ex.base; state.groups.set(b,{cfg:ex.cfg,dat:ex.dat,logs:ex.logs.map(l=>makeVirtualFile([l.text],l.name,'text/plain')),cff:f,cffMeta:ex.meta}); }catch(e){ state.groups.set(baseName(f.name),{cfg:null,dat:null,logs:[makeVirtualFile(['Lỗi đọc CFF: '+e.message],baseName(f.name)+'.cff_error.log','text/plain')],cff:f,cffError:e.message}); } continue; }
-    if(!['cfg','dat','log','hdr','inf','txt'].includes(ext)) continue; const b=baseName(f.name); if(!state.groups.has(b)) state.groups.set(b,{cfg:null,dat:null,logs:[]}); const g=state.groups.get(b); if(ext==='cfg') g.cfg=f; else if(ext==='dat') g.dat=f; else g.logs.push(f); }
+    if(!['cfg','dat','log','hdr','inf','txt','csv','roa'].includes(ext)) continue; const b=baseName(f.name); if(!state.groups.has(b)) state.groups.set(b,{cfg:null,dat:null,logs:[]}); const g=state.groups.get(b); if(ext==='cfg') g.cfg=f; else if(ext==='dat') g.dat=f; else g.logs.push(f); }
   renderGroups(); const first=[...state.groups.entries()].find(([b,g])=>g.cfg&&g.dat); if(first) await loadGroup(first[0]); else setStatus('Đã nhận file nhưng chưa tìm thấy .CFG + .DAT hoặc CFF hợp lệ.', 'warn'); }
 async function loadGroup(base){ const g=state.groups.get(base); if(!g)return; state.activeBase=base; renderGroups(); if(!g.cfg||!g.dat){ setStatus('Bộ '+base+' thiếu CFG hoặc DAT.', 'bad'); return; } try{ setStatus('Đang đọc CFG...', ''); const cfgText=await g.cfg.text(); state.cfg=parseCfg(cfgText); state.decoderNotes=[]; state.logs=[]; for(const f of g.logs){ try{state.logs.push({name:f.name,text:await f.text()});}catch(e){state.logs.push({name:f.name,text:'Không đọc được file: '+e.message});} } if(g.cffMeta){ state.logs.push({name:base+'.cff_sections.txt', text:'CFF sections:\n'+g.cffMeta.sections.join('\n')+'\nDAT header: '+g.cffMeta.datHeader+'\nDAT bytes: '+g.cffMeta.datBytes}); }
     setStatus('Đang đọc DAT '+state.cfg.datType+'...', ''); state.data=await parseDat(g.dat,state.cfg); state.summary=buildSummary(); state.selectedAnalog=new Set([...Array(Math.min(6,state.cfg.analogCount)).keys()]); state.selectedDigital=new Set([...Array(Math.min(12,state.cfg.digitalCount)).keys()]); setFullTimeInputs(); state.cursorA=0; state.cursorB=state.data?Math.min(state.data.samples-1,Math.max(0,Math.round(state.data.samples/2))):0; state.activeCursor='A'; state.faultAnalysis=null;
@@ -3482,7 +3482,7 @@ initSidebarMode();
         if(ext==='cff'){
           try{ const ex=await extractCff(f); const b=ex.base; state.groups.set(b,{cfg:ex.cfg,dat:ex.dat,logs:ex.logs.map(l=>makeVirtualFile([l.text],l.name,'text/plain')),cff:f,cffMeta:ex.meta}); }
           catch(e){ state.groups.set(baseName(f.name),{cfg:null,dat:null,logs:[makeVirtualFile(['Lỗi đọc CFF: '+e.message],baseName(f.name)+'.cff_error.log','text/plain')],cff:f,cffError:e.message}); }
-        } else if(['cfg','dat','log','hdr','inf','txt'].includes(ext)){
+        } else if(['cfg','dat','log','hdr','inf','txt','csv','roa'].includes(ext)){
           const b=baseName(f.name); if(!state.groups.has(b)) state.groups.set(b,{cfg:null,dat:null,logs:[]}); const g=state.groups.get(b); if(ext==='cfg') g.cfg=f; else if(ext==='dat') g.dat=f; else g.logs.push(f);
         }
         count++; if(count%200===0) await waitFrame();
@@ -4279,6 +4279,433 @@ init();`+ '<\/script></body></html>';
       ['btnExportFaultHtmlDynamic2',typeof exportFaultDynamicHtml==='function'?exportFaultDynamicHtml:null],['btnOpenFaultHtmlDynamic2',typeof openFaultDynamicHtml==='function'?openFaultDynamicHtml:null]
     ];
     pairs.forEach(function(p){ var b=document.getElementById(p[0]); if(b&&p[1]) b.onclick=p[1]; });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',rewire); else rewire();
+  window.addEventListener('load',rewire);
+})();
+</script>
+
+
+<script>
+/* ===== V9.9.19 PATCH: Universal Fault Parser - CSV/ROA, UTF-16, relay-sidecar fusion, invalid-sample filtering ===== */
+(function(){
+  'use strict';
+  const V9919='V9.9.19-UNIVERSAL-FAULT-PARSER';
+  try{ window.COMTRADE_V9919_VERSION=V9919; }catch(e){}
+  const TEXT_EXTS=['cfg','dat','cff','log','hdr','inf','txt','csv','roa'];
+  const SIDECAR_EXTS=['log','hdr','inf','txt','csv','roa'];
+
+  function S(){ return (typeof state!=='undefined')?state:null; }
+  function byId(id){ return document.getElementById(id); }
+  function E(s){ try{ return esc(s); }catch(e){ return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c)); } }
+  function F(v,d){ try{ return fmt(v,d); }catch(e){ return (v==null||!Number.isFinite(Number(v)))?'':String(Number(v).toFixed(d||6)); } }
+  function N(s){ return String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
+  function ext(name){ try{ return extName(name); }catch(e){ const m=String(name||'').toLowerCase().match(/\.([^.]+)$/); return m?m[1]:''; } }
+  function base(name){ try{ return baseName(name); }catch(e){ return String(name||'').split('/').pop().replace(/\.[^.]+$/,'').toLowerCase(); } }
+  function safeTable(headers, rows){ try{ return table(headers,rows); }catch(e){ return '<table><thead><tr>'+headers.map(h=>'<th>'+E(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table>'; } }
+  function cells(line){ line=String(line??''); if(line.includes('\t')) return line.split('\t').map(x=>x.trim()); try{ return csvSplit(line); }catch(e){ return line.split(',').map(x=>x.trim()); } }
+  function isTextExt(e){ return TEXT_EXTS.includes(String(e||'').toLowerCase()); }
+  function isSidecarExt(e){ return SIDECAR_EXTS.includes(String(e||'').toLowerCase()); }
+
+  // Decode UTF-8/UTF-16LE/UTF-16BE/ANSI-like text. This fixes Toshiba Event/Fault CSV with BOM FF FE.
+  const oldTextDecode = (typeof textDecode==='function') ? textDecode : null;
+  textDecode=function(bytes){
+    try{
+      const u = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes||[]);
+      if(u.length>=2 && u[0]===0xFF && u[1]===0xFE) return new TextDecoder('utf-16le').decode(u.subarray(2)).replace(/^\uFEFF/,'');
+      if(u.length>=2 && u[0]===0xFE && u[1]===0xFF) return new TextDecoder('utf-16be').decode(u.subarray(2)).replace(/^\uFEFF/,'');
+      if(u.length>=3 && u[0]===0xEF && u[1]===0xBB && u[2]===0xBF) return new TextDecoder('utf-8',{fatal:false}).decode(u.subarray(3)).replace(/^\uFEFF/,'');
+      let zeroOdd=0, zeroEven=0, lim=Math.min(u.length,2048);
+      for(let i=0;i<lim;i++){ if(u[i]===0){ if(i%2) zeroOdd++; else zeroEven++; } }
+      if(zeroOdd>lim*0.18 && zeroOdd>zeroEven*2) return new TextDecoder('utf-16le').decode(u).replace(/^\uFEFF/,'');
+      if(zeroEven>lim*0.18 && zeroEven>zeroOdd*2) return new TextDecoder('utf-16be').decode(u).replace(/^\uFEFF/,'');
+      return new TextDecoder('utf-8',{fatal:false}).decode(u).replace(/^\uFEFF/,'');
+    }catch(e){
+      if(oldTextDecode) try{return oldTextDecode(bytes);}catch(_e){}
+      let out=''; const u=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes||[]); for(const b of u) out+=String.fromCharCode(b); return out.replace(/^\uFEFF/,'');
+    }
+  };
+  async function readTextSmart(file){ const buf=await file.arrayBuffer(); return textDecode(new Uint8Array(buf)); }
+
+  // MIME and ZIP extraction support for CSV/ROA.
+  if(typeof mimeByExt==='function'){
+    const oldMime=mimeByExt;
+    mimeByExt=function(name){ const e=ext(name); if(isTextExt(e)) return 'text/plain;charset=utf-8'; return oldMime(name); };
+  }
+
+  // Reject obvious invalid/padding raw values such as 99999 and raw outside CFG min/max.
+  if(typeof scaleAnalog==='function'){
+    const oldScale=scaleAnalog;
+    scaleAnalog=function(ch,raw,isFloat){
+      raw=Number(raw);
+      if(!Number.isFinite(raw)) return NaN;
+      if(!isFloat){
+        if(Math.abs(raw)>=99990) return NaN;
+        const mn=Number(ch&&ch.min), mx=Number(ch&&ch.max);
+        if(Number.isFinite(mn)&&Number.isFinite(mx)&&mx>mn){
+          const pad=Math.max(2,Math.abs(mx-mn)*0.02);
+          if(raw<mn-pad || raw>mx+pad) return NaN;
+        }
+      }
+      return oldScale(ch,raw,isFloat);
+    };
+  }
+
+  // Override ZIP extractor to include sidecar CSV/ROA without needing to edit old browser cache code paths.
+  if(typeof extractZipFile==='function' && typeof readU32==='function' && typeof readU16==='function'){
+    extractZipFile=async function(zipFile){
+      const buf=await zipFile.arrayBuffer(); const bytes=new Uint8Array(buf); const dv=new DataView(buf); const len=bytes.length;
+      let eocd=-1; const start=Math.max(0,len-22-65536);
+      for(let i=len-22;i>=start;i--){ if(readU32(dv,i)===0x06054b50){ eocd=i; break; } }
+      if(eocd<0) throw new Error('Không tìm thấy EOCD, file ZIP có thể hỏng hoặc là ZIP64/định dạng không chuẩn.');
+      const total=readU16(dv,eocd+10), cdSize=readU32(dv,eocd+12), cdOff=readU32(dv,eocd+16);
+      if(cdOff<=0 || cdOff>=len) throw new Error('Central directory ZIP không hợp lệ.');
+      let p=cdOff; const out=[]; const tdUtf8=new TextDecoder('utf-8',{fatal:false});
+      for(let n=0;n<total && p<cdOff+cdSize && p<len;n++){
+        if(readU32(dv,p)!==0x02014b50) break;
+        const method=readU16(dv,p+10), compSize=readU32(dv,p+20), fnameLen=readU16(dv,p+28), extraLen=readU16(dv,p+30), commentLen=readU16(dv,p+32), lho=readU32(dv,p+42);
+        let name=String(tdUtf8.decode(bytes.slice(p+46,p+46+fnameLen))).replace(/^\/+/, '').replace(/\\/g,'/');
+        p += 46 + fnameLen + extraLen + commentLen;
+        if(!name || name.endsWith('/')) continue;
+        const e=ext(name); if(!isTextExt(e)) continue;
+        if(lho<0 || lho+30>len || readU32(dv,lho)!==0x04034b50) continue;
+        const lfNameLen=readU16(dv,lho+26), lfExtraLen=readU16(dv,lho+28), dataStart=lho+30+lfNameLen+lfExtraLen;
+        if(dataStart+compSize>len) throw new Error('Dữ liệu nén vượt quá kích thước file ZIP ở mục '+name+'.');
+        const comp=bytes.slice(dataStart,dataStart+compSize); let data;
+        if(method===0) data=comp; else if(method===8) data=await inflateRawBytes(comp); else throw new Error('ZIP có mục '+name+' dùng phương thức nén '+method+' chưa hỗ trợ. Hãy nén ZIP dạng Store/Deflate hoặc giải nén trước.');
+        const shortName=(name.split('/').pop()||name);
+        let f; try{ f=new File([data], shortName, {type:mimeByExt(shortName), lastModified:zipFile.lastModified||Date.now()}); }catch(e2){ f=makeVirtualFile([data], shortName, mimeByExt(shortName)); }
+        f._zipPath=name; f._zipSource=zipFile.name; out.push(f);
+      }
+      if(!out.length) throw new Error('Không tìm thấy CFG/DAT/CFF/LOG/HDR/INF/TXT/CSV/ROA trong ZIP.');
+      return out;
+    };
+  }
+
+  function fileSourceKey(f){ return f?((f._zipSource&&('zip:'+f._zipSource)) || (f.webkitRelativePath&&('folder:'+String(f.webkitRelativePath).split('/')[0])) || 'loose'): 'loose'; }
+  function initGroup(b){ const st=S(); if(!st.groups.has(b)) st.groups.set(b,{cfg:null,dat:null,logs:[]}); return st.groups.get(b); }
+  function groupBestForSidecar(f, sourceToBases){
+    const st=S(), b=base(f.name), e=ext(f.name);
+    if(st.groups.has(b)) return b;
+    const key=fileSourceKey(f), bases=Array.from(sourceToBases.get(key)||[]).filter(x=>st.groups.get(x)?.cfg||st.groups.get(x)?.dat);
+    if(bases.length===1) return bases[0];
+    const full=Array.from(st.groups.entries()).filter(([_,g])=>g.cfg&&g.dat).map(([x])=>x);
+    if(full.length===1) return full[0];
+    if(/^(fault|event|trigger|record|osc|roa|report)[_\-]/i.test(b) && full.length) return full[0];
+    return b || (e+'_sidecar');
+  }
+
+  async function expandArchiveInputsV9919(rawFiles){
+    const result=[], messages=[];
+    for(const f of Array.from(rawFiles||[])){
+      const e=ext(f.name);
+      if(e==='zip'){
+        try{ if(typeof setStatus==='function') setStatus('Đang giải nén ZIP: '+f.name,''); const got=await extractZipFile(f); result.push(...got); messages.push('ZIP '+f.name+': đã giải nén '+got.length+' file gồm COMTRADE + sidecar.'); }
+        catch(err){ messages.push('ZIP '+f.name+': lỗi - '+err.message); result.push(makeVirtualFile(['Lỗi giải nén ZIP '+f.name+': '+err.message], base(f.name)+'_zip_error.log','text/plain')); }
+      }else if(e==='rar'){
+        try{ if(typeof setStatus==='function') setStatus('Đang giải nén RAR: '+f.name,''); const got=await extractRarFile(f); result.push(...got); messages.push('RAR '+f.name+': đã giải nén '+got.length+' file dùng được.'); }
+        catch(err){ const msg='RAR '+f.name+': '+err.message; messages.push(msg); result.push(makeVirtualFile([msg], base(f.name)+'_rar_note.log','text/plain')); }
+      }else result.push(f);
+    }
+    const st=S(); if(st&&messages.length){ st.decoderNotes=st.decoderNotes||[]; st.decoderNotes.push(...messages); }
+    return result;
+  }
+
+  // Group sidecar files extracted from the same ZIP with the CFG/DAT pair, even when names differ (Fault_*.CSV, Event_*.CSV).
+  handleFiles=async function(fileList){
+    const st=S(); const rawFiles=Array.from(fileList||[]); if(!st||!rawFiles.length) return;
+    try{
+      if(typeof setStatus==='function') setStatus('Đang mở danh sách file...', '');
+      const files=await expandArchiveInputsV9919(rawFiles); if(!files.length) return;
+      st.groups.clear(); st.activeBase=null; st.cfg=null; st.data=null; st.logs=[]; st.summary=[]; st.selectedAnalog.clear(); st.selectedDigital.clear(); st.cursorA=0; st.cursorB=0; st.activeCursor='A'; st.faultAnalysis=null; st.sidecars=null;
+      const sourceToBases=new Map();
+      // Pass 1: CFF/CFG/DAT define record groups.
+      for(const f of files){
+        const e=ext(f.name), b=base(f.name), key=fileSourceKey(f);
+        if(e==='cff'){
+          try{ const ex=await extractCff(f); const gb=ex.base; st.groups.set(gb,{cfg:ex.cfg,dat:ex.dat,logs:ex.logs.map(l=>makeVirtualFile([l.text],l.name,'text/plain')),cff:f,cffMeta:ex.meta}); if(!sourceToBases.has(key))sourceToBases.set(key,new Set()); sourceToBases.get(key).add(gb); }
+          catch(err){ st.groups.set(b,{cfg:null,dat:null,logs:[makeVirtualFile(['Lỗi đọc CFF: '+err.message],b+'.cff_error.log','text/plain')],cff:f,cffError:err.message}); }
+        }else if(e==='cfg'||e==='dat'){
+          const g=initGroup(b); if(e==='cfg') g.cfg=f; else g.dat=f; if(!sourceToBases.has(key))sourceToBases.set(key,new Set()); sourceToBases.get(key).add(b);
+        }
+      }
+      // Pass 2: attach log/hdr/inf/txt/csv/roa to the correct record group.
+      for(const f of files){
+        const e=ext(f.name); if(!isSidecarExt(e)) continue;
+        const b=groupBestForSidecar(f, sourceToBases); const g=initGroup(b); g.logs.push(f);
+      }
+      try{ renderGroups(); }catch(e){}
+      const first=Array.from(st.groups.entries()).find(([b,g])=>g.cfg&&g.dat);
+      if(first) await loadGroup(first[0]); else if(typeof setStatus==='function') setStatus('Đã nhận file nhưng chưa tìm thấy .CFG + .DAT hoặc CFF hợp lệ.', 'warn');
+    }catch(err){ console.error(err); if(typeof setStatus==='function') setStatus('Lỗi đọc danh sách file: '+err.message,'bad'); }
+  };
+
+  // Load text with smart decoder and parse sidecars immediately after DAT is loaded.
+  loadGroup=async function(baseNameArg){
+    const st=S(), g=st&&st.groups.get(baseNameArg); if(!st||!g) return;
+    st.activeBase=baseNameArg; try{ renderGroups(); }catch(e){}
+    if(!g.cfg||!g.dat){ if(typeof setStatus==='function') setStatus('Bộ '+baseNameArg+' thiếu CFG hoặc DAT.','bad'); return; }
+    try{
+      if(typeof setStatus==='function') setStatus('Đang đọc CFG...', '');
+      const cfgText=await readTextSmart(g.cfg); st.cfg=parseCfg(cfgText); st.decoderNotes=[]; st.logs=[]; st.sidecars=null;
+      for(const f of g.logs||[]){ try{ st.logs.push({name:f.name,text:await readTextSmart(f), ext:ext(f.name), zipPath:f._zipPath||'', zipSource:f._zipSource||''}); }catch(err){ st.logs.push({name:f.name,text:'Không đọc được file: '+err.message, ext:ext(f.name)}); } }
+      if(g.cffMeta){ st.logs.push({name:baseNameArg+'.cff_sections.txt', text:'CFF sections:\n'+g.cffMeta.sections.join('\n')+'\nDAT header: '+g.cffMeta.datHeader+'\nDAT bytes: '+g.cffMeta.datBytes, ext:'txt'}); }
+      if(typeof setStatus==='function') setStatus('Đang đọc DAT '+st.cfg.datType+'...', '');
+      st.data=await parseDat(g.dat,st.cfg); st.summary=buildSummary();
+      st.selectedAnalog=new Set(Array.from({length:Math.min(6,st.cfg.analogCount)},(_,i)=>i)); st.selectedDigital=new Set(Array.from({length:Math.min(12,st.cfg.digitalCount)},(_,i)=>i));
+      if(typeof setFullTimeInputs==='function') setFullTimeInputs();
+      st.cursorA=0; st.cursorB=st.data?Math.min(st.data.samples-1,Math.max(0,Math.round(st.data.samples/2))):0; st.activeCursor='A'; st.faultAnalysis=null;
+      st.sidecars=parseSidecarsFromLogs();
+      const sc=st.sidecars||{}; const scNote=[]; if(sc.faults?.length) scNote.push(sc.faults.length+' Fault CSV'); if(sc.events?.length) scNote.push(sc.events.length+' Event CSV'); if(sc.roa?.length) scNote.push(sc.roa.length+' ROA');
+      let msg=`Đã đọc xong bộ ${baseNameArg}\nNguồn: ${g.cff?'CFF một-file':'CFG/DAT rời'}\nCFG: ${g.cfg.name}\nDAT: ${g.dat.name}\nMẫu: ${st.data.samples.toLocaleString('vi-VN')} · Kiểu: ${st.data.format}`;
+      if(scNote.length) msg+='\nSidecar đã nhận: '+scNote.join(' + ');
+      if(st.data.endian) msg+=` · ${st.data.endian}-endian`; if(st.data.recordBytes) msg+=` · ${st.data.recordBytes} byte/bản ghi`; if(st.data.trailingBytes) msg+=`\nCảnh báo: còn dư ${st.data.trailingBytes} byte ở cuối DAT.`; if(st.data.badRows) msg+='\nCảnh báo: có dòng/byte bất thường cần kiểm tra.'; if(st.cfg.warnings.length) msg+='\n'+st.cfg.warnings.join('\n');
+      if(typeof setStatus==='function') setStatus(msg, st.cfg.warnings.length||st.data.badRows?'warn':'good');
+      if(typeof renderAfterLoadLite==='function') renderAfterLoadLite(); else if(typeof renderAll==='function') renderAll();
+      renderSidecarCard(null);
+    }catch(err){ console.error(err); if(typeof setStatus==='function') setStatus('Lỗi đọc COMTRADE: '+err.message,'bad'); }
+  };
+
+  function parseDateParts(s){
+    s=String(s||'').trim();
+    let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s*,?\s*(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?/);
+    if(m){ const frac=(m[7]||'').padEnd(6,'0').slice(0,6); return {y:+m[3],mo:+m[2],d:+m[1],h:+m[4],mi:+m[5],se:+m[6],us:+frac}; }
+    m=s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?/);
+    if(m){ const frac=(m[7]||'').padEnd(6,'0').slice(0,6); return {y:+m[1],mo:+m[2],d:+m[3],h:+m[4],mi:+m[5],se:+m[6],us:+frac}; }
+    return null;
+  }
+  function partsToSec(p){ if(!p) return NaN; return Date.UTC(p.y,p.mo-1,p.d,p.h,p.mi,p.se,Math.floor((p.us||0)/1000))/1000 + ((p.us||0)%1000)/1e6; }
+  function cfgStartSec(){ const st=S(); return partsToSec(parseDateParts(st?.cfg?.startTime)); }
+  function cfgTriggerSec(){ const st=S(); return partsToSec(parseDateParts(st?.cfg?.triggerTime)); }
+  function dataRange(){ const st=S(), d=st&&st.data; if(!d||!d.samples) return {t0:0,t1:0}; return {t0:d.times[0],t1:d.times[d.samples-1]}; }
+  function alignAbsToRecord(absSec){
+    const st=S(), start=cfgStartSec(), trig=cfgTriggerSec(), range=dataRange(); if(!Number.isFinite(absSec)) return NaN;
+    const candidates=[]; if(Number.isFinite(start)) candidates.push(absSec-start); if(Number.isFinite(trig)) candidates.push(absSec-trig+(trig-start));
+    // Toshiba Fault CSV often stores local +7h while CFG/DAT timestamp may be UTC-like. Try hourly offsets.
+    if(Number.isFinite(start)){ for(const off of [-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9,10,11,12,13,14]) candidates.push(absSec-start-off*3600); }
+    const score=t=>{ const lo=range.t0-2, hi=range.t1+2; if(t>=lo&&t<=hi) return 0; return Math.min(Math.abs(t-lo),Math.abs(t-hi)); };
+    candidates.sort((a,b)=>score(a)-score(b)); return candidates[0];
+  }
+  function eventRelFromSecNs(sec,ns){ const eventSec=Date.UTC(2000,0,1,0,0,0,0)/1000 + Number(sec) + Number(ns||0)/1e9; return alignAbsToRecord(eventSec); }
+  function faultRelFromDate(s){ return alignAbsToRecord(partsToSec(parseDateParts(s))); }
+  function phaseArray(p){ const out=[]; String(p||'').toUpperCase().replace(/[^ABCNG]/g,'').split('').forEach(x=>{ if(['A','B','C'].includes(x)&&!out.includes(x)) out.push(x); }); return out; }
+  function phaseType(phases, ground){ if(!phases.length) return 'Chưa xác định rõ dạng sự cố'; if(phases.length===1) return 'Sự cố 1 pha '+phases[0]+(ground?'-đất':''); if(phases.length===2) return 'Sự cố 2 pha '+phases.join('-')+(ground?' chạm đất':''); return 'Sự cố 3 pha'+(ground?' có chạm đất/thành phần không':''); }
+
+  function parseToshibaFaultCsv(log){
+    const lines=String(log.text||'').split(/\r?\n/); const out={source:log.name, operations:[], locators:[], rawRows:0};
+    for(const line of lines){
+      if(!line.trim()) continue; out.rawRows++;
+      const p=cells(line); const p0=p[0]||'', p1=p[1]||'', p2=p[2]||'';
+      if(/^Fault Phase$/i.test(p1)) out.faultPhase=p2;
+      else if(/^Trip Phase$/i.test(p1)) out.tripPhase=p2;
+      else if(/^Fault Locator$/i.test(p1)){ const m=String(p2).replace(',', '.').match(/FL\s*([\d.]+)\s*km\s*([\d.]+)?\s*%?/i); out.locators.push({text:p2, km:m?Number(m[1]):NaN, pct:m&&m[2]?Number(m[2]):NaN}); }
+      const dateCell=p.find(x=>/\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\s+\d{1,2}:\d{2}:\d{2}/.test(x));
+      if(dateCell){ const idx=p.indexOf(dateCell); const op=(p[idx+1]||p[idx+2]||'').trim(); if(op){ out.operations.push({timeText:dateCell, relTime:faultRelFromDate(dateCell), text:op}); } }
+    }
+    out.mainOperation=out.operations.find(x=>/TRIP|DIF|OC|EF|Z\d|FT\d|FAULT|PKP|OPT/i.test(x.text||'')) || out.operations[0] || null;
+    if(!out.faultPhase && !out.tripPhase && !out.locators.length && !out.operations.length) return null;
+    return out;
+  }
+
+  function parseToshibaEventCsv(log){
+    const lines=String(log.text||'').split(/\r?\n/); let header=null, start=-1;
+    for(let i=0;i<lines.length;i++){ const c=cells(lines[i]); if(c.includes('Date Time Second') && c.includes('Event')){ header=c; start=i+1; break; } }
+    if(!header) return null;
+    const idx=name=>header.findIndex(x=>N(x)===N(name));
+    const isec=idx('Date Time Second'), ins=idx('Date Time Nanosecond'), iev=idx('Event'), ist=idx('Status String'), ival=idx('Value'), ilv=idx('Event Level');
+    const events=[]; const range=dataRange();
+    for(let i=start;i<lines.length;i++){
+      const p=cells(lines[i]); if(p.length<header.length-2) continue;
+      const sec=Number(p[isec]), ns=Number(p[ins]||0), name=p[iev]||'', status=p[ist]||'', val=p[ival]||'';
+      if(!Number.isFinite(sec)||!name) continue;
+      const t=eventRelFromSecNs(sec,ns);
+      const ev={source:log.name, time:t, absSecond:sec, ns, event:name, status, value:val, level:ilv>=0?p[ilv]:''};
+      if(Number.isFinite(t) && t>=range.t0-2 && t<=range.t1+2) events.push(ev);
+    }
+    if(!events.length) return null;
+    events.sort((a,b)=>a.time-b.time || String(a.event).localeCompare(String(b.event)));
+    return {source:log.name, events, count:events.length};
+  }
+
+  function parseRoa(log){
+    const text=String(log.text||''); if(!text.trim()) return null;
+    const lines=text.split(/\r?\n/).filter(x=>x.trim()).slice(0,80);
+    const hits=lines.filter(x=>/FAULT|TRIP|PHASE|LOCAT|DIST|KM|DIF|OC|EF|ZONE|RELAY/i.test(x));
+    if(!/\.roa$/i.test(log.name||'') && !hits.length) return null;
+    return {source:log.name, lines:hits.slice(0,40), preview:lines.slice(0,12)};
+  }
+
+  function parseSidecarsFromLogs(){
+    const st=S(), out={faults:[], events:[], roa:[], others:[]}; if(!st) return out;
+    for(const log of st.logs||[]){
+      const e=(log.ext||ext(log.name));
+      try{
+        if(e==='csv'){
+          const f=parseToshibaFaultCsv(log); if(f){ out.faults.push(f); continue; }
+          const ev=parseToshibaEventCsv(log); if(ev){ out.events.push(ev); continue; }
+        }
+        if(e==='roa'){ const r=parseRoa(log); if(r){ out.roa.push(r); continue; } }
+      }catch(err){ out.others.push({source:log.name,error:err.message}); }
+    }
+    return out;
+  }
+
+  function classifySideEventName(name,status,value){
+    const n=N(name), on=String(status||value||'').match(/ON|1|TRUE/i);
+    if(/TRIP|OPERATE|OPT\.PHASE/.test(n) && on) return /OPT\.PHASE/.test(n)?'Pha tác động rơ le':'Trip/Operate';
+    if(/PKP|PICKUP|START|DETECT/.test(n) && on) return 'Pickup/Start';
+    if(/CB|52A|52B|BREAKER|MC|CLOSE|OPEN/.test(n)) return 'Máy cắt đổi trạng thái';
+    if(/ARC|RECLOSE|AR/.test(n)) return 'Tự đóng lại/ARC';
+    return 'Event CSV';
+  }
+  function mergeTimeline(r, sideEvents){
+    if(!r) return;
+    const list=(r.timeline||[]).slice(); const seen=new Set(list.map(x=>Math.round((x.time||0)*1e6)+'|'+N(x.channel||'')+'|'+N(x.event||'')));
+    for(const ev of sideEvents||[]){
+      const t=Number(ev.time); if(!Number.isFinite(t)) continue;
+      const type=classifySideEventName(ev.event,ev.status,ev.value); const key=Math.round(t*1e6)+'|'+N(ev.event)+'|'+N(type);
+      if(seen.has(key)) continue; seen.add(key);
+      list.push({time:t,event:type,channel:ev.event,detail:(ev.status?ev.status:'')+(ev.value!==''?' · Value='+ev.value:'')+' · '+ev.source});
+    }
+    list.sort((a,b)=>(a.time||0)-(b.time||0)||String(a.channel||'').localeCompare(String(b.channel||'')));
+    r.timeline=list;
+    r.firstPickup=list.find(x=>/Pickup|Start/i.test(x.event||'')) || r.firstPickup;
+    r.firstTrip=list.find(x=>/Trip|Operate/i.test(x.event||'')) || r.firstTrip;
+    const cb=list.find(x=>/Máy cắt/i.test(x.event||'') && (/CB-OPEN/i.test(x.channel||'') || (/CLOSE/i.test(x.channel||'') && /1\s*→\s*0|Off|Value=0/i.test(x.detail||''))));
+    r.firstBreaker=cb || list.find(x=>/Máy cắt/i.test(x.event||'')) || r.firstBreaker;
+  }
+
+  function statForChannel(idx,s,e){
+    const st=S(), data=st&&st.data, cfg=st&&st.cfg; if(!data||!cfg||idx<0) return null;
+    const rate=(typeof estimateSampleRate==='function'?estimateSampleRate():cfg.sampleRates?.[0]?.rate)||1000;
+    const win=Math.max(3,Math.round(rate/Math.max(cfg.frequency||50,1)));
+    const arr=(typeof slidingRms==='function')?slidingRms(data.analog[idx],win):data.analog[idx];
+    const pre0=Math.max(0,s-Math.round(rate*0.2)), pre1=Math.max(pre0,Math.min(data.samples-1,s-1));
+    const post0=Math.min(data.samples-1,e+1), post1=Math.min(data.samples-1,e+Math.round(rate*0.2));
+    let pre=NaN, fault=NaN, post=NaN, maxAbs=0;
+    try{ pre=avgRange(arr,pre0,pre1); post=avgRange(arr,post0,post1); const m=maxRange(arr,s,e); fault=m.value; }catch(err){}
+    for(let i=s;i<=e;i++){ const v=data.analog[idx][i]; if(Number.isFinite(v)) maxAbs=Math.max(maxAbs,Math.abs(v)); }
+    return {pre,fault,post,ratio:fault/Math.max(Math.abs(pre)||0,1e-9),maxAbs};
+  }
+  function phaseOfAnalog(ch){ const t=N((ch?.id||'')+' '+(ch?.phase||'')); if(/(^|[^A-Z])I?A([^A-Z]|$)|PHASE\s*A|\bVA\b|\bUA\b/.test(t)) return 'A'; if(/(^|[^A-Z])I?B([^A-Z]|$)|PHASE\s*B|\bVB\b|\bUB\b/.test(t)) return 'B'; if(/(^|[^A-Z])I?C([^A-Z]|$)|PHASE\s*C|\bVC\b|\bUC\b/.test(t)) return 'C'; if(/\b(N|G|E|3I0|IE|IN|IG|3U0|VE|VN|VG)\b/.test(t)) return 'N'; return ''; }
+  function groupOfAnalog(ch){ const id=N(ch?.id||''); if(/^ID|\bID[ABC]?\b|DIF|DIFF/.test(id)) return 'Id/Differential'; if(/R1/.test(id)) return 'R1/Remote-1'; if(/R2/.test(id)) return 'R2/Remote-2'; if(/(^|[^A-Z])L($|[^A-Z])|-L\b|LOCAL/.test(id)) return 'L/Local'; if(/(^|[^A-Z])I[A-CN]?($|[^A-Z])|^I[A-CN]$/.test(id)) return 'I chính'; if(/(^|[^A-Z])[UV][A-CN]($|[^A-Z])|^V[A-CN]$|^U[A-CN]$/.test(id)) return 'U/V'; return 'Khác'; }
+  function enhanceChannels(r){
+    const st=S(), cfg=st&&st.cfg, data=st&&st.data; if(!r||!cfg||!data) return;
+    const phases=(r.relayFaultPhases&&r.relayFaultPhases.length?r.relayFaultPhases:(r.phases||[]));
+    const s=Math.max(0,r.startIndex||0), e=Math.min(data.samples-1,r.endIndex||s);
+    const rows=[]; const rel=[];
+    cfg.analog.forEach((ch,idx)=>{
+      const unit=N(ch.unit||''), isI=/^A$|AMP|KA/.test(unit), isV=/^V$|KV|VOLT/.test(unit), ph=phaseOfAnalog(ch), group=groupOfAnalog(ch);
+      if(!isI && !isV) return;
+      const stt=statForChannel(idx,s,e); if(!stt) return;
+      let score=(Number.isFinite(stt.ratio)?Math.min(stt.ratio,50):0) + Math.log10(1+(stt.maxAbs||0));
+      if(isI && phases.includes(ph)) score+=15;
+      if(/Id/.test(group)) score+=12; else if(/R1|Local/.test(group)) score+=6; else if(/I chính/.test(group)) score+=3;
+      rows.push({idx, name:ch.id||('A'+(idx+1)), phase:ph, group, kind:isI?'I':'V', pre:stt.pre, fault:stt.fault, post:stt.post, ratio:stt.ratio, maxAbs:stt.maxAbs, score});
+    });
+    rows.sort((a,b)=>b.score-a.score);
+    // Relevant plotting channels: top current candidates for fault phases + existing standard voltage/current roles.
+    const add=i=>{ if(Number.isInteger(i)&&i>=0&&i<cfg.analogCount&&!rel.includes(i)) rel.push(i); };
+    rows.filter(x=>x.kind==='I' && (!phases.length||phases.includes(x.phase)||x.phase==='N')).slice(0,12).forEach(x=>add(x.idx));
+    if(r.roles){ ['A','B','C','N'].forEach(p=>{ add(r.roles.I?.[p]); add(r.roles.V?.[p]); }); }
+    r.v9919ChannelCandidates=rows.slice(0,40);
+    r.v9919RelevantAnalogIndices=rel.slice(0,24);
+    if(rows.length){ r.notes=r.notes||[]; const top=rows.slice(0,6).map(x=>`#${x.idx+1} ${x.name} (${x.group}, pha ${x.phase||'-'}, ${F(x.fault,3)} ${cfg.analog[x.idx].unit||''})`).join('; '); r.notes.push('V9.9.19: đã xếp hạng kênh analog theo biến động RMS/biên độ và tên nhóm L/R1/R2/Id. Kênh nổi bật: '+top+'.'); }
+  }
+
+  function applyRelaySidecars(r){
+    const st=S(); if(!st||!r) return r; const sc=st.sidecars || parseSidecarsFromLogs(); st.sidecars=sc; r.sidecars=sc;
+    const allEvents=[]; (sc.events||[]).forEach(pack=>allEvents.push(...(pack.events||[]))); mergeTimeline(r, allEvents);
+    const fault=(sc.faults||[]).find(f=>f.faultPhase||f.tripPhase||f.locators?.length||f.mainOperation) || null;
+    if(fault){
+      r.vendorFault=fault;
+      r.relayFaultPhase=fault.faultPhase||''; r.relayTripPhase=fault.tripPhase||''; r.relayFaultPhases=phaseArray(fault.faultPhase); r.relayTripPhases=phaseArray(fault.tripPhase);
+      if(r.relayFaultPhases.length){ r.phases=r.relayFaultPhases.slice(); r.ground=/N|G|E|0/.test(String(fault.faultPhase).toUpperCase()); r.type=phaseType(r.phases,r.ground)+' · theo Fault CSV'+(fault.mainOperation?(' · '+fault.mainOperation.text):''); r.confidence='Rất cao - đã đối chiếu Fault CSV của rơ le'; }
+      if(fault.mainOperation && Number.isFinite(fault.mainOperation.relTime)){
+        const exists=(r.timeline||[]).some(x=>Math.abs((x.time||0)-fault.mainOperation.relTime)<1e-4 && /Fault CSV/.test(x.detail||''));
+        if(!exists){ r.timeline.push({time:fault.mainOperation.relTime,event:'Kết luận rơ le/Fault record',channel:fault.mainOperation.text,detail:fault.source}); r.timeline.sort((a,b)=>a.time-b.time); }
+      }
+      if(fault.locators?.length){ r.vendorFaultLocation=fault.locators; }
+      r.notes=r.notes||[];
+      r.notes.unshift('V9.9.19: ưu tiên kết luận rơ le từ Fault CSV khi có: Fault Phase='+(fault.faultPhase||'')+', Trip Phase='+(fault.tripPhase||'')+', phần tử='+(fault.mainOperation?.text||'')+'.');
+    }
+    if(allEvents.length){ r.notes=r.notes||[]; r.notes.push('V9.9.19: đã ghép '+allEvents.length+' sự kiện từ Event CSV vào timeline theo mốc thời gian COMTRADE.'); }
+    enhanceChannels(r);
+    analyzeBreakerConclusion(r);
+    return r;
+  }
+
+  function analyzeBreakerConclusion(r){
+    const st=S(), data=st&&st.data; if(!r||!data) return;
+    const trip=r.firstTrip, br=r.firstBreaker; const notes=r.notes||(r.notes=[]);
+    if(trip&&br&&Number.isFinite(trip.time)&&Number.isFinite(br.time)){
+      const ms=(br.time-trip.time)*1000;
+      r.breakerConclusion={ok:ms>=0 && ms<300, tripTime:trip.time, breakerTime:br.time, tripToBreakerMs:ms, text:'Máy cắt đổi trạng thái sau Trip khoảng '+F(ms,3)+' ms.'};
+      notes.push('Kết luận máy cắt V9.9.19: '+r.breakerConclusion.text+' Cần đối chiếu thêm dòng sau cắt để khẳng định loại trừ sự cố.');
+    }else if(trip){
+      r.breakerConclusion={ok:null, tripTime:trip.time, text:'Có Trip nhưng chưa tìm thấy tín hiệu máy cắt/52a/52b rõ ràng trong vùng bản ghi.'};
+      notes.push('Kết luận máy cắt V9.9.19: có Trip nhưng chưa thấy tín hiệu trạng thái máy cắt phù hợp.');
+    }
+  }
+
+  if(typeof analyzeFaultCore==='function'){
+    const prevAnalyze=analyzeFaultCore;
+    analyzeFaultCore=function(){ const r=prevAnalyze.apply(this,arguments); return applyRelaySidecars(r); };
+  }
+  if(typeof faultRelevantAnalogIndices==='function'){
+    const prevRel=faultRelevantAnalogIndices;
+    faultRelevantAnalogIndices=function(r){ if(r&&Array.isArray(r.v9919RelevantAnalogIndices)&&r.v9919RelevantAnalogIndices.length) return r.v9919RelevantAnalogIndices.slice(0,32); return prevRel(r); };
+  }
+
+  function sidecarRows(r){
+    const st=S(), sc=(r&&r.sidecars)||st?.sidecars||{}; const rows=[];
+    (sc.faults||[]).forEach(f=>{
+      rows.push(['Fault CSV',E(f.source),'Fault Phase',E(f.faultPhase||'')]);
+      rows.push(['Fault CSV',E(f.source),'Trip Phase',E(f.tripPhase||'')]);
+      if(f.mainOperation) rows.push(['Fault CSV',E(f.source),'Phần tử/thời điểm',E(f.mainOperation.text)+' · t='+F(f.mainOperation.relTime,9)+' s']);
+      (f.locators||[]).forEach((x,i)=>rows.push(['Fault CSV',E(f.source),'Fault Locator '+(i+1),E(x.text)+(Number.isFinite(x.km)?' · '+F(x.km,3)+' km':'')+(Number.isFinite(x.pct)?' · '+F(x.pct,2)+'%':'')]));
+    });
+    (sc.events||[]).forEach(ev=>rows.push(['Event CSV',E(ev.source),'Sự kiện trong bản ghi',ev.count+' event đã căn thời gian vào COMTRADE']));
+    (sc.roa||[]).forEach(roa=>rows.push(['ROA',E(roa.source),'Dòng liên quan',E((roa.lines||roa.preview||[]).slice(0,8).join(' | '))]));
+    if(r&&r.breakerConclusion) rows.push(['Kiểm tra máy cắt','Timeline','Kết luận',E(r.breakerConclusion.text||'')]);
+    return rows;
+  }
+  function channelRows(r){
+    const cfg=S()?.cfg; return (r?.v9919ChannelCandidates||[]).slice(0,16).map(x=>[x.idx+1,E(x.name),E(x.group),E(x.phase||''),E(x.kind),F(x.pre,4),F(x.fault,4),F(x.post,4),F(x.ratio,3)+'×',E(cfg?.analog?.[x.idx]?.unit||'')]);
+  }
+  function renderSidecarCard(r){
+    const anchor=byId('faultSummary'); if(!anchor) return;
+    let card=byId('v9919SidecarCard');
+    if(!card){ card=document.createElement('div'); card.className='card'; card.id='v9919SidecarCard'; card.innerHTML='<h2>Đối chiếu bản ghi rơ le / CSV / ROA V9.9.19</h2><div id="v9919SidecarBox" class="table-wrap"></div><div id="v9919ChannelBox" class="table-wrap" style="margin-top:12px"></div><div class="tiny" id="v9919SidecarNote" style="margin-top:8px"></div>'; const parent=anchor.closest('.card')||anchor; parent.insertAdjacentElement('afterend',card); }
+    const rows=sidecarRows(r); const box=byId('v9919SidecarBox');
+    if(box) box.innerHTML=rows.length?safeTable(['Nguồn','File','Mục','Giá trị'],rows):'<div class="tiny" style="padding:12px">Chưa có Fault/Event CSV hoặc ROA ghép cùng bộ COMTRADE. Nếu file nằm trong ZIP khác tên, V9.9.19 sẽ tự ghép theo nguồn ZIP/thư mục.</div>';
+    const cr=channelRows(r); const cb=byId('v9919ChannelBox');
+    if(cb) cb.innerHTML=cr.length?safeTable(['#','Kênh','Nhóm','Pha','Loại','Trước RMS','Trong RMS','Sau RMS','Tỷ lệ','Đơn vị'],cr):'<div class="tiny" style="padding:12px">Bảng xếp hạng kênh sẽ hiện sau khi bấm “Phân tích sự cố”.</div>';
+    const note=byId('v9919SidecarNote'); if(note) note.textContent='V9.9.19 lọc raw 99999/ngoài min-max, đọc UTF-16LE/BE, ghép CSV/ROA trong cùng ZIP, tách Fault Phase và Trip Phase, và xếp hạng kênh L/R1/R2/Id để tránh kết luận nhầm khi Ia/Ib/Ic chính không phải nhóm dòng bảo vệ.';
+  }
+
+  if(typeof renderFaultAnalysis==='function'){
+    const prevRender=renderFaultAnalysis;
+    renderFaultAnalysis=function(){ const ret=prevRender.apply(this,arguments); try{ renderSidecarCard(S()?.faultAnalysis||null); }catch(e){ console.warn('[V9.9.19] render sidecar failed',e); } return ret; };
+  }
+  if(typeof faultSummaryRows==='function'){
+    const prevRows=faultSummaryRows;
+    faultSummaryRows=function(r){
+      const rows=prevRows.apply(this,arguments)||[];
+      if(r&&r.vendorFault){
+        rows.splice(5,0,['Fault Phase theo rơ le',r.relayFaultPhase||''],['Trip Phase theo rơ le',r.relayTripPhase||''],['Phần tử rơ le',r.vendorFault.mainOperation?.text||''],['Fault Locator rơ le',(r.vendorFault.locators||[]).map(x=>x.text).join(' | ')]);
+      }
+      if(r&&r.breakerConclusion) rows.push(['Kết luận máy cắt V9.9.19',r.breakerConclusion.text||'']);
+      return rows;
+    };
+  }
+
+  // Rewire inputs in case old hotfix bound before this patch.
+  function rewire(){
+    const fi=byId('fileInput'); if(fi) fi.onchange=e=>handleFiles(e.target.files);
+    const fo=byId('folderInput'); if(fo) fo.onchange=e=>handleFiles(e.target.files);
+    const ds=byId('logSelect'); if(ds) ds.onchange=()=>{ try{ showLog(); }catch(e){} };
+    const ls=byId('logSearch'); if(ls) ls.oninput=()=>{ try{ showLog(); }catch(e){} };
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',rewire); else rewire();
   window.addEventListener('load',rewire);
