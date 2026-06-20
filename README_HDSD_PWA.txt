@@ -1,6 +1,12 @@
-COMTRADE Offline Reader Pro V9.9.31 - Stable Open Core Guard
+COMTRADE Offline Reader Pro V9.9.39-RC5 - Safe Vendor Parser Pack
 
-COMTRADE Offline Reader Pro V9.9.31 - Record Decoder Plus
+- Tăng parser nhận diện hãng/rơ le theo cơ chế chỉ đọc, chạy thủ công.
+- Không bọc loadGroup/renderAll/makeFaultReportHtml để tránh treo/lộ template.
+- Có nút xuất parser JSON và gắn vào UniversalFaultRecord.
+
+COMTRADE Offline Reader Pro V9.9.33 - Relay Library Integration
+
+COMTRADE Offline Reader Pro V9.9.33 - Record Decoder Plus + Relay Library
 
 COMTRADE Offline Reader Pro V9.9.27
 Bản sửa: khôi phục bảng Giá trị các phần tử sự cố theo đúng dạng sự cố trong giao diện và báo cáo HTML.
@@ -69,3 +75,9 @@ V9.9.31: Core Consolidation & UniversalFaultRecord - ổn định kiến trúc, 
 
 
 V9.9.31: ổn định lõi dữ liệu trung gian, core pipeline guard, overlay UniversalFaultRecord 2.0 và định vị hai đầu có điều kiện.
+
+
+V9.9.33: Relay Library Integration - mở rộng nhận diện hãng/rơ le và loại bản ghi: SEL/SER, Siemens/DIGSI/SIGRA, ABB/Hitachi/PCM600, Schneider/MiCOM/Easergy, GE Multilin/EnerVista, NR/NARI, ZIV, VAMP/Arcteq, Fanox, Basler, Beckwith, NOJA; hỗ trợ thêm sidecar EVT/SER/SOE/XML/RIO/CID/SCD/ICD/RPT trong ZIP/RAR/folder.
+
+
+V9.9.33: Bổ sung module chuyên sâu 81 tần số/ROCOF, 87T/REF so lệch máy biến áp và 87B so lệch thanh cái; gắn kết quả vào dữ liệu trung gian và báo cáo.

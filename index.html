@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.9.38-RC4 PWA - Stable Core Guard</title>
+<title>COMTRADE Offline Reader Pro V9.9.39-RC5 Parser hãng an toàn</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -154,7 +154,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.9.38-RC4</h1>
+      <h1>COMTRADE Offline Reader Pro V9.9.31</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -5813,15 +5813,187 @@ init();`+ '<\/script></body></html>';
 })();
 
 </script>
+<script id="v9932-relay-library-integration">
+(function(){
+  'use strict';
+  // V9.9.39: vô hiệu hóa module V9.9.32/V9.9.33 cũ vì có wrapper nặng và lỗi cú pháp ở một số bản RC.
+  // Chức năng nhận diện hãng được thay bằng v9939-safe-vendor-parser-pack ở chế độ chỉ đọc/an toàn.
+  window.v9932RebuildProfile = window.v9932RebuildProfile || function(){ return window.v9939BuildSafeVendorProfile ? window.v9939BuildSafeVendorProfile() : null; };
+})();
+</script>
+
+<script id="v9933-advanced-protection-modules">
+(function(){
+  'use strict';
+  const VERSION='V9.9.33';
+  const PATCH='V9.9.33 Advanced Protection Modules - Frequency/87T/87B';
+  const PH=['A','B','C'];
+  window.COMTRADE_V9933_VERSION=PATCH;
+
+  function S(){ try{return (typeof state!=='undefined')?state:(window.state||null);}catch(e){return window.state||null;} }
+  function id(x){return document.getElementById(x);} 
+  function raw(x){return String(x==null?'':x);} 
+  function esc(x){return raw(x).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c;});}
+  function strip(x){return raw(x).replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();}
+  function norm(x){return strip(x).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();}
+  function fmt(v,d){v=Number(v); if(!Number.isFinite(v))return ''; try{if(typeof window.fmt==='function')return window.fmt(v,d==null?4:d);}catch(e){} return v.toLocaleString('vi-VN',{maximumFractionDigits:d==null?4:d});}
+  function table(head,rows,empty){head=head||[]; rows=rows||[]; if(!rows.length&&empty) return '<div class="note">'+esc(empty)+'</div>'; return '<table><thead><tr>'+head.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
+  function pill(t){return '<span class="pill">'+esc(t)+'</span>';}
+  function card(title,html){return '<div class="card v9933-card"><h2>'+esc(title)+'</h2>'+html+'</div>';}
+  function addNote(msg){const st=S(); if(st){st.decoderNotes=st.decoderNotes||[]; if(!st.decoderNotes.includes(msg))st.decoderNotes.push(msg);} }
+  function cfg(){const st=S(); return st&&st.cfg;} function data(){const st=S(); return st&&st.data;}
+  function analog(){return (cfg()&&cfg().analog)||[];} function digital(){return (cfg()&&cfg().digital)||[];}
+  function nSamples(){const d=data(); return (d&&(d.samples||(d.times&&d.times.length)))||0;}
+  function rate(){const st=S(), c=cfg(), d=data(); try{if(typeof window.estimateSampleRate==='function')return window.estimateSampleRate();}catch(e){} if(c&&c.sampleRates&&c.sampleRates[0]&&Number(c.sampleRates[0].rate)>0)return Number(c.sampleRates[0].rate); if(d&&d.times&&d.times.length>2){const dt=(d.times[d.times.length-1]-d.times[0])/(d.times.length-1); if(dt>0)return 1/dt;} return 1000;}
+  function fnom(){const f=cfg()&&Number(cfg().frequency); return Number.isFinite(f)&&f>0?f:50;}
+  function times(){const d=data(); return (d&&d.times)||[];}
+  function val(idx,i){const d=data(); if(!d||!d.analog||!d.analog[idx])return NaN; const v=Number(d.analog[idx][i]); if(!Number.isFinite(v))return NaN; try{if(typeof window.dispVal==='function')return window.dispVal(idx,v);}catch(e){} return v;}
+  function unit(idx){const ch=analog()[idx]||{}; try{if(typeof window.dispUnit==='function')return window.dispUnit(idx);}catch(e){} return ch.unit||'';}
+  function mean(arr){let s=0,c=0; (arr||[]).forEach(v=>{v=Number(v); if(Number.isFinite(v)){s+=v;c++;}}); return c?s/c:NaN;}
+  function rmsIdx(idx,a,b){let s=0,c=0; a=Math.max(0,a|0); b=Math.min(nSamples()-1,b|0); for(let i=a;i<=b;i++){const v=val(idx,i); if(Number.isFinite(v)){s+=v*v;c++;}} return c?Math.sqrt(s/c):NaN;}
+  function maxAbsIdx(idx,a,b){let m=NaN; a=Math.max(0,a|0); b=Math.min(nSamples()-1,b|0); for(let i=a;i<=b;i++){const v=Math.abs(val(idx,i)); if(Number.isFinite(v)&&(!Number.isFinite(m)||v>m))m=v;} return m;}
+  function phaseOf(ch){const s=norm((ch&&ch.id)+' '+(ch&&ch.phase)); if(/(?:^|[^A-Z0-9])(IA|VA|UA|A)(?:[^A-Z0-9]|$)|PHASE A|PHA A/.test(s))return 'A'; if(/(?:^|[^A-Z0-9])(IB|VB|UB|B)(?:[^A-Z0-9]|$)|PHASE B|PHA B/.test(s))return 'B'; if(/(?:^|[^A-Z0-9])(IC|VC|UC|C)(?:[^A-Z0-9]|$)|PHASE C|PHA C/.test(s))return 'C'; if(/(?:^|[^A-Z0-9])(IN|IG|IE|I0|3I0|UN|VN|U0|V0|N|G|E)(?:[^A-Z0-9]|$)/.test(s))return 'N'; return '';}
+  function kindOf(ch){const s=norm((ch&&ch.id)+' '+(ch&&ch.unit)); if(/(^|\s)(HZ|FREQ|FREQUENCY)(\s|$)|\bDF\/DT\b|ROCOF|\bFR\b|TAN SO/.test(s))return 'F'; if(/(^|\s)(KA|A|AMP|AMPERE)(\s|$)|\bI[A-Z0-9-]*\b|DONG/.test(s))return 'I'; if(/(^|\s)(KV|V|VOLT)(\s|$)|\b[UV][A-Z0-9-]*\b|DIEN AP|\bAP\b/.test(s))return 'V'; return '';}
+  function groupTag(ch){const s=norm(ch&&ch.id); if(/87B|BUSBAR|BUS BAR|BUSDIFF|THANH CAI|BAY|FEEDER|NGAN|LO|LINE\d|L\d|FDR/.test(s))return 'BAY'; if(/87T|TRANS|TRANSFORMER|MBA|TRAFO|XFMR|WIND|WINDING|HV|LV|MV|W1|W2|W3|REF/.test(s))return 'TR'; if(/87L|DIFL|LINE DIFF|REMOTE|LOCAL|R1|R2|ID[A-C]?|DIFF/.test(s))return '87L'; return '';}
+  function scanText(){const st=S(); const chunks=[]; try{(st&&st.groups&&st.activeBase&&st.groups.get(st.activeBase)&&st.groups.get(st.activeBase).logs||[]).forEach(f=>{chunks.push(f.name||''); if(typeof f.text==='string')chunks.push(f.text.slice(0,30000));});}catch(e){} try{if(st&&st.decoderNotes)chunks.push(st.decoderNotes.join('\n'));}catch(e){} try{if(st&&st.relayRecordProfileV9932)chunks.push(JSON.stringify(st.relayRecordProfileV9932));}catch(e){} analog().forEach(ch=>chunks.push(ch.id||'')); digital().forEach(ch=>chunks.push(ch.id||'')); return chunks.join('\n');}
+  function has(re){return re.test(norm(scanText()));}
+  function faultRange(){const st=S(); const r=(st&&st.faultAnalysis)||{}; const ns=nSamples(); const rt=rate(); let s=Number.isFinite(r.startIndex)?r.startIndex:Math.floor(ns*0.45); let e=Number.isFinite(r.endIndex)?r.endIndex:Math.min(ns-1,s+Math.round(0.08*rt)); s=Math.max(0,Math.min(ns-1,Math.round(s))); e=Math.max(s,Math.min(ns-1,Math.round(e))); const pre0=Math.max(0,s-Math.round(0.2*rt)), pre1=Math.max(0,s-1), post0=Math.min(ns-1,e+1), post1=Math.min(ns-1,e+Math.round(0.2*rt)); return {s,e,pre0,pre1,post0,post1,center:Math.round((s+e)/2), win:Math.max(12,Math.round(rate()/fnom()))};}
+  function c(re,im){return {re:Number(re)||0,im:Number(im)||0};} function cadd(a,b){a=a||c(0,0);b=b||c(0,0);return c(a.re+b.re,a.im+b.im);} function csub(a,b){a=a||c(0,0);b=b||c(0,0);return c(a.re-b.re,a.im-b.im);} function cabs(a){a=a||c(0,0);return Math.hypot(a.re,a.im);} function cang(a){return Math.atan2((a||{}).im||0,(a||{}).re||0)*180/Math.PI;}
+  function phasorIdx(idx,center,win){const t=times(), fr=fnom(); if(!Number.isInteger(idx)||!t.length)return null; let s=Math.max(0,Math.round(center)-Math.floor(win/2)), e=Math.min(nSamples()-1,s+win-1); if(e-s+1<8)return null; const t0=t[s]||0; let re=0,im=0,cnt=0; for(let i=s;i<=e;i++){const v=val(idx,i); if(!Number.isFinite(v))continue; const th=2*Math.PI*fr*((t[i]||0)-t0); re+=v*Math.cos(th); im-=v*Math.sin(th); cnt++;} if(cnt<8)return null; return c(re*Math.SQRT2/cnt,im*Math.SQRT2/cnt);}
+  function phasorMap(map,center,win){const out={}; Object.keys(map||{}).forEach(k=>{const x=phasorIdx(map[k],center,win); if(x)out[k]=x;}); return out;}
+  function pickChannels(filter){const arr=[]; analog().forEach((ch,idx)=>{try{if(filter(ch,idx))arr.push({idx,ch,name:ch.id||('#'+(idx+1)),phase:phaseOf(ch),kind:kindOf(ch),unit:unit(idx),tag:groupTag(ch)});}catch(e){}}); return arr;}
+  function phaseMap(chs){const m={}; (chs||[]).forEach(x=>{if(PH.includes(x.phase)&&!Number.isInteger(m[x.phase]))m[x.phase]=x.idx;}); return m;}
+  function roleManual(role){const st=S(); try{const r=st&&st.v9929ManualRoles&&st.v9929ManualRoles[role]; if(Number.isInteger(r))return r;}catch(e){} return null;}
+  function manualMap(prefix){const m={}; PH.forEach(p=>{const v=roleManual(prefix+p); if(Number.isInteger(v))m[p]=v;}); return m;}
+
+  function buildFrequencyModule(){
+    const fr={version:VERSION,kind:'frequency',available:false,confidence:'Thấp',source:'',rows:[],events:[],warnings:[],seriesStats:null};
+    const fCh=pickChannels((ch)=>kindOf(ch)==='F' || /FREQ|FREQUENCY|ROCOF|DF\/DT|HZ|TAN SO/i.test((ch.id||'')+' '+(ch.unit||'')));
+    const r=faultRange(), ns=nSamples(), rt=rate();
+    let freqSeries=[]; let src='';
+    const direct=fCh.find(x=>/FREQ|FREQUENCY|HZ|TAN SO/i.test((x.name||'')+' '+x.unit) && !/ROCOF|DF\/DT/i.test(x.name));
+    if(direct){ for(let i=0;i<ns;i++){const v=val(direct.idx,i); if(Number.isFinite(v)&&Math.abs(v)>1&&Math.abs(v)<1000)freqSeries.push({i,v});} src='Kênh tần số '+direct.name; }
+    if(!freqSeries.length){
+      const vchs=pickChannels(ch=>kindOf(ch)==='V' && PH.includes(phaseOf(ch)));
+      const map=phaseMap(vchs); const idx=map.A||map.B||map.C;
+      if(Number.isInteger(idx)&&ns>Math.round(rt/fnom())*3){
+        const step=Math.max(1,Math.round(rt/fnom()/4)), win=Math.max(12,Math.round(rt/fnom())); let prev=null;
+        for(let center=win;center<ns-win;center+=step){const ph=phasorIdx(idx,center,win); if(!ph)continue; const t=times()[center]||center/rt; const ang=Math.atan2(ph.im,ph.re); if(prev){let d=ang-prev.ang; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI; const dt=t-prev.t; if(dt>0){const f=Math.abs(d)/(2*Math.PI*dt); if(Number.isFinite(f)&&f>10&&f<80)freqSeries.push({i:center,v:f});}} prev={ang,t};}
+        src='Ước lượng từ góc pha điện áp '+(analog()[idx]&&analog()[idx].id||('#'+(idx+1)));
+      }
+    }
+    if(!freqSeries.length){fr.warnings.push('Không tìm thấy kênh tần số và không đủ điện áp ổn định để ước lượng tần số.'); return fr;}
+    const vals=freqSeries.map(x=>x.v); const mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals), av=mean(vals);
+    const roc=[]; for(let k=1;k<freqSeries.length;k++){const t0=(times()[freqSeries[k-1].i]||freqSeries[k-1].i/rt), t1=(times()[freqSeries[k].i]||freqSeries[k].i/rt); const dt=t1-t0; if(dt>0){const x=(freqSeries[k].v-freqSeries[k-1].v)/dt; if(Number.isFinite(x)&&Math.abs(x)<1000)roc.push(x);}}
+    const maxRoc=roc.length?roc.reduce((a,b)=>Math.abs(a)>Math.abs(b)?a:b,0):NaN;
+    const opt=window.v9933FrequencyOptions||{}; const u=Number(opt.under||49), o=Number(opt.over||51), ro=Number(opt.rocof||1);
+    const under=freqSeries.filter(x=>x.v<u).length, over=freqSeries.filter(x=>x.v>o).length, rocofHits=roc.filter(x=>Math.abs(x)>ro).length;
+    fr.available=true; fr.confidence=direct?'Cao':'Trung bình'; fr.source=src; fr.seriesStats={min:mn,max:mx,avg:av,maxRocof:maxRoc,thresholds:{under:u,over:o,rocof:ro},points:freqSeries.length};
+    fr.rows.push(['Nguồn tần số',src,'','']);
+    fr.rows.push(['f min',fmt(mn,4),'Hz','giá trị nhỏ nhất trong bản ghi/vùng ước lượng']);
+    fr.rows.push(['f max',fmt(mx,4),'Hz','giá trị lớn nhất']);
+    fr.rows.push(['f trung bình',fmt(av,4),'Hz','trung bình các điểm hợp lệ']);
+    fr.rows.push(['ROCOF lớn nhất',fmt(maxRoc,4),'Hz/s','dấu + tăng tần số, dấu - giảm tần số']);
+    fr.rows.push(['Điểm dưới ngưỡng '+fmt(u,3)+' Hz',String(under),'mẫu/điểm','phục vụ 81U']);
+    fr.rows.push(['Điểm trên ngưỡng '+fmt(o,3)+' Hz',String(over),'mẫu/điểm','phục vụ 81O']);
+    fr.rows.push(['Điểm |df/dt| > '+fmt(ro,3)+' Hz/s',String(rocofHits),'điểm','phục vụ 81R/ROCOF']);
+    if(under)fr.events.push({type:'81U',detail:'Tần số dưới ngưỡng '+fmt(u,3)+' Hz tại '+under+' điểm'});
+    if(over)fr.events.push({type:'81O',detail:'Tần số trên ngưỡng '+fmt(o,3)+' Hz tại '+over+' điểm'});
+    if(rocofHits)fr.events.push({type:'81R',detail:'ROCOF vượt ngưỡng tại '+rocofHits+' điểm'});
+    if(has(/\b81U\b|UNDERFREQ|UNDER FREQUENCY|TAN SO THAP/))fr.events.push({type:'81U relay',detail:'Có từ khóa 81U/under-frequency trong file phụ trợ hoặc kênh digital'});
+    if(has(/\b81O\b|OVERFREQ|OVER FREQUENCY|TAN SO CAO/))fr.events.push({type:'81O relay',detail:'Có từ khóa 81O/over-frequency trong file phụ trợ hoặc kênh digital'});
+    if(has(/\b81R\b|ROCOF|DF\/DT/))fr.events.push({type:'81R relay',detail:'Có từ khóa ROCOF/df/dt trong file phụ trợ hoặc kênh digital'});
+    return fr;
+  }
+
+  function groupTransformerChannels(){
+    const out={HV:[],MV:[],LV:[],W1:[],W2:[],W3:[],REF:[],BIAS:[],DIFF:[],HARM:[]};
+    pickChannels(ch=>kindOf(ch)==='I').forEach(x=>{const s=norm(x.name); let k=''; if(/REF|64REF|REST EARTH|RESTRICT/.test(s))k='REF'; else if(/BIAS|RESTRAINT|RESTR|IBIAS|IREST/.test(s))k='BIAS'; else if(/DIFF|DIF|IDIF|87T/.test(s))k='DIFF'; else if(/HARM|2ND|SECOND|5TH|FIFTH|H2|H5/.test(s))k='HARM'; else if(/HV|HIGH|CAO AP|H\.V|W1|SIDE1|SIDE 1|PRIMARY/.test(s))k='HV'; else if(/MV|MED|TRUNG AP|W2|SIDE2|SIDE 2/.test(s))k='MV'; else if(/LV|LOW|HA AP|L\.V|W3|SIDE3|SIDE 3|SECONDARY/.test(s))k='LV'; else if(/WIND1|WINDING1|CUON1|Y1/.test(s))k='W1'; else if(/WIND2|WINDING2|CUON2|Y2/.test(s))k='W2'; else if(/WIND3|WINDING3|CUON3|Y3/.test(s))k='W3'; if(k)out[k].push(x);});
+    return out;
+  }
+  function mapForList(list){return phaseMap(list||[]);} 
+  function phasorSum3(map,center,win){let z=c(0,0),cnt=0; PH.forEach(p=>{if(Number.isInteger(map[p])){const ph=phasorIdx(map[p],center,win); if(ph){z=cadd(z,ph);cnt++;}}}); return {z,cnt};}
+  function module87T(){
+    const m={version:VERSION,kind:'87T/REF',available:false,confidence:'Thấp',rows:[],phaseRows:[],warnings:[],evidence:[],maps:{}};
+    const groups=groupTransformerChannels(); const r=faultRange(); const keys=['HV','MV','LV','W1','W2','W3'];
+    keys.forEach(k=>{m.maps[k]=mapForList(groups[k]);}); m.maps.REF=mapForList(groups.REF); m.maps.DIFF=mapForList(groups.DIFF); m.maps.BIAS=mapForList(groups.BIAS);
+    const hasRelay=has(/\b87T\b|TRANSFORMER DIFFERENTIAL|DIFF.*TRANS|SO LECH.*MBA|SO LECH.*MAY BIEN AP|REF|64REF/);
+    const validSides=keys.filter(k=>Object.keys(m.maps[k]||{}).length>=2 || groups[k].length>=2);
+    if(!hasRelay&&!validSides.length&&!groups.DIFF.length&&!groups.REF.length){m.warnings.push('Chưa nhận diện được nhóm kênh/digital 87T hoặc REF.'); return m;}
+    m.available=true; m.confidence=(hasRelay&&validSides.length)?'Cao':(hasRelay||validSides.length?'Trung bình':'Thấp'); if(hasRelay)m.evidence.push('Có từ khóa 87T/REF/Transformer Differential trong bản ghi.'); if(validSides.length)m.evidence.push('Có nhóm dòng theo cuộn/phía MBA: '+validSides.join(', '));
+    keys.forEach(k=>{const list=groups[k]; if(!list.length)return; PH.forEach(p=>{const x=list.find(y=>y.phase===p); if(!x)return; const pre=rmsIdx(x.idx,r.pre0,r.pre1), flt=rmsIdx(x.idx,r.s,r.e), pk=maxAbsIdx(x.idx,r.s,r.e); m.phaseRows.push([k,p,x.name,fmt(pre,6),fmt(flt,6),fmt(pk,6),x.unit||unit(x.idx),'dòng cuộn/phía MBA']);});});
+    groups.DIFF.forEach(x=>m.phaseRows.push(['DIFF/Id',x.phase||'',x.name,fmt(rmsIdx(x.idx,r.pre0,r.pre1),6),fmt(rmsIdx(x.idx,r.s,r.e),6),fmt(maxAbsIdx(x.idx,r.s,r.e),6),x.unit||unit(x.idx),'kênh so lệch nếu rơ le xuất sẵn']));
+    groups.BIAS.forEach(x=>m.phaseRows.push(['BIAS/Irest',x.phase||'',x.name,fmt(rmsIdx(x.idx,r.pre0,r.pre1),6),fmt(rmsIdx(x.idx,r.s,r.e),6),fmt(maxAbsIdx(x.idx,r.s,r.e),6),x.unit||unit(x.idx),'dòng hãm/bias nếu có']));
+    groups.REF.forEach(x=>m.phaseRows.push(['REF/64REF',x.phase||'',x.name,fmt(rmsIdx(x.idx,r.pre0,r.pre1),6),fmt(rmsIdx(x.idx,r.s,r.e),6),fmt(maxAbsIdx(x.idx,r.s,r.e),6),x.unit||unit(x.idx),'chạm đất hạn chế MBA']));
+    const center=r.center, win=r.win; const sideSums=[]; keys.forEach(k=>{const mp=m.maps[k]||{}; const sum=phasorSum3(mp,center,win); if(sum.cnt>=2)sideSums.push({k,z:sum.z,cnt:sum.cnt});});
+    if(sideSums.length>=2){let id=c(0,0), bias=0; sideSums.forEach(s=>{id=cadd(id,s.z); bias+=cabs(s.z);}); bias=bias/sideSums.length; const ratio=bias>1e-12?cabs(id)/bias:NaN; m.rows.push(['Ước lượng Id tổng các phía',fmt(cabs(id),6),'','chưa bù tổ đấu dây/tỷ số CT, chỉ dùng cảnh báo sơ bộ']); m.rows.push(['Ước lượng Ibias',fmt(bias,6),'','trung bình biên độ dòng tổng từng phía']); m.rows.push(['Id/Ibias ước lượng',Number.isFinite(ratio)?fmt(ratio*100,2)+' %':'','','nếu cao và có 87T/REF thì cần kiểm tra chi tiết mapping/vector group']); if(ratio>0.3)m.warnings.push('Id/Ibias ước lượng cao. Cần xác nhận CT ratio, chiều dòng và vector group trước khi kết luận 87T.');}
+    else m.warnings.push('Chưa đủ ít nhất hai phía/cụm dòng để ước lượng Id/Ibias 87T từ waveform.');
+    if(groups.HARM.length){groups.HARM.forEach(x=>m.rows.push(['Kênh hài/inrush',x.name,x.unit||unit(x.idx),'cần dùng để phân biệt inrush/quá kích từ nếu có giá trị phần trăm H2/H5']));}
+    else m.warnings.push('Không thấy kênh hài bậc 2/5; chưa thể phân biệt inrush/quá kích từ bằng hài.');
+    if(!m.rows.length)m.rows.push(['Trạng thái','Đã nhận diện 87T/REF nhưng chưa đủ dữ liệu tính Id/Ibias','','']);
+    return m;
+  }
+
+  function bayName(name){let s=raw(name); let m=s.match(/(?:BAY|FEEDER|FDR|LINE|LO|NGAN|NGĂN|LỘ|L)([-_ ]?\d{2,4}[A-Z]?)/i); if(m)return m[0].replace(/\s+/g,' '); m=s.match(/\b(\d{3,4}[A-Z]?)\b/); if(m)return 'Bay '+m[1]; m=s.match(/(?:^|[-_ ])([A-Z]{1,3}\d{1,3})(?:[-_ ]|$)/); if(m)return 'Bay '+m[1]; return 'Bay/nhóm chưa rõ';}
+  function groupBusChannels(){const bays={}; pickChannels(ch=>kindOf(ch)==='I').forEach(x=>{const s=norm(x.name); if(!(/87B|BUSBAR|BUS BAR|BAY|FEEDER|FDR|LINE|LO|NGAN|NGĂN|LỘ|\b\d{3,4}\b/.test(s)))return; const b=bayName(x.name); bays[b]=bays[b]||[]; bays[b].push(x);}); return bays;}
+  function module87B(){
+    const m={version:VERSION,kind:'87B',available:false,confidence:'Thấp',rows:[],bayRows:[],warnings:[],evidence:[],bayCount:0};
+    const bays=groupBusChannels(); const bayKeys=Object.keys(bays); const hasRelay=has(/\b87B\b|BUS ?BAR|BUSDIFF|BUS DIFF|THANH CAI|CHECK ZONE|ISOLATOR|DAO CACH LY|DISCONNECTOR/);
+    if(!hasRelay&&bayKeys.length<2){m.warnings.push('Chưa đủ dấu hiệu 87B/thanh cái hoặc chưa tách được nhiều bay dòng điện.'); return m;}
+    m.available=true; m.bayCount=bayKeys.length; m.confidence=(hasRelay&&bayKeys.length>=2)?'Cao':(hasRelay?'Trung bình':'Thấp'); if(hasRelay)m.evidence.push('Có từ khóa 87B/Busbar/Check zone/Isolator trong bản ghi.'); if(bayKeys.length)m.evidence.push('Tách được '+bayKeys.length+' bay/nhóm dòng.');
+    const r=faultRange(); bayKeys.forEach(b=>{const mp=phaseMap(bays[b]); PH.forEach(p=>{const idx=mp[p]; if(!Number.isInteger(idx))return; const ch=analog()[idx]||{}; m.bayRows.push([b,p,ch.id||('#'+(idx+1)),fmt(rmsIdx(idx,r.pre0,r.pre1),6),fmt(rmsIdx(idx,r.s,r.e),6),fmt(maxAbsIdx(idx,r.s,r.e),6),unit(idx),'dòng bay/ngăn lộ']);});});
+    const center=r.center, win=r.win; PH.forEach(p=>{let diff=c(0,0), bias=0, cnt=0; bayKeys.forEach(b=>{const idx=phaseMap(bays[b])[p]; if(Number.isInteger(idx)){const ph=phasorIdx(idx,center,win); if(ph){diff=cadd(diff,ph); bias+=cabs(ph); cnt++;}}}); if(cnt>=2){const ratio=bias>1e-12?cabs(diff)/bias:NaN; m.rows.push(['Pha '+p,fmt(cabs(diff),6),fmt(bias,6),Number.isFinite(ratio)?fmt(ratio*100,2)+' %':'',String(cnt),'Id/Ibias tổng các bay - chưa xét trạng thái dao cách ly']); if(ratio>0.25)m.warnings.push('Pha '+p+' có Id/Ibias thanh cái ước lượng cao; cần xác nhận mapping bay và trạng thái dao cách ly.');}});
+    const dtexts=digital().map(d=>d.id||'').join(' '); if(!/ISOL|DS|DISCONNECT|DAO|QC|CHECK/i.test(dtexts))m.warnings.push('Không thấy tín hiệu dao cách ly/check zone; kết luận 87B chỉ ở mức tham khảo.');
+    if(!m.rows.length)m.rows.push(['Trạng thái','','','',String(bayKeys.length),'Đã nhận diện 87B nhưng chưa đủ bay pha để tính Id/Ibias.']);
+    return m;
+  }
+
+  function buildModules(){
+    const modules={version:VERSION,createdAt:new Date().toISOString(),frequency:buildFrequencyModule(),transformerDifferential:module87T(),busDifferential:module87B(),warnings:[]};
+    [modules.frequency,modules.transformerDifferential,modules.busDifferential].forEach(x=>{(x.warnings||[]).forEach(w=>modules.warnings.push(x.kind+': '+w));});
+    return modules;
+  }
+  function attach(mod){const st=S(); if(!st)return mod; st.v9933ProtectionModules=mod; if(st.faultAnalysis)st.faultAnalysis.v9933ProtectionModules=mod; try{if(st.universalFaultRecordV9930)st.universalFaultRecordV9930.v9933ProtectionModules=mod;}catch(e){} try{if(st.universalFaultRecord)st.universalFaultRecord.v9933ProtectionModules=mod;}catch(e){} return mod;}
+  function rebuild(){return attach(buildModules());}
+
+  function renderHtml(mod){mod=mod||rebuild(); const f=mod.frequency,t=mod.transformerDifferential,b=mod.busDifferential; let html='';
+    html+='<div class="v9933-summary">'+pill('V9.9.33')+pill('81: '+(f.available?f.confidence:'chưa đủ dữ liệu'))+pill('87T/REF: '+(t.available?t.confidence:'chưa đủ dữ liệu'))+pill('87B: '+(b.available?b.confidence:'chưa đủ dữ liệu'))+'</div>';
+    html+=card('Module tần số / ROCOF 81U-81O-81R', '<div class="note">Nguồn: '+esc(f.source||'chưa có')+'. Module này ưu tiên kênh Hz/Frequency nếu có; nếu không có sẽ thử ước lượng từ góc pha điện áp.</div>'+table(['Mục','Giá trị','Đơn vị','Ghi chú'],f.rows,'Không đủ dữ liệu phân tích tần số.')+(f.events&&f.events.length?table(['Loại','Chi tiết'],f.events.map(e=>[e.type,e.detail])):''));
+    html+=card('Module so lệch máy biến áp 87T / REF', '<div class="note">Module này chỉ ước lượng sơ bộ Id/Ibias nếu chưa có dữ liệu cài đặt CT, vector group, tỷ số quy đổi và chiều dòng. Kết luận chính vẫn cần đối chiếu report rơ le.</div>'+table(['Mục','Giá trị 1','Giá trị 2','Ghi chú'],t.rows,'Không nhận diện được dữ liệu 87T/REF.')+table(['Nhóm','Pha','Kênh','Trước RMS','Trong RMS','Peak','Đơn vị','Ghi chú'],t.phaseRows,''));
+    html+=card('Module so lệch thanh cái 87B', '<div class="note">Module 87B cần mapping bay/ngăn lộ và trạng thái dao cách ly/check zone. Nếu thiếu các tín hiệu này thì chỉ dùng để sàng lọc.</div>'+table(['Pha/nhóm','Id ước lượng','Ibias ước lượng','Id/Ibias','Số bay','Ghi chú'],b.rows,'Không nhận diện được dữ liệu 87B.')+table(['Bay/nhóm','Pha','Kênh','Trước RMS','Trong RMS','Peak','Đơn vị','Ghi chú'],b.bayRows,''));
+    if(mod.warnings&&mod.warnings.length)html+=card('Cảnh báo module chuyên sâu V9.9.33', '<ul>'+mod.warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>');
+    return html;
+  }
+  function ensureUi(){
+    if(!document.body)return; style();
+    let box=id('v9933ModulesBox'); if(!box){box=document.createElement('div'); box.id='v9933ModulesBox'; box.className='card'; box.innerHTML='<h2>Module chuyên sâu V9.9.33: Tần số / 87T / 87B</h2><div class="toolbar"><button id="v9933RebuildBtn">Dựng lại module</button><button id="v9933ExportBtn">Xuất module JSON</button></div><div id="v9933ModulesContent" class="v9933-mod-content"></div>'; const target=id('relayProfilePanel')||id('faultAnalysis')||document.querySelector('main')||document.body; target.appendChild(box);} 
+    const btn=id('v9933RebuildBtn'); if(btn&&!btn.dataset.v9933){btn.dataset.v9933='1'; btn.addEventListener('click',()=>{render();});}
+    const ex=id('v9933ExportBtn'); if(ex&&!ex.dataset.v9933){ex.dataset.v9933='1'; ex.addEventListener('click',exportJson);}
+  }
+  function render(){ensureUi(); const ctn=id('v9933ModulesContent'); if(!ctn)return; const mod=rebuild(); ctn.innerHTML=renderHtml(mod); addAnalysisSummary(mod);}
+  function addAnalysisSummary(mod){try{let host=id('v9933AnalysisSummary'); if(!host){host=document.createElement('div'); host.id='v9933AnalysisSummary'; host.className='note'; const fa=id('faultAnalysis')||id('faultResult')||document.querySelector('.fault-analysis'); if(fa)fa.insertBefore(host,fa.firstChild); else return;} host.innerHTML='<b>V9.9.33 module chuyên sâu:</b> '+['81 '+(mod.frequency.available?mod.frequency.confidence:'không đủ'), '87T '+(mod.transformerDifferential.available?mod.transformerDifferential.confidence:'không đủ'), '87B '+(mod.busDifferential.available?mod.busDifferential.confidence:'không đủ')].map(esc).join(' · ');}catch(e){}}
+  function exportJson(){const mod=rebuild(); const name=((S()&&S().activeBase)||'comtrade')+'_advanced_protection_modules_v9933.json'; const txt=JSON.stringify(mod,null,2); if(typeof downloadText==='function')downloadText(name,txt,'application/json;charset=utf-8'); else{const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);}}
+  function style(){if(id('v9933Style'))return; const st=document.createElement('style'); st.id='v9933Style'; st.textContent='.v9933-card{margin-top:12px}.v9933-summary{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}.v9933-mod-content table td,.v9933-mod-content table th{font-size:12px}.v9933-mod-content .note{margin:8px 0}.toolbar button{margin-right:8px}'; document.head.appendChild(st);}
+  function wrap(name){try{const fn=window[name]; if(typeof fn!=='function'||fn.v9933Wrapped)return; const w=function(){const ret=fn.apply(this,arguments); setTimeout(()=>{try{render();}catch(e){}},80); setTimeout(()=>{try{render();}catch(e){}},350); return ret;}; w.v9933Wrapped=true; window[name]=w;}catch(e){}}
+  function patchReport(){try{const fn=window.makeFaultReportHtml; if(typeof fn!=='function'||fn.v9933Wrapped)return; const w=function(){let html=fn.apply(this,arguments); try{const mod=rebuild(); const block='<h2>Module chuyên sâu V9.9.33</h2>'+renderHtml(mod); if(/Module chuyên sâu V9\.9\.33/.test(html))return html; html=html.replace(/<\/body>/i,block+'</body>');}catch(e){} return html;}; w.v9933Wrapped=true; window.makeFaultReportHtml=w;}catch(e){}}
+  function patchTextReport(){try{const fn=window.makeFaultReportText; if(typeof fn!=='function'||fn.v9933Wrapped)return; const w=function(){let txt=fn.apply(this,arguments); try{const mod=rebuild(); const lines=['','MODULE CHUYÊN SÂU V9.9.33','Tần số: '+(mod.frequency.available?mod.frequency.confidence:'không đủ dữ liệu'),'87T/REF: '+(mod.transformerDifferential.available?mod.transformerDifferential.confidence:'không đủ dữ liệu'),'87B: '+(mod.busDifferential.available?mod.busDifferential.confidence:'không đủ dữ liệu')]; (mod.warnings||[]).forEach(x=>lines.push('- '+x)); txt+='\n'+lines.join('\n');}catch(e){} return txt;}; w.v9933Wrapped=true; window.makeFaultReportText=w;}catch(e){}}
+  function patchUFR(){try{const old=window.v9930Rebuild||window.v9929Rebuild; if(typeof old==='function'&&!old.v9933ModulesWrapped){const w=function(){const r=old.apply(this,arguments); try{rebuild();}catch(e){} return r;}; w.v9933ModulesWrapped=true; if(window.v9930Rebuild)window.v9930Rebuild=w; else window.v9929Rebuild=w;}}catch(e){}}
+  function init(){ensureUi(); patchReport(); patchTextReport(); patchUFR(); ['loadGroup','renderAll','renderFaultAnalysis','analyzeFaultCore','v9932RebuildProfile'].forEach(wrap); setTimeout(render,150); setTimeout(render,900); addNote('V9.9.33: thêm module 81 tần số/ROCOF, 87T/REF so lệch MBA, 87B so lệch thanh cái; kết quả được gắn vào dữ liệu trung gian và báo cáo.'); try{document.title=document.title.replace(/V9\.9\.\d+/g,'V9.9.33'); const h=document.querySelector('h1'); if(h&&/V9\.9\./.test(h.textContent))h.textContent=h.textContent.replace(/V9\.9\.\d+/,'V9.9.33');}catch(e){}
+  }
+  window.v9933RebuildProtectionModules=function(){return rebuild();}; window.v9933RenderProtectionModules=render; window.v9933ExportProtectionModules=exportJson;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
+})();
+</script>
 
 
-<!-- V9.9.38-RC4: Stable Open Core / Release Guard / 87G safe module -->
+
+<!-- V9.9.39-RC5: Stable Open Core / Release Guard / 87G safe module -->
 <script id="v9938-rc4-stable-open-core">
 (function(){
   'use strict';
   if(window.__V9938_RC4_STABLE_OPEN_CORE__) return;
   window.__V9938_RC4_STABLE_OPEN_CORE__ = true;
-  var VERSION='V9.9.38-RC4';
+  var VERSION='V9.9.39-RC5';
   function S(){return window.state || {};}
   function byId(id){return document.getElementById(id);}
   function esc(v){return String(v==null?'':v).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c;});}
@@ -5840,14 +6012,14 @@ init();`+ '<\/script></body></html>';
   function build87G(){var rows=channelRows(); var has87g=rows.some(function(r){return /87G|GEN|DIFF|BIAS/i.test(r[2]+r[1]);}); var has64g=rows.some(function(r){return /64G|GROUND|NEUT|59N|27TN/i.test(r[2]+r[1]);}); var warnings=[]; if(has87g && !rows.some(function(r){return /Bias|Restraint/i.test(r[2]);})) warnings.push('87G: chưa thấy kênh Bias/Restraint, chưa kiểm chứng được đặc tính hãm.'); if(has87g && !rows.some(function(r){return /Differential/i.test(r[2]);})) warnings.push('87G: chưa thấy kênh Idiff/Differential rõ ràng.'); if(has64g && !rows.some(function(r){return /64G|Ground/i.test(r[2]);})) warnings.push('64G: cần kiểm tra lại kênh VN/U0/59N/27TN hoặc dòng trung tính.'); if(!has87g&&!has64g) warnings.push('Không thấy dấu hiệu rõ ràng của 87G/64G trong tên kênh hiện có.'); return {version:VERSION,available:has87g||has64g,has87G:has87g,has64G:has64g,rows:rows,warnings:warnings}; }
   function buildUFR(){var st=S(), inf=dataInfo(); var prof=st.relayRecordProfileV9932 || st.relayRecordProfile || (st.universalFaultRecord&&st.universalFaultRecord.profile) || null; var fa=st.faultAnalysis||null; var guard=runGuard(false); var rec={schema:'UniversalFaultRecord',version:VERSION,createdAt:new Date().toISOString(),source:{activeBase:st.activeBase||'',fileGroups:st.groups&&typeof st.groups.size==='number'?st.groups.size:null},comtrade:{station:(st.cfg&&st.cfg.station)||'',device:(st.cfg&&st.cfg.device)||'',revision:(st.cfg&&st.cfg.rev)||'',analogCount:inf.analogCfg.length,digitalCount:inf.digitalCfg.length,samples:(inf.times&&inf.times.length)||inf.data.samples||0,frequency:(st.cfg&&st.cfg.frequency)||null},profile:prof,analysis:{faultType:fa&&fa.type||null,phases:fa&&fa.phases||[],confidence:fa&&fa.confidence||null,startTime:fa&&fa.startTime,endTime:fa&&fa.endTime},modules:{protectionModulesV9933:st.v9933ProtectionModules||null,generator87G64G:build87G()},quality:{guardOk:guard.ok,guardChecks:guard.checks},warnings:[]}; rec.warnings=(rec.modules.generator87G64G.warnings||[]).concat((guard.checks||[]).filter(function(x){return x.status!=='ok';}).map(function(x){return x.name+': '+x.detail;})); try{st.universalFaultRecordV9938=rec; st.universalFaultRecord=st.universalFaultRecord||{}; st.universalFaultRecord.v9938=rec;}catch(e){} return rec; }
   function check(name, ok, detail){return {name:name,status:ok?'ok':'warn',detail:detail||''};}
-  function runGuard(store){var st=S(), txt=''; try{txt=document.body?document.body.innerText:'';}catch(e){} var bad=/\$\{esc\(title\)\}|\$\{summary\}|\$\{values\}|function\s+makeFaultReportHtml/.test(txt); var inf=dataInfo(); var checks=[]; checks.push(check('HTML không lộ template báo cáo',!bad,bad?'Còn thấy mã/biến template trong DOM.':'Không thấy token template lộ ra giao diện.')); checks.push(check('CFG đã nạp',!!st.cfg,st.cfg?'Có CFG.':'Chưa có CFG.')); checks.push(check('DAT/data đã nạp',!!st.data,st.data?'Có dữ liệu DAT.':'Chưa có DAT/data.')); checks.push(check('Số kênh analog',inf.analogCfg.length>0,String(inf.analogCfg.length||0))); checks.push(check('Số mẫu',((inf.times&&inf.times.length)||inf.data.samples||0)>0,String((inf.times&&inf.times.length)||inf.data.samples||0))); checks.push(check('Không dùng auto-report trong guard',true,'Release Guard V9.9.38 không gọi makeFaultReportHtml/makeFaultReportText.')); var res={version:VERSION,ok:checks.every(function(x){return x.status==='ok';}),checks:checks}; if(store!==false){try{st.v9938ReleaseGuard=res;}catch(e){}} return res; }
+  function runGuard(store){var st=S(), txt=''; try{txt=document.body?document.body.innerText:'';}catch(e){} var bad=/\$\{esc\(title\)\}|\$\{summary\}|\$\{values\}|function\s+makeFaultReportHtml/.test(txt); var inf=dataInfo(); var checks=[]; checks.push(check('HTML không lộ template báo cáo',!bad,bad?'Còn thấy mã/biến template trong DOM.':'Không thấy token template lộ ra giao diện.')); checks.push(check('CFG đã nạp',!!st.cfg,st.cfg?'Có CFG.':'Chưa có CFG.')); checks.push(check('DAT/data đã nạp',!!st.data,st.data?'Có dữ liệu DAT.':'Chưa có DAT/data.')); checks.push(check('Số kênh analog',inf.analogCfg.length>0,String(inf.analogCfg.length||0))); checks.push(check('Số mẫu',((inf.times&&inf.times.length)||inf.data.samples||0)>0,String((inf.times&&inf.times.length)||inf.data.samples||0))); checks.push(check('Không dùng auto-report trong guard',true,'Release Guard V9.9.39 không gọi makeFaultReportHtml/makeFaultReportText.')); var res={version:VERSION,ok:checks.every(function(x){return x.status==='ok';}),checks:checks}; if(store!==false){try{st.v9938ReleaseGuard=res;}catch(e){}} return res; }
   function htmlTable(head,rows){return '<div class="table-wrap"><table><thead><tr>'+head.map(function(x){return '<th>'+esc(x)+'</th>';}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+r.map(function(x){return '<td>'+esc(x)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table></div>';}
   function renderGuard(g){return htmlTable(['Mục kiểm tra','Trạng thái','Chi tiết'],(g.checks||[]).map(function(x){return [x.name,x.status==='ok'?'OK':'Cảnh báo',x.detail||''];}));}
   function renderUFR(rec){var m=rec.modules.generator87G64G||{}; var html='<div class="v9938-pills"><span class="pill">'+esc(VERSION)+'</span><span class="pill">Guard: '+(rec.quality.guardOk?'OK':'cảnh báo')+'</span><span class="pill">87G/64G: '+(m.available?'có dấu hiệu':'chưa rõ')+'</span></div>'; html+='<h3>Chất lượng lõi</h3>'+renderGuard({checks:rec.quality.guardChecks||[]}); html+='<h3>87G/64G an toàn</h3>'; if(m.rows&&m.rows.length) html+=htmlTable(['#','Kênh','Vai trò','Đơn vị','Trước RMS','Trong RMS','Sau RMS','Peak trong'],m.rows); else html+='<div class="note">Chưa tìm thấy kênh 87G/64G rõ ràng theo tên kênh.</div>'; html+='<h3>Cảnh báo</h3><ul>'+((rec.warnings||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')||'<li>Không có cảnh báo mới.</li>')+'</ul>'; return html; }
   function download(name,text,type){ if(typeof window.downloadText==='function'){try{return window.downloadText(name,text,type||'text/plain;charset=utf-8');}catch(e){}} var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type:type||'text/plain;charset=utf-8'})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},1000); }
   function exportReportHtml(){var rec=buildUFR(); var html='<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Báo cáo chuẩn '+esc(VERSION)+'</title><style>body{font-family:Arial,sans-serif;margin:18px;line-height:1.45}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#eef2f7}.pill{display:inline-block;padding:5px 9px;border:1px solid #bbb;border-radius:999px;margin:3px}.note{border-left:4px solid #f59e0b;background:#fff7ed;padding:8px 10px;margin:10px 0}</style></head><body><h1>Báo cáo chuẩn '+esc(VERSION)+'</h1>'+renderUFR(rec)+'<h2>JSON dữ liệu trung gian</h2><pre>'+esc(JSON.stringify(rec,null,2))+'</pre></body></html>'; download(((S().activeBase)||'comtrade')+'_report_v9938.html',html,'text/html;charset=utf-8'); }
   function exportReportTxt(){var rec=buildUFR(), lines=[]; lines.push('BAO CAO CHUAN '+VERSION); lines.push('Bo file: '+(S().activeBase||'')); lines.push('Guard: '+(rec.quality.guardOk?'OK':'CANH BAO')); lines.push('Analog: '+rec.comtrade.analogCount+', Digital: '+rec.comtrade.digitalCount+', Mau: '+rec.comtrade.samples); lines.push(''); lines.push('CANH BAO'); (rec.warnings||[]).forEach(function(x){lines.push('- '+x);}); download(((S().activeBase)||'comtrade')+'_report_v9938.txt',lines.join('\n'),'text/plain;charset=utf-8'); }
-  function ensureUi(){var host=byId('page-fault')||byId('page-overview')||document.querySelector('.content')||document.body; var box=byId('v9938CoreBox'); if(!box){box=document.createElement('div'); box.id='v9938CoreBox'; box.className='card'; box.innerHTML='<h2>V9.9.38-RC4 - Lõi ổn định / Release Guard / 87G-64G an toàn</h2><div class="toolbar"><button id="v9938Build">Dựng lại lõi</button><button id="v9938Guard">Chạy Release Guard</button><button id="v9938Json">Xuất UFR JSON</button><button id="v9938Html">Xuất báo cáo chuẩn HTML</button><button id="v9938Txt">Xuất báo cáo chuẩn TXT</button></div><div id="v9938CoreContent" class="small" style="margin-top:10px"></div>'; host.appendChild(box); }
+  function ensureUi(){var host=byId('page-fault')||byId('page-overview')||document.querySelector('.content')||document.body; var box=byId('v9938CoreBox'); if(!box){box=document.createElement('div'); box.id='v9938CoreBox'; box.className='card'; box.innerHTML='<h2>V9.9.39-RC5 - Lõi ổn định / Release Guard / 87G-64G an toàn</h2><div class="toolbar"><button id="v9938Build">Dựng lại lõi</button><button id="v9938Guard">Chạy Release Guard</button><button id="v9938Json">Xuất UFR JSON</button><button id="v9938Html">Xuất báo cáo chuẩn HTML</button><button id="v9938Txt">Xuất báo cáo chuẩn TXT</button></div><div id="v9938CoreContent" class="small" style="margin-top:10px"></div>'; host.appendChild(box); }
     var bind=function(id,fn){var b=byId(id); if(b&&!b.dataset.v9938){b.dataset.v9938='1'; b.addEventListener('click',fn);}};
     bind('v9938Build',function(){var rec=buildUFR(); renderCore(rec);}); bind('v9938Guard',function(){var g=runGuard(true); var c=byId('v9938CoreContent'); if(c)c.innerHTML=renderGuard(g);}); bind('v9938Json',function(){var rec=buildUFR(); download(((S().activeBase)||'comtrade')+'_ufr_v9938.json',JSON.stringify(rec,null,2),'application/json;charset=utf-8');}); bind('v9938Html',exportReportHtml); bind('v9938Txt',exportReportTxt);
   }
@@ -5858,6 +6030,118 @@ init();`+ '<\/script></body></html>';
   window.v9938RunReleaseGuard=runGuard;
   window.v9938Build87G64G=build87G;
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
+})();
+</script>
+
+
+<script id="v9939-safe-vendor-parser-pack">
+(function(){
+  'use strict';
+  var VERSION='V9.9.39-RC5';
+  var PATCH='Safe Vendor Parser Pack';
+  var MAX_TEXT_CHARS=900000;
+  var MAX_EVENT_LINES=260;
+  function S(){try{return (typeof state!=='undefined')?state:(window.state||null);}catch(e){return window.state||null;}}
+  function byId(x){return document.getElementById(x);}
+  function esc(x){try{if(typeof window.esc==='function')return window.esc(x==null?'':String(x));}catch(e){} return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c;});}
+  function txt(x){return String(x==null?'':x);}
+  function norm(x){return txt(x).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();}
+  function ext(name){var m=txt(name).toLowerCase().match(/\.([^.\\/]+)$/);return m?m[1]:'';}
+  function safeTable(head,rows){try{if(typeof htmlTable==='function')return htmlTable(head,rows);}catch(e){} return '<div class="table-wrap"><table><thead><tr>'+head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+esc(c)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table></div>';}
+  function download(name,content,type){try{if(typeof downloadText==='function')return downloadText(name,content,type||'text/plain;charset=utf-8');}catch(e){} var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:type||'text/plain;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){try{URL.revokeObjectURL(a.href);a.remove();}catch(e){}},1200);}
+  function addNote(msg){try{var st=S(); if(st){st.decoderNotes=st.decoderNotes||[]; if(st.decoderNotes.indexOf(msg)<0)st.decoderNotes.push(msg);} if(typeof renderDecoderNotes==='function')renderDecoderNotes();}catch(e){}}
+
+  var VENDORS=[
+    {id:'toshiba',name:'Toshiba GRL/GRZ/GRD/GR-200',weight:100,kw:['TOSHIBA','GRL','GRZ','GRD','GR-200','GR TIEMS','GR-TIEMS','DIFL','FAULT PHASE','TRIP PHASE','DATE TIME SECOND','ROA']},
+    {id:'sel',name:'SEL / Schweitzer',weight:98,kw:['SEL-','SCHWEITZER','ACSELERATOR','SYNCHROWAVE','EVENT REPORT','FID=','FID ','TARGETS','RELAY WORD','SER COMTRADE','SELOGIC','DATE TRIGGER']},
+    {id:'siemens',name:'Siemens SIPROTEC / DIGSI / SIGRA',weight:95,kw:['SIEMENS','SIPROTEC','DIGSI','SIGRA','7SA','7SD','7SJ','7UT','7SS','PROTECTION TRIP','GENERAL FAULT','FAULT RECORDING','SPONTANEOUS INDICATION']},
+    {id:'abb_hitachi',name:'ABB / Hitachi Energy Relion / PCM600',weight:95,kw:['ABB','HITACHI ENERGY','RELION','PCM600','REC670','REL670','RED670','RET670','REB670','IED CONNECT','DISTURBANCE RECORDER','COMTRADE EXPORT']},
+    {id:'schneider_micom',name:'Schneider MiCOM / Easergy / Sepam',weight:94,kw:['SCHNEIDER','MICOM','EASERGY','SEPAM','P441','P442','P443','P444','P545','P546','P642','PX40','S1 STUDIO','FAULT RECORD','EVENT RECORD']},
+    {id:'ge_multilin',name:'GE Multilin / GE Vernova / EnerVista UR',weight:94,kw:['GE MULTILIN','MULTILIN','ENERVISTA','GE VERNOVA','UR SERIES','D60','L90','T60','B90','F60','C60','OSCILLOGRAPHY','SOE VIEWER']},
+    {id:'nr_nari',name:'NR Electric / NARI PCS/RCS',weight:90,kw:['NR ELECTRIC','NARI','PCS-','RCS-','PCS ','RCS ','PCS931','PCS-931','PCS902','PCS-902','RCS931','PROTECTION DEVICE','动作','保护','启动','跳闸']},
+    {id:'ziv',name:'ZIV protection relays',weight:84,kw:['ZIV','ZIVGRID','ZIVERCOM','IRV','ZIV APLICACIONES','ZIV RELAY','ZIV AUTOMATION']},
+    {id:'vamp_arcteq',name:'VAMP / Arcteq arc & feeder relays',weight:84,kw:['VAMP','ARCTEQ','AQ-','AQ ','ARC FLASH','VAMPSET','AQ VIEW','FEEDER PROTECTION','ARC PROTECTION']},
+    {id:'fanox',name:'Fanox',weight:78,kw:['FANOX','SIA-','SIL-','SIL ','SIA ','SELF POWERED','SIA C']},
+    {id:'basler',name:'Basler Electric BE1 / BESTCOMS',weight:78,kw:['BASLER','BE1-','BESTCOMS','DECS','BE1 ','BE1CDS']},
+    {id:'beckwith',name:'Beckwith Electric M-series',weight:78,kw:['BECKWITH','M-3311','M-3425','M-3520','M-7679','IPSCOM','IPScom']},
+    {id:'noja',name:'NOJA Power Recloser',weight:78,kw:['NOJA','RC10','RC15','OSM','RECLOSER','NOJAVIS','AUTO RECLOSE']},
+    {id:'omicron_doble',name:'OMICRON / Doble test record',weight:72,kw:['OMICRON','DOBLE','TEST UNIVERSE','CMC','TRANSWIN','F6150','RIO','XRIO','STATE SEQUENCER']},
+    {id:'woodward',name:'Woodward / Generator protection',weight:72,kw:['WOODWARD','EASYGEN','GENERATOR PROTECTION','STATOR GROUND','64G','87G']},
+    {id:'nxtphase',name:'NxtPhase / optical CT protection',weight:66,kw:['NXTPHASE','OPTICAL CT','NXVCT','NXVT']}
+  ];
+  var RECORDS=[
+    {id:'fault',name:'Fault report / target / summary',kw:['FAULT REPORT','FAULT SUMMARY','FAULT PHASE','TRIP PHASE','FAULT LOCATOR','DISTANCE TO FAULT','FAULT LOCATION','TARGETS','ZONE OPERATED','LOOP','LOCATOR']},
+    {id:'event',name:'Event/SOE/SER timeline',kw:['SER','SOE','SEQUENCE OF EVENTS','EVENT LIST','EVENT RECORD','EVENT LOG','PICKUP','START','TRIP','OPERATE','ASSERTED','DEASSERTED','52A','52B','CB OPEN']},
+    {id:'settings',name:'Setting / IEC 61850 / RIO',kw:['SETTING','SETTINGS','SCL','IEDNAME','LN0','GOOSE','DATASET','REPORTCONTROL','RIO','XRIO','ZONE SETTING','CT RATIO','VT RATIO','PT RATIO']},
+    {id:'quality_frequency',name:'Power quality / frequency / ROCOF',kw:['FREQUENCY','ROCOF','DF/DT','HZ/S','LOAD SHEDDING','UNDERFREQUENCY','OVERFREQUENCY','PMU','SYNCHROPHASOR']},
+    {id:'comms',name:'Teleprotection / communication',kw:['GOOSE','TELEPROTECTION','POTT','PUTT','DTT','DCB','BLOCKING','PERMISSIVE','COMM FAIL','CHANNEL FAIL','RECEIVE TRIP','SEND TRIP']}
+  ];
+  var PROTECT=[
+    {id:'21',name:'21 khoảng cách',kw:['21','DISTANCE','MHO','QUAD','ZONE 1','ZONE1','ZONE 2','ZONE2','ZAG','ZBG','ZCG','ZAB','ZBC','ZCA']},
+    {id:'50_51_67',name:'50/51/67 quá dòng/chạm đất/có hướng',kw:['50','51','67','IOC','TOC','OVERCURRENT','EARTH FAULT','GROUND FAULT','DIRECTIONAL','IN>','IG>']},
+    {id:'87L',name:'87L/DIFL so lệch đường dây',kw:['87L','DIFL','LINE DIFFERENTIAL','LINE DIFF','LOCAL','REMOTE','IDIFF','IREST','RESTRAINT','COMM CHANNEL']},
+    {id:'87T_REF',name:'87T/REF so lệch MBA',kw:['87T','TRANSFORMER DIFFERENTIAL','REF','64REF','RESTRICTED EARTH','BIAS','2ND HARMONIC','5TH HARMONIC','INRUSH']},
+    {id:'87B',name:'87B so lệch thanh cái',kw:['87B','BUS DIFF','BUSBAR','CHECK ZONE','BAY UNIT','ISOLATOR','DISCONNECTOR']},
+    {id:'87G_64G',name:'87G/64G máy phát/chạm đất stator',kw:['87G','64G','GENERATOR DIFFERENTIAL','STATOR GROUND','STATOR EARTH','NGR','NEUTRAL OVERVOLTAGE','59N','27TN']},
+    {id:'81',name:'81U/81O/81R tần số/ROCOF',kw:['81U','81O','81R','UNDERFREQUENCY','OVERFREQUENCY','ROCOF','DF/DT','HZ/S']},
+    {id:'50BF_86',name:'50BF/86 hỏng MC/khóa cắt',kw:['50BF','BREAKER FAILURE','BF TRIP','CB FAIL','86','LOCKOUT','LOR','52A','52B']},
+    {id:'79',name:'79 tự đóng lại',kw:['79','RECLOSE','RECLOSER','AUTO RECLOSE','AR READY','AR SHOT','DEAD TIME','RECLAIM']},
+    {id:'27_59_64',name:'27/59/64 điện áp',kw:['27','59','59N','UNDERVOLTAGE','OVERVOLTAGE','ZERO SEQUENCE VOLTAGE','3U0','VN','V0']},
+    {id:'25_78_32_40',name:'25/78/32/40 đồng bộ/công suất/mất kích từ',kw:['25','SYNC CHECK','SYNCHRONISM','78','OUT OF STEP','POWER SWING','32','REVERSE POWER','40','LOSS OF EXCITATION']}
+  ];
+
+  function stateFiles(){var st=S(), out=[]; try{var g=st&&st.groups&&st.activeBase?st.groups.get(st.activeBase):null; if(g){['cfg','dat','cff'].forEach(function(k){if(g[k])out.push({kind:k,name:g[k].name,ext:ext(g[k].name)});}); (g.logs||[]).forEach(function(f){out.push({kind:'sidecar',name:f.name,ext:ext(f.name),path:f._zipPath||f._archivePath||f._rarPath||''});});}}catch(e){} return out;}
+  function collectText(){var st=S(), parts=[], files=stateFiles(); try{if(st&&st.cfg){parts.push('STATION '+txt(st.cfg.station));parts.push('DEVICE '+txt(st.cfg.device));parts.push('REV '+txt(st.cfg.rev));(st.cfg.analog||[]).forEach(function(c){parts.push('A '+c.index+' '+c.id+' '+c.phase+' '+c.unit);});(st.cfg.digital||[]).forEach(function(c){parts.push('D '+c.index+' '+c.id+' '+c.phase);});}}catch(e){} try{(st.logs||[]).forEach(function(l){parts.push('FILE '+l.name+'\n'+txt(l.text).slice(0,MAX_TEXT_CHARS));});}catch(e){} files.forEach(function(f){parts.push('FILENAME '+f.name+' '+f.path);}); var all=parts.join('\n'); if(all.length>MAX_TEXT_CHARS*2)all=all.slice(0,MAX_TEXT_CHARS*2); return all;}
+  function scoreDefs(defs, ctx, maxTake){var text=ctx.textNorm, files=ctx.files||[]; return defs.map(function(d){var ev=[], score=0; (d.kw||[]).forEach(function(k){var kk=norm(k); if(!kk)return; var re=new RegExp(kk.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'); var m=text.match(re); if(m){var add=Math.min(35,m.length*8); score+=add; ev.push(k+'×'+m.length);}}); files.forEach(function(f){var e=txt(f.ext).toLowerCase(), n=norm(f.name); if((d.ext||[]).indexOf(e)>=0){score+=8; ev.push('đuôi '+e);} (d.kw||[]).slice(0,8).forEach(function(k){if(n.indexOf(norm(k))>=0){score+=10; ev.push('tên file '+k);}});}); score=Math.min(99,Math.round(score*(d.weight||80)/100)); return {id:d.id,name:d.name,score:score,evidence:ev.slice(0,8)};}).filter(function(x){return x.score>0;}).sort(function(a,b){return b.score-a.score;}).slice(0,maxTake||8);}
+  function extractPhases(text){var out=[]; var pats=[/(FAULT\s*PHASE|FAULTED\s*PHASE|PHASE\s*FAULT)\s*[:=,;\t ]+([ABCNG\- ]{1,12})/ig,/(TRIP\s*PHASE|TRIPPED\s*PHASE)\s*[:=,;\t ]+([ABCNG\- ]{1,12})/ig,/(LOOP|FAULT\s*LOOP)\s*[:=,;\t ]+([ABC]{1,3}\-?[GNE]?)/ig]; pats.forEach(function(re){var m; while((m=re.exec(text))&&out.length<30){out.push({kind:m[1],value:m[2].replace(/\s+/g,'').toUpperCase(),line:nearLine(text,m.index)});}}); return out;}
+  function extractLocators(text){var out=[]; var pats=[/(FAULT\s*LOCATOR|FAULT\s*LOCATION|DISTANCE\s*TO\s*FAULT|LOCATION|FL\s*\d*)[^\n\r:;=]*[:=,;\t ]+(-?\d+(?:[\.,]\d+)?)\s*(KM|KILOMETER|MI|MILE|%)/ig,/(-?\d+(?:[\.,]\d+)?)\s*KM\s*[,;\/]?\s*(-?\d+(?:[\.,]\d+)?)\s*%/ig]; pats.forEach(function(re){var m; while((m=re.exec(text))&&out.length<40){if(m.length>=4)out.push({label:m[1],value:num(m[2]),unit:m[3],line:nearLine(text,m.index)}); else out.push({label:'km/%',value:num(m[1]),unit:'km',percent:num(m[2]),line:nearLine(text,m.index)});}}); return out;}
+  function num(x){var v=parseFloat(txt(x).replace(',','.')); return Number.isFinite(v)?v:null;}
+  function nearLine(text,idx){var a=text.lastIndexOf('\n',idx);var b=text.indexOf('\n',idx); if(a<0)a=0; else a++; if(b<0)b=Math.min(text.length,a+220); return text.slice(a,b).trim().slice(0,260);}
+  function extractEvents(text){var keys=/\b(PICKUP|START|TRIP|OPERATE|ASSERT|DEASSERT|BREAKER|CB\s*OPEN|52A|52B|LOCKOUT|86|RECLOSE|AR\s*SHOT|GOOSE|SEND|RECEIVE|TELEPROTECTION|FREQUENCY|ROCOF|DIFF|DIFFERENTIAL|ZONE|FAULT)\b|启动|动作|跳闸|合闸|重合|闭锁/i; var out=[], lines=text.split(/\r?\n/); for(var i=0;i<lines.length&&out.length<MAX_EVENT_LINES;i++){var l=lines[i]; if(l&&keys.test(l)){var time=(l.match(/\b\d{1,4}[\/-]\d{1,2}[\/-]\d{1,4}[ T]\d{1,2}:\d{2}:\d{2}(?:[\.,]\d+)?\b/)||l.match(/\b\d{1,2}:\d{2}:\d{2}(?:[\.,]\d+)?\b/)||[''])[0]; out.push({time:time,event:classEvent(l),raw:l.trim().slice(0,280)});}} return out;}
+  function classEvent(l){var n=norm(l); if(/TRIP|OPERATE|跳闸|动作/.test(n))return 'Trip/Operate'; if(/PICKUP|START|启动/.test(n))return 'Pickup/Start'; if(/52A|52B|BREAKER|CB OPEN/.test(n))return 'Breaker/52'; if(/RECLOSE|AR SHOT|重合/.test(n))return 'Reclose/79'; if(/GOOSE|TELE|SEND|RECEIVE|CHANNEL|COMM/.test(n))return 'Tele/GOOSE'; if(/LOCKOUT|86|闭锁/.test(n))return 'Lockout/Block'; if(/FREQUENCY|ROCOF|HZ/.test(n))return 'Frequency/81'; if(/DIFF|DIFFERENTIAL|87/.test(n))return 'Differential'; return 'Khác';}
+  function extractSettings(text){var rows=[]; var pats=[['CT ratio',/(CT\s*(RATIO)?|CTR)\s*[:= ]+([\d\.\/, :A]+)\b/ig],['VT/PT ratio',/(VT\s*(RATIO)?|PT\s*(RATIO)?|PTR)\s*[:= ]+([\d\.\/, :V]+)\b/ig],['Line length',/(LINE\s*LENGTH|LENGTH)\s*[:= ]+(-?\d+(?:[\.,]\d+)?)\s*(KM|MI)/ig],['Frequency setting',/(NOMINAL\s*FREQUENCY|FREQUENCY|FN)\s*[:= ]+(\d+(?:[\.,]\d+)?)\s*HZ/ig],['Zone setting',/(ZONE\s*\d|Z1|Z2|Z3)\s*[^\n]{0,80}(OHM|Ω|DEG|KM)/ig]]; pats.forEach(function(p){var m; while((m=p[1].exec(text))&&rows.length<80){rows.push({kind:p[0],line:nearLine(text,m.index)});}}); return rows;}
+  function channelHints(){var st=S(), rows=[]; try{(st.cfg&&st.cfg.analog||[]).forEach(function(c){var n=norm(c.id), role=''; if(/FREQ|HZ|ROCOF|DFDT|DF\/DT/.test(n))role='frequency'; else if(/IDIFF|ID[A-C]?|DIFF/.test(n))role='differential'; else if(/BIAS|REST|RESTRAINT/.test(n))role='restraint/bias'; else if(/R1|REMOTE|REM/.test(n))role='remote'; else if(/LOCAL|\-L\b|_L\b/.test(n))role='local'; else if(/NGR|NEUTRAL|59N|27TN|VN|64G/.test(n))role='neutral/ground'; else if(/VA|VB|VC|VAB|VBC|VCA|UA|UB|UC/.test(n))role='voltage'; else if(/IA|IB|IC|IN|IG|I0|IE/.test(n))role='current'; if(role)rows.push({index:c.index||rows.length+1,name:c.id,phase:c.phase||'',unit:c.unit||'',role:role});}); (st.cfg&&st.cfg.digital||[]).forEach(function(c){var n=norm(c.id), role=''; if(/TRIP|OPER|跳闸/.test(n))role='trip'; else if(/PICKUP|START|启动/.test(n))role='pickup'; else if(/52A|52B|CB|BREAKER/.test(n))role='breaker'; else if(/GOOSE|SEND|RECEIVE|TELE/.test(n))role='teleprotection'; else if(/LOCKOUT|86|BLOCK/.test(n))role='lockout/block'; if(role)rows.push({index:c.index||rows.length+1,name:c.id,phase:c.phase||'',unit:'digital',role:role});});}catch(e){} return rows.slice(0,120);}
+  function buildProfile(){var st=S(), files=stateFiles(), text=collectText(), ctx={files:files,text:text,textNorm:norm(text)}; var vendors=scoreDefs(VENDORS,ctx,10); var records=scoreDefs(RECORDS,ctx,10); var protections=scoreDefs(PROTECT,ctx,12); var extracted={phases:extractPhases(text),locators:extractLocators(text),events:extractEvents(text),settings:extractSettings(text),channelHints:channelHints()}; var warnings=[]; if(!vendors.length)warnings.push('Chưa nhận diện chắc hãng rơ le; chỉ dùng parser chung theo từ khóa.'); if(!files.some(function(f){return f.kind==='sidecar';}))warnings.push('Chưa thấy file sidecar Fault/Event/SER/SOE/Report; kết luận chủ yếu dựa vào CFG/DAT.'); if(extracted.events.length>=MAX_EVENT_LINES)warnings.push('Timeline sidecar nhiều dòng; bảng đã giới hạn để tránh treo trình duyệt.'); var topVendor=vendors[0]||{id:'unknown',name:'Chưa rõ',score:0,evidence:[]}; var topProt=protections[0]||{id:'unknown',name:'Chưa rõ',score:0,evidence:[]}; var profile={version:VERSION,mode:'safe-read-only-manual',createdAt:new Date().toISOString(),source:(st&&st.activeBase)||'',files:files,vendors:vendors,recordTypes:records,protectionFunctions:protections,extracted:extracted,warnings:warnings,summary:'Parser an toàn: '+topVendor.name+' ('+topVendor.score+'%); chức năng khả nghi: '+topProt.name+' ('+topProt.score+'%).'}; try{if(st){st.v9939SafeVendorProfile=profile; if(st.universalFaultRecord){st.universalFaultRecord.v9939SafeVendorProfile=profile;} if(st.faultAnalysis){st.faultAnalysis.v9939SafeVendorProfile=profile;}} window.v9939SafeVendorProfile=profile;}catch(e){} return profile;}
+  function rowsScore(arr){return (arr||[]).map(function(x){return [x.name||x.id,(x.score||0)+'%',(x.evidence||[]).join('; ')];});}
+  function renderProfile(p){p=p||buildProfile(); var h='<div class="v9939-pills"><span class="pill">'+esc(VERSION)+'</span><span class="pill">Chế độ: chỉ đọc / thủ công</span><span class="pill">Không bọc render cũ</span></div>'; h+='<div class="note"><b>'+esc(p.summary)+'</b><br>Module này không tự gọi báo cáo, không tự bọc loadGroup/renderAll; chỉ phân tích khi bấm nút để tránh treo và lỗi lộ template.</div>'; h+='<h3>Ứng viên hãng rơ le</h3>'+safeTable(['Hãng/rơ le','Tin cậy','Bằng chứng'],rowsScore(p.vendors)); h+='<h3>Loại bản ghi / sidecar</h3>'+safeTable(['Loại bản ghi','Tin cậy','Bằng chứng'],rowsScore(p.recordTypes)); h+='<h3>Chức năng bảo vệ khả nghi</h3>'+safeTable(['Chức năng','Tin cậy','Bằng chứng'],rowsScore(p.protectionFunctions)); h+='<h3>Trích xuất từ Fault/Event/Setting text</h3>'; h+=safeTable(['Nhóm','Giá trị','Dòng gốc'],[].concat((p.extracted.phases||[]).map(function(x){return [x.kind,x.value,x.line];}),(p.extracted.locators||[]).map(function(x){return [x.label,(x.value!=null?x.value:'')+' '+(x.unit||'')+(x.percent!=null?' / '+x.percent+'%':''),x.line];}),(p.extracted.settings||[]).map(function(x){return [x.kind,'',x.line];}))); h+='<h3>Timeline rút gọn từ sidecar</h3>'+safeTable(['Thời gian','Nhóm sự kiện','Dòng gốc'],(p.extracted.events||[]).slice(0,80).map(function(x){return [x.time,x.event,x.raw];})); h+='<h3>Gợi ý vai trò kênh</h3>'+safeTable(['#','Kênh','Pha','Đơn vị','Vai trò'],(p.extracted.channelHints||[]).map(function(x){return [x.index,x.name,x.phase,x.unit,x.role];})); h+='<h3>Cảnh báo</h3><ul>'+((p.warnings||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')||'<li>Không có cảnh báo mới.</li>')+'</ul>'; return h;}
+  function ensureUi(){var page=byId('page-relay'); if(!page){page=document.createElement('section');page.id='page-relay';page.className='page';var ref=byId('page-fault')||document.querySelector('.page'); if(ref&&ref.parentNode)ref.parentNode.insertBefore(page,ref.nextSibling); else document.body.appendChild(page);} if(!document.querySelector('.tab[data-tab="relay"]')){var group=[].slice.call(document.querySelectorAll('.tab-group')).find(function(g){return /Phân tích sự cố/.test(g.textContent||'');})||document.querySelector('.tabs')||byId('tabMenu'); if(group){var tab=document.createElement('div');tab.className='tab';tab.dataset.tab='relay';tab.textContent='Hồ sơ rơ le';tab.addEventListener('click',function(){if(typeof activateTab==='function')activateTab('relay');});group.appendChild(tab);}}
+    var box=byId('v9939SafeParserBox'); if(!box){box=document.createElement('div');box.id='v9939SafeParserBox';box.className='card';box.innerHTML='<h2>V9.9.39-RC5 - Parser hãng an toàn</h2><div class="tiny">Tăng nhận diện hãng/rơ le và loại bản ghi theo kiểu chỉ đọc. Không tự bọc hàm render, không tự gọi báo cáo, không chạy vòng lặp nền.</div><div class="toolbar"><button id="v9939Run">Chạy parser an toàn</button><button id="v9939Json">Xuất parser JSON</button><button id="v9939Attach">Gắn vào UniversalFaultRecord</button></div><div id="v9939SafeParserContent" style="margin-top:10px">Chưa chạy parser.</div>'; page.appendChild(box);} function bind(id,fn){var b=byId(id); if(b&&!b.dataset.v9939){b.dataset.v9939='1';b.addEventListener('click',fn);}} bind('v9939Run',function(){render();}); bind('v9939Json',function(){var p=buildProfile();download(((S()&&S().activeBase)||'comtrade')+'_safe_vendor_parser_v9939.json',JSON.stringify(p,null,2),'application/json;charset=utf-8');}); bind('v9939Attach',function(){var p=buildProfile();try{var st=S(); if(st){st.universalFaultRecord=st.universalFaultRecord||{};st.universalFaultRecord.v9939SafeVendorProfile=p;}}catch(e){} render();});}
+  function render(){ensureUi(); var p=buildProfile(); var c=byId('v9939SafeParserContent'); if(c)c.innerHTML=renderProfile(p);}
+  function updateAccept(){var extra='.eve,.evl,.ser,.soe,.evt,.rpt,.rep,.rio,.xrio,.cid,.scd,.icd,.iid,.ssd,.sed,.xml,.json,.prn,.out,.rec,.rcd,.osc,.dr,.fdr,.flt,.map,.set,.lst,.csv,.txt,.log,.hdr,.inf,.roa'; var inp=byId('fileInput'); if(inp&&!inp.dataset.v9939Accept){inp.setAttribute('accept',(inp.getAttribute('accept')||'')+','+extra+','+extra.toUpperCase());inp.dataset.v9939Accept='1';}}
+  function installStyle(){if(byId('v9939Style'))return;var st=document.createElement('style');st.id='v9939Style';st.textContent='#v9939SafeParserBox{border-left:4px solid #93c5fd}.v9939-pills{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}#v9939SafeParserBox table td,#v9939SafeParserBox table th{font-size:12px}';document.head.appendChild(st);}
+  function bumpVersion(){try{document.title=document.title.replace(/V9\.9\.\d+(?:-RC\d+)?/g,VERSION);var h=document.querySelector('h1');if(h&&/COMTRADE/i.test(h.textContent||''))h.textContent=(h.textContent||'COMTRADE Offline Reader Pro').replace(/V9\.9\.\d+(?:-RC\d+)?/g,VERSION);}catch(e){}}
+  window.v9939BuildSafeVendorProfile=buildProfile;
+  window.v9939RenderSafeVendorParser=render;
+  function init(){installStyle();updateAccept();ensureUi();bumpVersion();addNote('V9.9.39-RC5: thêm parser hãng an toàn dạng chỉ đọc cho SEL, Siemens, ABB/Hitachi, Schneider/MiCOM, GE Multilin, NR/NARI, ZIV, VAMP/Arcteq, Fanox, Basler, Beckwith, NOJA, OMICRON/Doble; không bọc hàm render để tránh lỗi treo.'); setTimeout(function(){try{if(S()&&S().cfg)render();}catch(e){}},600);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
+})();
+</script>
+
+
+<script id="v9939-safe-file-pipeline">
+(function(){
+  'use strict';
+  var SAFE_EXT={cfg:1,dat:1,cff:1,log:1,hdr:1,inf:1,txt:1,csv:1,roa:1,evt:1,ser:1,soe:1,xml:1,json:1,rio:1,xrio:1,cid:1,scd:1,icd:1,iid:1,sed:1,ssd:1,rpt:1,rep:1,out:1,prn:1,rec:1,rcd:1,dr:1,osc:1,fdr:1,flt:1,map:1,set:1,lst:1,eve:1,evl:1,cfgx:1};
+  function S(){try{return (typeof state!=='undefined')?state:(window.state||null);}catch(e){return null;}}
+  function ex(n){try{return extName(n);}catch(e){var m=String(n||'').toLowerCase().match(/\.([^.\\/]+)$/);return m?m[1]:'';}}
+  function base(n){try{return baseName(n);}catch(e){return String(n||'file').replace(/\\/g,'/').split('/').pop().replace(/\.[^.]+$/,'');}}
+  function short(n){return String(n||'file').replace(/\\/g,'/').split('/').filter(Boolean).pop()||'file';}
+  function isSide(e){return SAFE_EXT[e] && !/^(cfg|dat|cff)$/.test(e);}
+  function isAll(e){return SAFE_EXT[e]||e==='zip'||e==='rar';}
+  function mime(n){var e=ex(n); if(SAFE_EXT[e])return 'text/plain;charset=utf-8'; return 'application/octet-stream';}
+  function fkey(f){return f?((f._zipSource&&'zip:'+f._zipSource)||(f._archiveSource&&'rar:'+f._archiveSource)||(f._rarSource&&'rar:'+f._rarSource)||(f.webkitRelativePath&&'folder:'+String(f.webkitRelativePath).split('/')[0])||'loose'):'loose';}
+  function initGroup(st,b){if(!st.groups.has(b))st.groups.set(b,{cfg:null,dat:null,logs:[]});return st.groups.get(b);}
+  function rd16(dv,p){return dv.getUint16(p,true);} function rd32(dv,p){return dv.getUint32(p,true);}
+  async function zipExtract(file){var buf=await file.arrayBuffer(), bytes=new Uint8Array(buf), dv=new DataView(buf), len=bytes.length, eocd=-1, start=Math.max(0,len-22-65536); for(var i=len-22;i>=start;i--){if(rd32(dv,i)===0x06054b50){eocd=i;break;}} if(eocd<0)throw new Error('Không tìm thấy EOCD ZIP.'); var total=rd16(dv,eocd+10), cdSize=rd32(dv,eocd+12), cdOff=rd32(dv,eocd+16), p=cdOff, out=[], td=new TextDecoder('utf-8',{fatal:false}); for(var n=0;n<total&&p<cdOff+cdSize&&p<len;n++){if(rd32(dv,p)!==0x02014b50)break; var method=rd16(dv,p+10), compSize=rd32(dv,p+20), flen=rd16(dv,p+28), xlen=rd16(dv,p+30), clen=rd16(dv,p+32), lho=rd32(dv,p+42); var name=td.decode(bytes.slice(p+46,p+46+flen)).replace(/^\/+/, '').replace(/\\/g,'/'); p+=46+flen+xlen+clen; if(!name||name.endsWith('/'))continue; var e=ex(name); if(!isAll(e)||e==='zip'||e==='rar')continue; if(lho<0||lho+30>len||rd32(dv,lho)!==0x04034b50)continue; var nlen=rd16(dv,lho+26), elen=rd16(dv,lho+28), ds=lho+30+nlen+elen; if(ds+compSize>len)continue; var comp=bytes.slice(ds,ds+compSize), data=null; if(method===0)data=comp; else if(method===8){if(typeof inflateRawBytes!=='function')continue; data=await inflateRawBytes(comp);} else continue; var sn=short(name), vf; try{vf=new File([data],sn,{type:mime(sn),lastModified:file.lastModified||Date.now()});}catch(e2){vf=makeVirtualFile([data],sn,mime(sn));} try{vf._zipPath=name;vf._zipSource=file.name;}catch(e3){} out.push(vf);} return out;}
+  async function rarExtract(file){if(!window.Unarchiver||typeof window.Unarchiver.open!=='function')throw new Error('Thiếu runtime đọc RAR offline.'); var ar=await window.Unarchiver.open(file), out=[]; try{var entries=Array.from((ar&&ar.entries)||[]); for(var i=0;i<entries.length;i++){var ent=entries[i]; if(!ent||ent.is_file===false)continue; var full=String(ent.name||''), e=ex(full); if(!isAll(e)||e==='zip'||e==='rar')continue; var data=await ent.read(), sn=short(full), vf; if(data&&data.name)vf=data; else{try{vf=new File([data],sn,{type:mime(sn),lastModified:file.lastModified||Date.now()});}catch(e2){vf=makeVirtualFile([data],sn,mime(sn));}} try{vf._archivePath=full;vf._archiveSource=file.name;vf._rarPath=full;vf._rarSource=file.name;}catch(e3){} out.push(vf);}} finally{try{if(window.Unarchiver.close)await window.Unarchiver.close(ar);}catch(e4){}} return out;}
+  async function expand(raw){var out=[], notes=[]; for(var i=0;i<raw.length;i++){var f=raw[i], e=ex(f.name); if(e==='zip'){try{var z=await zipExtract(f); out.push.apply(out,z); notes.push('ZIP '+f.name+': '+z.length+' file hỗ trợ parser an toàn.');}catch(err){notes.push('ZIP '+f.name+': lỗi '+err.message);}} else if(e==='rar'){try{var r=await rarExtract(f); out.push.apply(out,r); notes.push('RAR '+f.name+': '+r.length+' file hỗ trợ parser an toàn.');}catch(err2){notes.push('RAR '+f.name+': lỗi '+err2.message);}} else out.push(f);} try{var st=S(); if(st){st.decoderNotes=st.decoderNotes||[];notes.forEach(function(x){if(st.decoderNotes.indexOf(x)<0)st.decoderNotes.push(x);}); if(typeof renderDecoderNotes==='function')renderDecoderNotes();}}catch(e){} return out;}
+  function chooseSidecarGroup(st,f,srcMap){var b=base(f.name), key=fkey(f); if(st.groups.has(b))return b; var src=Array.from(srcMap.get(key)||[]); if(src.length===1)return src[0]; var valid=Array.from(st.groups.entries()).filter(function(x){return x[1]&&x[1].cfg&&x[1].dat;}).map(function(x){return x[0];}); if(valid.length===1)return valid[0]; if(/^(fault|event|trigger|record|osc|report|disturb|ser|soe|setting|rio|goose|target|trip|summary)[_\-]/i.test(b)&&valid.length)return valid[0]; return b||'sidecar';}
+  async function handleFilesSafe(fileList){var st=S(), raw=Array.from(fileList||[]); if(!st||!raw.length)return; try{if(typeof setStatus==='function')setStatus('V9.9.39 đang phân loại file bằng pipeline an toàn...', ''); var files=await expand(raw); st.groups.clear(); st.activeBase=null; st.cfg=null; st.data=null; st.logs=[]; st.summary=[]; try{st.selectedAnalog.clear();st.selectedDigital.clear();}catch(e){st.selectedAnalog=new Set();st.selectedDigital=new Set();} st.cursorA=0;st.cursorB=0;st.activeCursor='A';st.faultAnalysis=null;st.v9939SafeVendorProfile=null; var srcMap=new Map(); for(var i=0;i<files.length;i++){var f=files[i], e=ex(f.name), b=base(f.name), key=fkey(f); if(e==='cff'){try{var cx=await extractCff(f), gb=cx.base||b; st.groups.set(gb,{cfg:cx.cfg,dat:cx.dat,logs:(cx.logs||[]).map(function(l){return makeVirtualFile([l.text],l.name,'text/plain');}),cff:f,cffMeta:cx.meta}); if(!srcMap.has(key))srcMap.set(key,new Set());srcMap.get(key).add(gb);}catch(err){st.groups.set(b,{cfg:null,dat:null,logs:[makeVirtualFile(['Lỗi đọc CFF: '+err.message],b+'.cff_error.log','text/plain')],cff:f,cffError:err.message});}} else if(e==='cfg'||e==='dat'){var g=initGroup(st,b); if(e==='cfg')g.cfg=f; else g.dat=f; if(!srcMap.has(key))srcMap.set(key,new Set());srcMap.get(key).add(b);}}
+      for(var j=0;j<files.length;j++){var sf=files[j], se=ex(sf.name); if(isSide(se)){var sb=chooseSidecarGroup(st,sf,srcMap); initGroup(st,sb).logs.push(sf);}}
+      try{renderGroups();}catch(e){} var first=Array.from(st.groups.entries()).find(function(x){return x[1]&&x[1].cfg&&x[1].dat;}); if(first)await loadGroup(first[0]); else if(typeof setStatus==='function')setStatus('Đã nhận file nhưng chưa tìm thấy CFG+DAT/CFF hợp lệ.', 'warn'); setTimeout(function(){try{if(window.v9939RenderSafeVendorParser)window.v9939RenderSafeVendorParser();}catch(e){}},350); }catch(err2){console.error(err2); if(typeof setStatus==='function')setStatus('Lỗi pipeline an toàn V9.9.39: '+err2.message,'bad');}}
+  function patch(){if(typeof handleFiles==='function'&&!handleFiles.v9939SafePipeline){window.handleFiles=handleFiles=handleFilesSafe; handleFiles.v9939SafePipeline=true;} var fi=document.getElementById('fileInput'); if(fi&&!fi.dataset.v9939Pipeline){fi.onchange=function(e){handleFilesSafe(e.target.files);};fi.dataset.v9939Pipeline='1';} var fo=document.getElementById('folderInput'); if(fo&&!fo.dataset.v9939Pipeline){fo.onchange=function(e){handleFilesSafe(e.target.files);};fo.dataset.v9939Pipeline='1';}}
+  window.v9939HandleFilesSafe=handleFilesSafe;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',patch,{once:true}); else patch();
 })();
 </script>
 
