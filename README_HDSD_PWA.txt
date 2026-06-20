@@ -1,4 +1,4 @@
-COMTRADE Offline Reader Pro V9.9.24
+COMTRADE Offline Reader Pro V9.9.25
 Bản sửa: khôi phục bảng Giá trị các phần tử sự cố theo đúng dạng sự cố trong giao diện và báo cáo HTML.
 
 COMTRADE Offline Reader Pro V4 PWA - Phân tích sự cố
@@ -50,3 +50,6 @@ BỔ SUNG V4 - PHÂN TÍCH SỰ CỐ
 - Ghép Fault Phase, Trip Phase, Fault Locator và Event CSV vào dòng thời gian phân tích.
 - Lọc raw 99999 và raw ngoài min/max CFG để tránh RMS/biểu đồ sai.
 - Xếp hạng kênh L/R1/R2/Id theo biến động sự cố để tránh chỉ dùng nhầm Ia/Ib/Ic đầu tiên.
+
+
+V9.9.25: sửa RAR đọc thiếu Fault/Event CSV và ROA; sidecar trong RAR được ghép cùng bộ CFG/DAT như ZIP/thư mục.

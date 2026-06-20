@@ -1,5 +1,5 @@
-/* COMTRADE Offline Reader Pro V9.9.24 - PWA cache for ZIP/RAR runtime */
-const CACHE_VERSION = 'comtrade-reader-v99-24-unit-sync-context-table-20260620-1';
+/* COMTRADE Offline Reader Pro V9.9.25 - PWA cache for ZIP/RAR runtime */
+const CACHE_VERSION = 'comtrade-reader-v99-25-rar-sidecar-20260620-1';
 const OLD_CACHE_PREFIX = 'comtrade-reader-';
 const APP_SHELL = [
   './',

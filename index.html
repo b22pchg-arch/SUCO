@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.9.24 PWA - Unit Sync Context Table</title>
+<title>COMTRADE Offline Reader Pro V9.9.25 PWA - Unit Sync Context Table</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -154,7 +154,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.9.24</h1>
+      <h1>COMTRADE Offline Reader Pro V9.9.25</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -2107,7 +2107,7 @@ initSidebarMode();
 
 <script>
 (function(){
-  const APP_VERSION='COMTRADE-PWA-V9.9.7-RAR-OFFLINE-CACHED';
+  const APP_VERSION='COMTRADE-PWA-V9.9.25-RAR-SIDECAR-FIX';
   let deferredPrompt=null;
   function el(id){return document.getElementById(id)}
   function toast(msg,type=''){
@@ -5042,10 +5042,10 @@ init();`+ '<\/script></body></html>';
 
 
 <script>
-/* ===== V9.9.24 PATCH: đồng bộ đơn vị toàn file + giữ bảng ngữ cảnh sau nút Áp dụng/Cập nhật bảng ===== */
+/* ===== V9.9.25 PATCH: đồng bộ đơn vị toàn file + giữ bảng ngữ cảnh sau nút Áp dụng/Cập nhật bảng ===== */
 (function(){
   'use strict';
-  const VERSION='V9.9.24-UNIT-SYNC-CONTEXT-TABLE-PERSIST';
+  const VERSION='V9.9.25-UNIT-SYNC-CONTEXT-TABLE-PERSIST';
   window.COMTRADE_V9924_VERSION=VERSION;
   const LS_UNIT='comtrade_v96_fault_analog_display_mode';
   const LS_MEASURE='comtrade_v97_fault_measure_mode';
@@ -5074,7 +5074,7 @@ init();`+ '<\/script></body></html>';
   function phaseOf(ch){ const s=norm((ch&&ch.id)+' '+(ch&&ch.phase)); if(/(^|[^A-Z0-9])(?:I|U|V|ID)?A(?:[^A-Z0-9]|$)|PHASE A/.test(s)) return 'A'; if(/(^|[^A-Z0-9])(?:I|U|V|ID)?B(?:[^A-Z0-9]|$)|PHASE B/.test(s)) return 'B'; if(/(^|[^A-Z0-9])(?:I|U|V|ID)?C(?:[^A-Z0-9]|$)|PHASE C/.test(s)) return 'C'; if(/(^|[^A-Z0-9])(N|G|E|IE|IN|IG|I0|3I0|U0|V0|UN|VN|VE)([^A-Z0-9]|$)/.test(s)) return 'N'; return ''; }
   function groupOf(ch){ const s=norm(ch&&ch.id); if(/^ID|(^|[^A-Z])ID[ABC]?([^A-Z]|$)|DIF|DIFF/.test(s)) return 'Id/Differential'; if(/R1|REMOTE1|REMOTE-1/.test(s)) return 'R1/Remote-1'; if(/R2|REMOTE2|REMOTE-2/.test(s)) return 'R2/Remote-2'; if(/(^|[^A-Z])L([^A-Z]|$)|-L([^A-Z]|$)|LOCAL/.test(s)) return 'L/Local'; if(/(^|[^A-Z])I[ABCNG]?([^A-Z]|$)|^I[ABCNG]?$/.test(s)) return 'I chính'; if(/(^|[^A-Z])[UV][ABCNG]?([^A-Z]|$)|^[UV][ABCNG]?$/.test(s)) return 'U/V'; return 'Khác'; }
   function targetUnit(kind){ const m=unitMode(); if(m==='secondary') return kind==='I'?'A thứ cấp':(kind==='V'?'V thứ cấp':''); if(m==='primary_raw') return kind==='I'?'A sơ cấp':(kind==='V'?'V sơ cấp':''); return kind==='I'?'kA sơ cấp':(kind==='V'?'kV sơ cấp':''); }
-  function unitNote(){ const m=unitMode(), mm=measureMode(); const u=m==='secondary'?'thứ cấp A/V theo a×raw+b trong DAT':(m==='primary_raw'?'sơ cấp A/V theo CT/VT':'sơ cấp kA/kV thống nhất theo CT/VT'); const p=mm==='both'?'RMS + Peak |x| song song':(mm==='peak'?'Peak |x|':'RMS'); return 'V9.9.24: đơn vị dùng chung toàn file = '+u+'; bảng/biểu đồ/báo cáo dùng cùng chế độ '+p+'.'; }
+  function unitNote(){ const m=unitMode(), mm=measureMode(); const u=m==='secondary'?'thứ cấp A/V theo a×raw+b trong DAT':(m==='primary_raw'?'sơ cấp A/V theo CT/VT':'sơ cấp kA/kV thống nhất theo CT/VT'); const p=mm==='both'?'RMS + Peak |x| song song':(mm==='peak'?'Peak |x|':'RMS'); return 'V9.9.25: đơn vị dùng chung toàn file = '+u+'; bảng/biểu đồ/báo cáo dùng cùng chế độ '+p+'.'; }
   function convertSample(v,ch,kind){
     v=Number(v); if(!Number.isFinite(v)||!kind) return NaN;
     let x=v*(baseIsK(ch,kind)?1000:1); // đổi về A hoặc V trước
@@ -5110,7 +5110,7 @@ init();`+ '<\/script></body></html>';
   function headers(){ const mm=measureMode(); if(mm==='peak') return ['Nhóm theo dạng sự cố','Đại lượng / vòng','Kênh hoặc công thức','Trước Peak |x|','Trong Peak |x|','Sau Peak |x|','Tỷ lệ Peak','Đơn vị','Vai trò']; if(mm==='rms') return ['Nhóm theo dạng sự cố','Đại lượng / vòng','Kênh hoặc công thức','Trước RMS','Trong RMS','Sau RMS','Tỷ lệ RMS','Đơn vị','Vai trò']; return ['Nhóm theo dạng sự cố','Đại lượng / vòng','Kênh hoặc công thức','Trước RMS','Trong RMS','Peak |x|','Sau RMS','Tỷ lệ RMS','Đơn vị','Vai trò']; }
   function push(rows,seen,group,sig,r,mode,role){ if(!sig) return; const key=group+'|'+sig.label+'|'+sig.channel+'|'+role+'|'+unitMode()+'|'+measureMode(); if(seen.has(key)) return; const row=rowOf(group,sig,r,mode,role); if(row){ rows.push(row); seen.add(key); } }
   function pair(ph){ return ph&&ph.length>=2?[ph[0],ph[1]]:['A','B']; }
-  function buildValue(r){ const fm=faultModel(r), rows=[], seen=new Set(); const usePh=(fm.code==='LLL'||fm.code==='LLLG'||(!fm.phases.length&&!fm.voltage))?['A','B','C']:(fm.phases.length?fm.phases.slice():(fm.code==='VOLT'?['A','B','C']:[])); const head=headers(); const first=new Array(head.length).fill(''); first[0]='Nhận dạng sự cố V9.9.24'; first[1]=fm.label; first[2]=(r&&r.relayFaultPhase?('Fault Phase='+r.relayFaultPhase):'')+(r&&r.relayTripPhase?(' · Trip Phase='+r.relayTripPhase):''); first[head.length-1]=fm.diff?'Dạng 87L/DIF: ưu tiên Fault CSV; waveform chỉ kiểm chứng':'Bảng ngữ cảnh, đơn vị đồng bộ'; rows.push(first);
+  function buildValue(r){ const fm=faultModel(r), rows=[], seen=new Set(); const usePh=(fm.code==='LLL'||fm.code==='LLLG'||(!fm.phases.length&&!fm.voltage))?['A','B','C']:(fm.phases.length?fm.phases.slice():(fm.code==='VOLT'?['A','B','C']:[])); const head=headers(); const first=new Array(head.length).fill(''); first[0]='Nhận dạng sự cố V9.9.25'; first[1]=fm.label; first[2]=(r&&r.relayFaultPhase?('Fault Phase='+r.relayFaultPhase):'')+(r&&r.relayTripPhase?(' · Trip Phase='+r.relayTripPhase):''); first[head.length-1]=fm.diff?'Dạng 87L/DIF: ưu tiên Fault CSV; waveform chỉ kiểm chứng':'Bảng ngữ cảnh, đơn vị đồng bộ'; rows.push(first);
     const I={},V={}; ['A','B','C','N'].forEach(function(p){ I[p]=sigFor(r,'I',p,/I chính|L\/Local|R1\/Remote|R2\/Remote/i,/Id|Differential/i,'I'+p); V[p]=sigFor(r,'V',p,/U\/V|Khác/i,null,'U'+p); });
     usePh.forEach(function(p){ push(rows,seen,'Dòng pha sự cố',I[p],r,'max','pha '+p+' thuộc Fault Phase'); });
     (fm.tripPhases||[]).forEach(function(p){ if(usePh.indexOf(p)<0) push(rows,seen,'Dòng pha trip/đối chiếu',I[p],r,'max','Trip Phase '+p+' không thuộc Fault Phase'); });
@@ -5130,18 +5130,18 @@ init();`+ '<\/script></body></html>';
   function seqCalc(a,b,c0){ const A=c(Math.cos(2*Math.PI/3),Math.sin(2*Math.PI/3)), A2=c(Math.cos(4*Math.PI/3),Math.sin(4*Math.PI/3)); return {zero:cscale(cadd(cadd(a,b),c0),1/3), pos:cscale(cadd(cadd(a,cmul(A,b)),cmul(A2,c0)),1/3), neg:cscale(cadd(cadd(a,cmul(A2,b)),cmul(A,c0)),1/3)}; }
   function buildSeq(r){ const fm=faultModel(r), w=range(r); if(!w) return []; const start=Math.max(0,Math.min(w.e-w.win, w.s+Math.max(1,Math.floor(w.win/2)))); const rows=[]; function one(kind){ const SA=sigFor(r,kind,'A',kind==='I'?/I chính|L\/Local|R1\/Remote|R2\/Remote/i:/U\/V|Khác/i,kind==='I'?/Id|Differential/i:null,kind+'A'), SB=sigFor(r,kind,'B',kind==='I'?/I chính|L\/Local|R1\/Remote|R2\/Remote/i:/U\/V|Khác/i,kind==='I'?/Id|Differential/i:null,kind+'B'), SC=sigFor(r,kind,'C',kind==='I'?/I chính|L\/Local|R1\/Remote|R2\/Remote/i:/U\/V|Khác/i,kind==='I'?/Id|Differential/i:null,kind+'C'); if(!SA||!SB||!SC) return; const z=seqCalc(phasor(SA,start,w.win),phasor(SB,start,w.win),phasor(SC,start,w.win)); const u=targetUnit(kind), base=cabs(z.pos); const name=kind==='I'?'dòng':'áp'; const select = fm.code==='SLG'?['zero','pos','neg']:(fm.code==='LL'||fm.code==='LLG'?['neg','pos','zero']:(fm.code==='LLL'||fm.code==='LLLG'?['pos','neg','zero']:['pos','neg','zero'])); const labs={pos:(kind==='I'?'I1':'U1/V1'),neg:(kind==='I'?'I2':'U2/V2'),zero:(kind==='I'?'I0':'U0/V0')}; const notes={pos:'thành phần thuận',neg:(fm.code==='LL'||fm.code==='LLG'?'thứ tự nghịch đặc trưng sự cố không đối xứng':'đối chiếu thứ tự nghịch'),zero:fm.ground?'thứ tự không đặc trưng chạm đất':'thứ tự không/đối chiếu'}; select.forEach(function(k){ const mag=cabs(z[k]); if(!Number.isFinite(mag)) return; rows.push(['Thành phần thứ tự '+name,labs[k],fmt(mag,6),u,fmt(cang(z[k]),2),Number.isFinite(base)&&Math.abs(base)>1e-12?fmt(mag/base*100,2)+' %':'',notes[k]]); }); }
     one('I'); one('V'); return rows.slice(0,18); }
-  function prepare(r){ if(!r) return r; try{ const pack=buildValue(r); r.v9924FaultModel=pack.model; r.v9924ValueHeaders=pack.headers; r.v9924ValueRows=pack.rows; r.v10ValueHeaders=pack.headers; r.v10ValueRows=pack.rows; const seq=buildSeq(r); r.v9924SequenceRows=seq; r.sequence=r.sequence||{}; r.sequence.v9924Rows=seq; r.sequence.rowsV10=seq; r.v10UnitMode=unitMode(); r.v10MeasureMode=measureMode(); r.v10UnitNote=unitNote(); r.notes=r.notes||[]; if(!r.notes.some(function(x){return /V9\.9\.24/.test(String(x));})) r.notes.push(unitNote()+' Nút Áp dụng/Cập nhật bảng không còn quay về bảng cố định cũ.'); }catch(e){ console.warn('[V9.9.24] prepare failed',e); } return r; }
-  function render(){ const st=G(), r=st&&st.faultAnalysis; if(!r) return; prepare(r); const box=byId('faultValueTable'); if(box){ box.innerHTML='<div class="v9924-note">Bảng V9.9.24 theo dạng sự cố: <b>'+esc((r.v9924FaultModel&&r.v9924FaultModel.label)||'chưa rõ')+'</b>. '+esc(unitNote())+'</div>'+table(r.v9924ValueHeaders,r.v9924ValueRows); }
+  function prepare(r){ if(!r) return r; try{ const pack=buildValue(r); r.v9924FaultModel=pack.model; r.v9924ValueHeaders=pack.headers; r.v9924ValueRows=pack.rows; r.v10ValueHeaders=pack.headers; r.v10ValueRows=pack.rows; const seq=buildSeq(r); r.v9924SequenceRows=seq; r.sequence=r.sequence||{}; r.sequence.v9924Rows=seq; r.sequence.rowsV10=seq; r.v10UnitMode=unitMode(); r.v10MeasureMode=measureMode(); r.v10UnitNote=unitNote(); r.notes=r.notes||[]; if(!r.notes.some(function(x){return /V9\.9\.24/.test(String(x));})) r.notes.push(unitNote()+' Nút Áp dụng/Cập nhật bảng không còn quay về bảng cố định cũ.'); }catch(e){ console.warn('[V9.9.25] prepare failed',e); } return r; }
+  function render(){ const st=G(), r=st&&st.faultAnalysis; if(!r) return; prepare(r); const box=byId('faultValueTable'); if(box){ box.innerHTML='<div class="v9924-note">Bảng V9.9.25 theo dạng sự cố: <b>'+esc((r.v9924FaultModel&&r.v9924FaultModel.label)||'chưa rõ')+'</b>. '+esc(unitNote())+'</div>'+table(r.v9924ValueHeaders,r.v9924ValueRows); }
     const seq=byId('sequenceTable'); if(seq){ const rows=r.v9924SequenceRows||[]; seq.innerHTML=rows.length?table(['Thành phần/nhóm','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'],rows):'<div class="tiny" style="padding:12px">Chưa đủ 3 pha để tính thành phần thứ tự theo đơn vị đang chọn.</div>'; }
-    const sn=byId('sequenceNote'); if(sn) sn.textContent='V9.9.24: thành phần thứ tự/vector được tính lại theo đúng đơn vị đang chọn; chạm đất ưu tiên I0/U0, pha-pha ưu tiên I2/U2, 3 pha ưu tiên I1/U1.';
+    const sn=byId('sequenceNote'); if(sn) sn.textContent='V9.9.25: thành phần thứ tự/vector được tính lại theo đúng đơn vị đang chọn; chạm đất ưu tiên I0/U0, pha-pha ưu tiên I2/U2, 3 pha ưu tiên I1/U1.';
     const notes=[byId('v9915FaultUnitNote'),byId('v96FaultUnitNote'),byId('v97FaultUnitNote')].filter(Boolean); notes.forEach(function(n){n.textContent=unitNote();}); const stt=byId('v96CtptStatus'); if(stt) stt.textContent=unitNote(); }
   window.v9924PrepareFaultTables=prepare; window.v9924RenderContextTables=render;
 
   function sectionHtml(r){ prepare(r); const seq=r&&r.v9924SequenceRows||[]; return '<h2>Giá trị các phần tử sự cố</h2><div class="note">'+esc(unitNote())+'</div>'+table(r.v9924ValueHeaders||[],r.v9924ValueRows||[])+(seq.length?'<h2>Thành phần thứ tự và pha vector</h2>'+table(['Thành phần/nhóm','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc (độ)','Tỷ lệ','Ghi chú'],seq):''); }
   function patchStatic(html,r){ if(!html||!r) return html; const block=sectionHtml(r); const re=/<h2>Giá trị các phần tử sự cố<\/h2>[\s\S]*?(?=<h2>Dòng thời gian tác động<\/h2>)/i; if(re.test(html)) return html.replace(re,block); return html.replace('</body>',block+'</body>'); }
-  function patchDyn(html,r){ if(!html||!r) return html; prepare(r); const m=html.match(/(<script id="payload" type="application\/json">)([\s\S]*?)(<\\\/script>|<\/script>)/i); if(!m) return html; try{ const p=JSON.parse(m[2]); p.valueHeaders=r.v9924ValueHeaders||p.valueHeaders; p.valueRows=r.v9924ValueRows||p.valueRows; p.sequenceRows=r.v9924SequenceRows||p.sequenceRows; p.unitNote=unitNote(); p.chartModeLabel=(p.chartModeLabel||'')+' · '+unitNote(); const js=JSON.stringify(p).replace(/<\//g,'<\\/'); return html.slice(0,m.index)+m[1]+js+m[3]+html.slice(m.index+m[0].length); }catch(e){ console.warn('[V9.9.24] dynamic payload patch failed',e); return html; } }
+  function patchDyn(html,r){ if(!html||!r) return html; prepare(r); const m=html.match(/(<script id="payload" type="application\/json">)([\s\S]*?)(<\\\/script>|<\/script>)/i); if(!m) return html; try{ const p=JSON.parse(m[2]); p.valueHeaders=r.v9924ValueHeaders||p.valueHeaders; p.valueRows=r.v9924ValueRows||p.valueRows; p.sequenceRows=r.v9924SequenceRows||p.sequenceRows; p.unitNote=unitNote(); p.chartModeLabel=(p.chartModeLabel||'')+' · '+unitNote(); const js=JSON.stringify(p).replace(/<\//g,'<\\/'); return html.slice(0,m.index)+m[1]+js+m[3]+html.slice(m.index+m[0].length); }catch(e){ console.warn('[V9.9.25] dynamic payload patch failed',e); return html; } }
   if(typeof window.analyzeFaultCore==='function'){ const prev=window.analyzeFaultCore; window.analyzeFaultCore=function(){ const r=prev.apply(this,arguments); return prepare(r); }; }
-  if(typeof window.renderFaultAnalysis==='function'){ const prev=window.renderFaultAnalysis; window.renderFaultAnalysis=function(){ const ret=prev.apply(this,arguments); try{ bindControls(); render(); setTimeout(render,0); setTimeout(render,150); }catch(e){ console.warn('[V9.9.24] render wrapper failed',e); } return ret; }; }
+  if(typeof window.renderFaultAnalysis==='function'){ const prev=window.renderFaultAnalysis; window.renderFaultAnalysis=function(){ const ret=prev.apply(this,arguments); try{ bindControls(); render(); setTimeout(render,0); setTimeout(render,150); }catch(e){ console.warn('[V9.9.25] render wrapper failed',e); } return ret; }; }
   if(typeof window.makeFaultReportHtml==='function'){ const prev=window.makeFaultReportHtml; window.makeFaultReportHtml=function(){ let r=null; try{ r=window.ensureFaultAnalysis?window.ensureFaultAnalysis():(G()&&G().faultAnalysis); prepare(r); }catch(e){} return patchStatic(prev.apply(this,arguments),r||((G()||{}).faultAnalysis)); }; }
   if(typeof window.makeFaultInteractiveReportHtml==='function'){ const prev=window.makeFaultInteractiveReportHtml; window.makeFaultInteractiveReportHtml=function(){ let r=null; try{ r=window.ensureFaultAnalysis?window.ensureFaultAnalysis():(G()&&G().faultAnalysis); prepare(r); }catch(e){} return patchDyn(prev.apply(this,arguments),r||((G()||{}).faultAnalysis)); }; }
   if(typeof window.makeFaultReportText==='function'){ const prevTxt=window.makeFaultReportText; window.makeFaultReportText=function(){ const r=window.ensureFaultAnalysis?window.ensureFaultAnalysis():((G()||{}).faultAnalysis); prepare(r); let lines=['BÁO CÁO PHÂN TÍCH SỰ CỐ COMTRADE','Bộ file: '+(((G()||{}).activeBase)||'comtrade'),'Tạo lúc: '+new Date().toLocaleString('vi-VN'),'Chế độ: '+unitNote(),'']; try{ (typeof faultSummaryRows==='function'?faultSummaryRows(r):[]).forEach(function(x){lines.push(txt(x[0])+': '+txt(x[1]));}); }catch(e){} lines.push('','GIÁ TRỊ CÁC PHẦN TỬ SỰ CỐ',(r.v9924ValueHeaders||[]).join('\t')); (r.v9924ValueRows||[]).forEach(function(x){lines.push(x.map(txt).join('\t'));}); if((r.v9924SequenceRows||[]).length){ lines.push('','THÀNH PHẦN THỨ TỰ VÀ PHA VECTOR',['Thành phần','Kênh/Nhóm','Biên độ RMS','Đơn vị','Góc','Tỷ lệ','Ghi chú'].join('\t')); r.v9924SequenceRows.forEach(function(x){lines.push(x.map(txt).join('\t'));}); } lines.push('','DÒNG THỜI GIAN TÁC ĐỘNG',['t(s)','Sự kiện','Kênh','Chi tiết'].join('\t')); (r.timeline||[]).forEach(function(x){lines.push([fmt(x.time,9),x.event,x.channel||'',x.detail||''].map(txt).join('\t'));}); return lines.join('\n'); }; }
@@ -5153,6 +5153,131 @@ init();`+ '<\/script></body></html>';
   function init(){ style(); bindControls(); try{ render(); }catch(e){} const mo=new MutationObserver(function(){ bindControls(); }); try{ mo.observe(document.body,{childList:true,subtree:true}); }catch(e){} setInterval(bindControls,1500); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init(); window.addEventListener('load',function(){ init(); setTimeout(scheduleRender,700); });
 })();
+</script>
+<script id="v9925-rar-sidecar-csv-roa-fix">
+(function(){
+  'use strict';
+  const PATCH='V9.9.25 RAR Sidecar CSV/ROA Fix';
+  function ex(name){
+    const s=String(name||'').split(/[?#]/)[0];
+    const p=s.lastIndexOf('.');
+    return p>=0?s.slice(p+1).toLowerCase():'';
+  }
+  function shortName(path){ return String(path||'').replace(/\\/g,'/').split('/').filter(Boolean).pop() || String(path||'file'); }
+  function baseOf(name){ const sn=shortName(name); const p=sn.lastIndexOf('.'); return p>=0?sn.slice(0,p):sn; }
+  function mime(name){
+    const e=ex(name);
+    if(['cfg','dat','cff','log','hdr','inf','txt','csv','roa'].includes(e)) return 'text/plain;charset=utf-8';
+    return 'application/octet-stream';
+  }
+  function sideExt(e){ return ['log','hdr','inf','txt','csv','roa'].includes(String(e||'').toLowerCase()); }
+  function allExt(e){ return ['cfg','dat','cff','log','hdr','inf','txt','csv','roa'].includes(String(e||'').toLowerCase()); }
+  function setNote(msg){ try{ const st=(typeof state!=='undefined')?state:null; if(st){ st.decoderNotes=st.decoderNotes||[]; if(!st.decoderNotes.includes(msg)) st.decoderNotes.push(msg); } }catch(e){} }
+
+  async function extractRarWithSidecars(file){
+    if(!globalThis.Unarchiver || typeof globalThis.Unarchiver.open!=='function'){
+      if(typeof globalThis.extractRarFile==='function' && globalThis.extractRarFile._v9925_native!==true){
+        const got=await globalThis.extractRarFile(file);
+        return got;
+      }
+      throw new Error('Thiếu runtime đọc RAR offline: unarchiver.min.js, worker-bundle.js, libarchive.wasm.');
+    }
+    const archive=await globalThis.Unarchiver.open(file);
+    const out=[]; let seenSidecar=0;
+    try{
+      const entries=Array.from((archive&&archive.entries)||[]);
+      for(const ent of entries){
+        if(!ent || ent.is_file===false) continue;
+        const full=String(ent.name||''); const e=ex(full);
+        if(!allExt(e)) continue;
+        let f=await ent.read();
+        const sn=shortName(full);
+        if(!f || !f.name || f.name!==sn || !f._archiveSource){
+          try{ f=new File([f], sn, {type:mime(sn), lastModified:file.lastModified||Date.now()}); }
+          catch(_){ try{ f=new Blob([f], {type:mime(sn)}); f.name=sn; f.lastModified=file.lastModified||Date.now(); }catch(__){} }
+        }
+        try{ f._archivePath=full; f._archiveSource=file.name; f._rarPath=full; f._rarSource=file.name; }catch(_){ }
+        if(e==='csv'||e==='roa') seenSidecar++;
+        out.push(f);
+      }
+    }finally{
+      try{ if(globalThis.Unarchiver.close) await globalThis.Unarchiver.close(archive); }catch(_e){}
+    }
+    if(!out.length) throw new Error('Đã mở được RAR nhưng không thấy CFG/DAT/CFF/LOG/HDR/INF/TXT/CSV/ROA bên trong.');
+    if(seenSidecar) setNote(PATCH+': RAR đã nhận '+seenSidecar+' file CSV/ROA phụ trợ.');
+    return out;
+  }
+  extractRarWithSidecars._v9925_native=true;
+  globalThis.extractRarFile=extractRarWithSidecars;
+
+  function sourceKey(f){
+    return f?((f._zipSource&&('zip:'+f._zipSource)) || (f._archiveSource&&('rar:'+f._archiveSource)) || (f._rarSource&&('rar:'+f._rarSource)) || (f.webkitRelativePath&&('folder:'+String(f.webkitRelativePath).split('/')[0])) || 'loose'):'loose';
+  }
+  function initG(st,b){ if(!st.groups.has(b)) st.groups.set(b,{cfg:null,dat:null,logs:[]}); return st.groups.get(b); }
+  function bestSidecarGroup(st,f,sourceToBases){
+    const b=baseOf(f.name), key=sourceKey(f);
+    if(st.groups.has(b)) return b;
+    const srcBases=Array.from(sourceToBases.get(key)||[]).filter(x=>{ const g=st.groups.get(x); return g&&(g.cfg||g.dat); });
+    if(srcBases.length===1) return srcBases[0];
+    const full=Array.from(st.groups.entries()).filter(([_,g])=>g&&g.cfg&&g.dat).map(([x])=>x);
+    if(full.length===1) return full[0];
+    if(/^(fault|event|trigger|record|osc|roa|report|disturb|faultrec|comtrade)[_\-]/i.test(b) && full.length) return full[0];
+    return b || (ex(f.name)+'_sidecar');
+  }
+
+  globalThis.expandArchiveInputsV9925 = async function(rawFiles){
+    const result=[], messages=[];
+    for(const f of Array.from(rawFiles||[])){
+      const e=ex(f.name);
+      if(e==='zip'){
+        try{ if(typeof setStatus==='function') setStatus('Đang giải nén ZIP: '+f.name,''); const got=await extractZipFile(f); result.push(...got); messages.push('ZIP '+f.name+': đã giải nén '+got.length+' file gồm COMTRADE + sidecar.'); }
+        catch(err){ const msg='ZIP '+f.name+': lỗi - '+err.message; messages.push(msg); try{ result.push(makeVirtualFile([msg], baseOf(f.name)+'_zip_error.log','text/plain')); }catch(_){} }
+      }else if(e==='rar'){
+        try{ if(typeof setStatus==='function') setStatus('Đang giải nén RAR: '+f.name,''); const got=await extractRarWithSidecars(f); result.push(...got); messages.push('RAR '+f.name+': đã giải nén '+got.length+' file gồm COMTRADE + sidecar CSV/ROA.'); }
+        catch(err){ const msg='RAR '+f.name+': '+err.message; messages.push(msg); try{ result.push(makeVirtualFile([msg], baseOf(f.name)+'_rar_note.log','text/plain')); }catch(_){} }
+      }else result.push(f);
+    }
+    try{ if(typeof state!=='undefined' && messages.length){ state.decoderNotes=state.decoderNotes||[]; state.decoderNotes.push(...messages); } }catch(_){ }
+    return result;
+  };
+  try{ if(typeof expandArchiveInputsV9919==='function') expandArchiveInputsV9919=globalThis.expandArchiveInputsV9925; }catch(_){ }
+  try{ if(typeof expandArchiveInputs==='function') expandArchiveInputs=globalThis.expandArchiveInputsV9925; }catch(_){ }
+
+  try{
+  if(typeof state!=='undefined' && typeof loadGroup==='function'){
+    handleFiles=async function(fileList){
+      const st=state; const rawFiles=Array.from(fileList||[]); if(!rawFiles.length) return;
+      try{
+        if(typeof setStatus==='function') setStatus('Đang mở danh sách file...', '');
+        const files=await globalThis.expandArchiveInputsV9925(rawFiles); if(!files.length) return;
+        st.groups.clear(); st.activeBase=null; st.cfg=null; st.data=null; st.logs=[]; st.summary=[];
+        try{ st.selectedAnalog.clear(); st.selectedDigital.clear(); }catch(_){ st.selectedAnalog=new Set(); st.selectedDigital=new Set(); }
+        st.cursorA=0; st.cursorB=0; st.activeCursor='A'; st.faultAnalysis=null; st.sidecars=null;
+        const sourceToBases=new Map();
+        for(const f of files){
+          const e=ex(f.name), b=baseOf(f.name), key=sourceKey(f);
+          if(e==='cff'){
+            try{ const cx=await extractCff(f); const gb=cx.base||b; st.groups.set(gb,{cfg:cx.cfg,dat:cx.dat,logs:(cx.logs||[]).map(l=>makeVirtualFile([l.text],l.name,'text/plain')),cff:f,cffMeta:cx.meta}); if(!sourceToBases.has(key)) sourceToBases.set(key,new Set()); sourceToBases.get(key).add(gb); }
+            catch(err){ st.groups.set(b,{cfg:null,dat:null,logs:[makeVirtualFile(['Lỗi đọc CFF: '+err.message],b+'.cff_error.log','text/plain')],cff:f,cffError:err.message}); }
+          }else if(e==='cfg'||e==='dat'){
+            const g=initG(st,b); if(e==='cfg') g.cfg=f; else g.dat=f;
+            if(!sourceToBases.has(key)) sourceToBases.set(key,new Set()); sourceToBases.get(key).add(b);
+          }
+        }
+        for(const f of files){
+          const e=ex(f.name); if(!sideExt(e)) continue;
+          const b=bestSidecarGroup(st,f,sourceToBases); initG(st,b).logs.push(f);
+        }
+        try{ renderGroups(); }catch(_){ }
+        const first=Array.from(st.groups.entries()).find(([_,g])=>g&&g.cfg&&g.dat);
+        if(first) await loadGroup(first[0]); else if(typeof setStatus==='function') setStatus('Đã nhận file nhưng chưa tìm thấy .CFG + .DAT hoặc CFF hợp lệ.', 'warn');
+      }catch(err){ console.error(err); if(typeof setStatus==='function') setStatus('Lỗi đọc danh sách file/RAR: '+err.message,'bad'); }
+    };
+  }
+  }catch(_){ }
+  try{ setNote(PATCH+': bật nhận CSV/ROA trong RAR và ghép sidecar theo cùng nguồn RAR.'); }catch(_){ }
+})();
+
 </script>
 </body>
 </html>
