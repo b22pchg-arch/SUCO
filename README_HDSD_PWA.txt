@@ -1,3 +1,5 @@
+COMTRADE Offline Reader Pro V9.9.28 - Record Decoder Plus
+
 COMTRADE Offline Reader Pro V9.9.27
 Bản sửa: khôi phục bảng Giá trị các phần tử sự cố theo đúng dạng sự cố trong giao diện và báo cáo HTML.
 

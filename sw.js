@@ -1,5 +1,5 @@
-/* COMTRADE Offline Reader Pro V9.9.27 - PWA cache for stable open guard */
-const CACHE_VERSION = 'comtrade-reader-v99-27-stable-open-guard-20260620-1';
+/* COMTRADE Offline Reader Pro V9.9.28 - PWA cache for stable open guard */
+const CACHE_VERSION = 'comtrade-reader-v99-28-record-decoder-plus-20260620-1';
 const OLD_CACHE_PREFIX = 'comtrade-reader-';
 const APP_SHELL = [
   './',

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.9.27 PWA - Stable Profile Fix</title>
+<title>COMTRADE Offline Reader Pro V9.9.28 PWA - Record Decoder Plus</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -154,7 +154,7 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
 <div class="app">
   <aside class="side">
     <div class="side-head">
-      <h1>COMTRADE Offline Reader Pro V9.9.27</h1>
+      <h1>COMTRADE Offline Reader Pro V9.9.28</h1>
       <p class="sub">Đọc, phân tích và thống kê sự cố từ <b>.CFG</b>, <b>.DAT</b>, <b>.CFF</b>, <b>.LOG/.HDR/.INF</b> ngay trên máy, không gửi dữ liệu ra ngoài.</p>
     </div>
     <div class="side-body">
@@ -5395,5 +5395,206 @@ init();`+ '<\/script></body></html>';
 })();
 </script>
 
+
+
+<script id="v9928-record-decoder-plus">
+(function(){
+  'use strict';
+  const VERSION='V9.9.28-RECORD-DECODER-PLUS';
+  try{ window.COMTRADE_V9928_VERSION=VERSION; }catch(_e){}
+  function G(){ try{ return (typeof state!=='undefined')?state:null; }catch(_){ return null; } }
+  function byId(id){ return document.getElementById(id); }
+  function N(s){ return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
+  function E(s){ try{ return esc(s); }catch(_){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c;}); } }
+  function F(v,d){ v=Number(v); if(!Number.isFinite(v)) return ''; try{ return fmt(v,d==null?6:d); }catch(_){ return v.toFixed(d==null?6:d); } }
+  function ext(name){ try{ return extName(name); }catch(_){ const m=String(name||'').toLowerCase().match(/\.([^.]+)$/); return m?m[1]:''; } }
+  function tableSafe(h,rows){ try{ return table(h,rows); }catch(_){ return '<table><thead><tr>'+h.map(x=>'<th>'+E(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table>'; } }
+  function addNote(msg){ try{ const st=G(); if(st){ st.decoderNotes=st.decoderNotes||[]; if(!st.decoderNotes.includes(msg)) st.decoderNotes.push(msg); } }catch(_){} }
+
+  // 1) Giải mã văn bản mạnh hơn: UTF-8 strict, UTF-16 có/không BOM, Windows-1258/1252 khi UTF-8 lỗi hoặc nhiều ký tự thay thế.
+  const prevTextDecode=(typeof textDecode==='function')?textDecode:null;
+  function decodeWith(label,u){ try{ return new TextDecoder(label,{fatal:false}).decode(u).replace(/^\uFEFF/,''); }catch(_){ return null; } }
+  function replScore(s){ const m=String(s||'').match(/\uFFFD/g); return m?m.length:0; }
+  try{
+    textDecode=function(bytes){
+      const u=bytes instanceof Uint8Array?bytes:new Uint8Array(bytes||[]);
+      try{
+        if(u.length>=2 && u[0]===0xFF && u[1]===0xFE) return decodeWith('utf-16le',u.subarray(2))||'';
+        if(u.length>=2 && u[0]===0xFE && u[1]===0xFF) return decodeWith('utf-16be',u.subarray(2))||'';
+        if(u.length>=3 && u[0]===0xEF && u[1]===0xBB && u[2]===0xBF) return decodeWith('utf-8',u.subarray(3))||'';
+        let zEven=0,zOdd=0,lim=Math.min(u.length,4096);
+        for(let i=0;i<lim;i++){ if(u[i]===0){ if(i%2) zOdd++; else zEven++; } }
+        if(zOdd>lim*0.12 && zOdd>zEven*2) return decodeWith('utf-16le',u)||'';
+        if(zEven>lim*0.12 && zEven>zOdd*2) return decodeWith('utf-16be',u)||'';
+        let utf8=''; let strictBad=false;
+        try{ utf8=new TextDecoder('utf-8',{fatal:true}).decode(u).replace(/^\uFEFF/,''); }
+        catch(_){ strictBad=true; utf8=decodeWith('utf-8',u)||''; }
+        const cp1258=decodeWith('windows-1258',u);
+        const cp1252=decodeWith('windows-1252',u);
+        if(strictBad || replScore(utf8)>Math.max(2,utf8.length*0.003)){
+          const cands=[utf8,cp1258,cp1252].filter(x=>x!=null);
+          cands.sort(function(a,b){ return replScore(a)-replScore(b); });
+          return cands[0]||utf8;
+        }
+        return utf8;
+      }catch(e){ if(prevTextDecode) try{ return prevTextDecode(bytes); }catch(_){} let s=''; for(const b of u)s+=String.fromCharCode(b); return s.replace(/^\uFEFF/,''); }
+    };
+  }catch(_e){}
+
+  function getOpt(name){ try{ return option(name); }catch(_){ return ''; } }
+  function countBadTimes(times){ let bad=0,huge=0,zero=0; const n=times?times.length:0; if(n<2) return {bad:0,huge:0,zero:0,dtMed:NaN}; const d=[]; for(let i=1;i<n;i++){ const a=Number(times[i-1]), b=Number(times[i]); const dt=b-a; if(!Number.isFinite(dt)||dt<0) bad++; if(dt===0) zero++; if(dt>0) d.push(dt); } d.sort((a,b)=>a-b); const med=d.length?d[Math.floor(d.length/2)]:NaN; for(const x of d){ if(Number.isFinite(med)&&med>0&&x>med*25) huge++; } return {bad,huge,zero,dtMed:med}; }
+  function rebuildTimes(out,cfg,reason){ if(!out||!out.times) return out; const n=out.samples||out.times.length; const t=new Float64Array(n); for(let i=0;i<n;i++){ try{ t[i]=timeBySample(cfg,i+1,i); }catch(_){ const rate=(cfg&&cfg.sampleRates&&cfg.sampleRates[0]&&cfg.sampleRates[0].rate)||1000; t[i]=i/Math.max(rate,1); } } out.times=t; out.v9928TimeRepaired=true; out.parserNotes=out.parserNotes||[]; out.parserNotes.push('V9.9.28: đã dựng lại trục thời gian theo sample rate vì '+reason+'.'); return out; }
+  function postProcessData(out,cfg,source){
+    if(!out||!out.times) return out;
+    const st=G(); const q=countBadTimes(out.times); const n=out.samples||out.times.length; const rate=(cfg&&cfg.sampleRates&&cfg.sampleRates[0]&&cfg.sampleRates[0].rate)||0;
+    if(n>5 && (q.bad>0 || q.zero>Math.max(10,n*0.05) || q.huge>Math.max(2,n*0.01))){
+      rebuildTimes(out,cfg,'mốc thời gian không đơn điệu/lặp/bị nhảy');
+    }
+    out.v9928Quality={timeIssues:q,source:source||out.format||'',sampleRate:rate};
+    try{
+      if(st&&out.v9928TimeRepaired){ st.decoderNotes=st.decoderNotes||[]; st.decoderNotes.push('V9.9.28: trục thời gian DAT đã được sửa theo sample rate; nên kiểm tra lại mốc trigger khi đối chiếu SOE.'); }
+    }catch(_){}
+    // Thống kê kênh có nhiều NaN do lọc padding/out-of-range để cảnh báo khi chọn nhầm kênh.
+    try{
+      const warn=[]; const A=(cfg&&cfg.analogCount)||0;
+      for(let a=0;a<A;a++){
+        const arr=out.analog&&out.analog[a]; if(!arr) continue; let nan=0; for(let i=0;i<arr.length;i++){ if(!Number.isFinite(arr[i])) nan++; }
+        if(nan>arr.length*0.05) warn.push('#'+(a+1)+' '+((cfg.analog[a]&&cfg.analog[a].id)||'')+': '+Math.round(nan/arr.length*100)+'% NaN');
+      }
+      if(warn.length){ out.parserNotes=out.parserNotes||[]; out.parserNotes.push('V9.9.28: kênh có nhiều mẫu bị lọc/padding: '+warn.slice(0,8).join('; ')); }
+    }catch(_){}
+    return out;
+  }
+
+  // 2) DAT ASCII cũng dùng textDecode mới, vì một số hãng xuất ASCII/CSV theo UTF-16 hoặc ANSI.
+  try{
+    if(typeof parseDat==='function'){
+      const oldParseDat=parseDat;
+      parseDat=async function(file,cfg){
+        const override=getOpt('datTypeOverride'); const type=(override&&override!=='cfg')?override:(cfg&&cfg.datType?cfg.datType:'ASCII');
+        if(type==='ASCII' || !['BINARY','BINARY32','FLOAT32'].includes(type)){
+          const buf=await file.arrayBuffer();
+          const txt=textDecode(new Uint8Array(buf));
+          return postProcessData(parseDatAscii(txt,cfg,type),cfg,'ASCII/textDecode');
+        }
+        const out=await oldParseDat.apply(this,arguments);
+        return postProcessData(out,cfg,type);
+      };
+    }
+  }catch(e){ console.warn('[V9.9.28] parseDat patch failed',e); }
+
+  // 3) Parser sidecar chung: SEL/SIPROTEC/ABB/MiCOM/GE/NR/ZIV... dạng TXT/LOG/CSV/SOE/SER.
+  function splitCells(line){ line=String(line||''); if(line.indexOf('\t')>=0) return line.split('\t').map(x=>x.trim()); if(line.indexOf(';')>=0) return line.split(';').map(x=>x.trim()); try{ return csvSplit(line); }catch(_){ return line.split(',').map(x=>x.trim()); } }
+  function parseNum(s){ const m=String(s||'').replace(',', '.').match(/[-+]?\d+(?:\.\d+)?/); return m?Number(m[0]):NaN; }
+  function normPhase(s){
+    let t=N(s).replace(/PHASE|PHASES|FAULT|TRIP|LOOP|PHA|REL|RELAY|TO|GROUND|GND|EARTH|DAT|CHAM|PHA|SU CO/g,'');
+    t=t.replace(/[^ABCNG0]/g,''); const out=[]; for(const c of t){ if('ABC'.includes(c)&&!out.includes(c)) out.push(c); }
+    const ground=/G|N|0/.test(t)||/GROUND|GND|EARTH|DAT|CHAM/i.test(String(s||''));
+    return {text:out.join('')+(ground&&out.length<3?'G':''), phases:out, ground};
+  }
+  function parseDateFlex(line){
+    const s=String(line||''); let m;
+    m=s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})[ T,]+(\d{1,2}):(\d{2}):(\d{2})(?:[\.,](\d{1,9}))?/);
+    if(m) return {full:m[0],y:+m[1],mo:+m[2],d:+m[3],h:+m[4],mi:+m[5],se:+m[6],frac:m[7]||''};
+    m=s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})[ T,]+(\d{1,2}):(\d{2}):(\d{2})(?:[\.,](\d{1,9}))?/);
+    if(m) return {full:m[0],y:+m[3],mo:+m[2],d:+m[1],h:+m[4],mi:+m[5],se:+m[6],frac:m[7]||''};
+    m=s.match(/(?:^|\s)(\d{1,2}):(\d{2}):(\d{2})(?:[\.,](\d{1,9}))?(?:\s|$)/);
+    if(m) return {full:m[0],timeOnly:true,h:+m[1],mi:+m[2],se:+m[3],frac:m[4]||''};
+    return null;
+  }
+  function cfgParts(str){ const p=parseDateFlex(str); return p&&!p.timeOnly?p:null; }
+  function epochSec(p){ if(!p) return NaN; const us=Number((p.frac||'').padEnd(6,'0').slice(0,6))||0; return Date.UTC(p.y,p.mo-1,p.d,p.h,p.mi,p.se,Math.floor(us/1000))/1000 + (us%1000)/1e6; }
+  function relTimeFromLine(line){
+    const st=G(), cfg=st&&st.cfg, data=st&&st.data, p=parseDateFlex(line); if(!p) return NaN;
+    const range=data&&data.samples?{t0:Number(data.times[0]),t1:Number(data.times[data.samples-1])}:{t0:0,t1:999999};
+    const start=cfgParts(cfg&&cfg.startTime), trig=cfgParts(cfg&&cfg.triggerTime); let candidates=[];
+    if(p.timeOnly){
+      const base=start||trig; if(base){ const pp={y:base.y,mo:base.mo,d:base.d,h:p.h,mi:p.mi,se:p.se,frac:p.frac}; const abs=epochSec(pp); const stAbs=epochSec(start||base); candidates.push(abs-stAbs); candidates.push(abs-stAbs+24*3600); candidates.push(abs-stAbs-24*3600); }
+      const sec=p.h*3600+p.mi*60+p.se+(Number(('0.'+(p.frac||'0')))||0); candidates.push(sec);
+    }else{
+      const abs=epochSec(p); const stAbs=epochSec(start), trAbs=epochSec(trig); if(Number.isFinite(stAbs)) candidates.push(abs-stAbs); if(Number.isFinite(trAbs)&&Number.isFinite(stAbs)) candidates.push(abs-trAbs+(trAbs-stAbs)); if(Number.isFinite(stAbs)){ for(let off=-14;off<=14;off++) if(off) candidates.push(abs-stAbs-off*3600); }
+    }
+    candidates=candidates.filter(Number.isFinite);
+    if(!candidates.length) return NaN;
+    const score=function(t){ if(t>=range.t0-2 && t<=range.t1+2) return 0; return Math.min(Math.abs(t-(range.t0||0)),Math.abs(t-(range.t1||0))); };
+    candidates.sort((a,b)=>score(a)-score(b)); return candidates[0];
+  }
+  function genericEventKind(text){ const t=N(text); if(/50BF|BREAKER FAILURE|BF TRIP|CBF/.test(t)) return '50BF/Hỏng máy cắt'; if(/TRIP|OPERATE|OPEN COMMAND|CDE OUV|DECLENCHE|DESLIG|CAT|CẮT/.test(t)) return 'Trip/Operate'; if(/PICKUP|START|PICK UP|ASSERT|DETECT|KHỞI ĐỘNG|KHOI DONG/.test(t)) return 'Pickup/Start'; if(/52A|52B|CB|BREAKER|MAY CAT|MÁY CẮT|CLOSE|OPEN/.test(t)) return 'Máy cắt'; if(/RECLOSE|79|AR |TĐL|TDL|AUTORECLOSE/.test(t)) return 'Tự đóng lại'; if(/BLOCK|LOCKOUT|86|BLOQUE|SUPERVISION|ALARM/.test(t)) return 'Block/Lockout/Alarm'; if(/GOOSE|CHANNEL|COMM|SYNC|GPS|TELE|POTT|PUTT|DTT/.test(t)) return 'Truyền thông/Teleprotection'; if(/FREQ|81|ROCOF|DF\/DT|HZ/.test(t)) return 'Tần số/ROCOF'; return 'Sự kiện phụ trợ'; }
+  function parseGenericSidecar(log){
+    const text=String(log&&log.text||''); if(!text.trim()) return null;
+    const lines=text.split(/\r?\n/); const out={source:(log&&log.name)||'sidecar', kind:'generic', faultPhase:'', tripPhase:'', locators:[], events:[], evidence:[], counters:{lines:lines.length}};
+    const isUseful=/SEL|SIPROTEC|SIEMENS|ABB|HITACHI|RELION|MICOM|EASERGY|MULTILIN|ENERVISTA|TOSHIBA|GRL|NARI|NR ELECTRIC|ZIV|VAMP|ARCTEQ|FAULT|TRIP|PICKUP|START|OPERATE|EVENT|SOE|SER|DISTURB|LOCAT|ZONE|50BF|87|21|81/i.test(text.slice(0,20000));
+    if(!isUseful && !['log','txt','csv','roa','hdr','inf'].includes(ext(out.source))) return null;
+    for(let i=0;i<Math.min(lines.length,8000);i++){
+      const raw=lines[i]; if(!raw || !raw.trim()) continue; const line=raw.trim(); const u=N(line); const cells=splitCells(line);
+      if(!out.faultPhase && /(FAULT\s*PHASE|FAULTED\s*PHASE|FAULT\s*LOOP|LOOP|PHASE\s*SELECTION|FAULT\s*TYPE|TYPE\s*OF\s*FAULT|PHA\s*SU\s*CO)/i.test(line)){
+        const val=(cells.length>1?cells.slice(1).join(' '):line.replace(/^[^:=,]+[:=,]?/,'')).trim(); const ph=normPhase(val); if(ph.phases.length){ out.faultPhase=ph.text; out.evidence.push('Fault phase: '+line.slice(0,160)); }
+      }
+      if(!out.tripPhase && /(TRIP\s*PHASE|POLE\s*TRIP|PHASE\s*TRIP|TRIP\s*POLE|PHA\s*CAT)/i.test(line)){
+        const val=(cells.length>1?cells.slice(1).join(' '):line.replace(/^[^:=,]+[:=,]?/,'')).trim(); const ph=normPhase(val); if(ph.phases.length){ out.tripPhase=ph.text; out.evidence.push('Trip phase: '+line.slice(0,160)); }
+      }
+      if(/(FAULT\s*LOCAT|LOCATION|DISTANCE\s*TO\s*FAULT|FAULT\s*DIST|DISTAN|KHOANG\s*CACH|KM)/i.test(line)){
+        const kmMatch=line.replace(',', '.').match(/([-+]?\d+(?:\.\d+)?)\s*(KM|KILOMETER)/i); const pctMatch=line.replace(',', '.').match(/([-+]?\d+(?:\.\d+)?)\s*%/); if(kmMatch){ out.locators.push({text:line.slice(0,220),km:Number(kmMatch[1]),pct:pctMatch?Number(pctMatch[1]):NaN,source:out.source}); }
+      }
+      if(/TRIP|OPERATE|PICKUP|START|ASSERT|DEASSERT|ON\b|OFF\b|52A|52B|CB|BREAKER|50BF|LOCKOUT|RECLOSE|GOOSE|CHANNEL|FREQ|ROCOF|ZONE|DIF|87|21|50|51|67|81/i.test(line)){
+        const t=relTimeFromLine(line); const stat=(line.match(/\b(ON|OFF|ASSERT|DEASSERT|PICKUP|DROP.?OUT|TRUE|FALSE|1|0)\b/i)||[])[1]||'';
+        out.events.push({time:Number.isFinite(t)?t:NaN,event:line.slice(0,180),status:stat,value:'',source:out.source,kind:genericEventKind(line)});
+      }
+    }
+    out.events=out.events.filter((x,idx,arr)=>idx<1000 && (Number.isFinite(x.time)||idx<120));
+    if(out.faultPhase||out.tripPhase||out.locators.length||out.events.length||out.evidence.length) return out;
+    return null;
+  }
+  function parseAllGenericSidecars(){ const st=G(); const packs=[]; if(!st) return packs; for(const log of st.logs||[]){ try{ const p=parseGenericSidecar(log); if(p) packs.push(p); }catch(e){ packs.push({source:log.name||'',kind:'error',error:e.message,events:[],locators:[],evidence:[]}); } } return packs; }
+  function mergeEventsIntoR(r,events){ if(!r||!events||!events.length) return; const list=(r.timeline||[]).slice(); const seen=new Set(list.map(x=>Math.round((Number(x.time)||0)*1e6)+'|'+N(x.event)+'|'+N(x.channel))); for(const ev of events){ if(!Number.isFinite(ev.time)) continue; const key=Math.round(ev.time*1e6)+'|'+N(ev.kind||ev.event)+'|'+N(ev.event); if(seen.has(key)) continue; seen.add(key); list.push({time:ev.time,event:ev.kind||genericEventKind(ev.event),channel:ev.event,detail:(ev.status||'')+' · '+ev.source}); } list.sort((a,b)=>(Number(a.time)||0)-(Number(b.time)||0)); r.timeline=list; r.firstPickup=list.find(x=>/Pickup|Start/i.test(x.event||''))||r.firstPickup; r.firstTrip=list.find(x=>/Trip|Operate/i.test(x.event||''))||r.firstTrip; r.firstBreaker=list.find(x=>/Máy cắt|Breaker/i.test(x.event||''))||r.firstBreaker; }
+  function phaseArray(s){ const out=[]; for(const c of N(s)){ if('ABC'.includes(c)&&!out.includes(c)) out.push(c); } return out; }
+
+  function classifyAnalog(ch,idx,data){
+    const id=N((ch&&ch.id)||''), phase=N((ch&&ch.phase)||''), unit=N((ch&&ch.unit)||''); const text=id+' '+phase+' '+unit; let role='Khác', ph='';
+    if(/(^|[^A-Z])(IA|AIA|I A|A-PH|PHA A|PHASE A|A CURRENT|IL1|L1)([^A-Z]|$)/.test(text)||/^IA/.test(id)||/\bA\b/.test(phase)) ph='A';
+    if(/(^|[^A-Z])(IB|BIB|I B|B-PH|PHB B|PHASE B|B CURRENT|IL2|L2)([^A-Z]|$)/.test(text)||/^IB/.test(id)||/\bB\b/.test(phase)) ph='B';
+    if(/(^|[^A-Z])(IC|CIC|I C|C-PH|PHC C|PHASE C|C CURRENT|IL3|L3)([^A-Z]|$)/.test(text)||/^IC/.test(id)||/\bC\b/.test(phase)) ph='C';
+    if(/\b(IN|IG|IE|I0|3I0|RES|RESID|NEUTRAL|GROUND|EARTH|N)\b/.test(text)) ph=ph||'N';
+    if(/\b(VA|UA|UL1|U A|V A)\b/.test(text)) ph=ph||'A'; if(/\b(VB|UB|UL2|U B|V B)\b/.test(text)) ph=ph||'B'; if(/\b(VC|UC|UL3|U C|V C)\b/.test(text)) ph=ph||'C'; if(/\b(VN|UN|U0|3U0|ZERO)\b/.test(text)) ph=ph||'N';
+    const isV=/KV|VOLT|\bV\b/.test(unit)||/^(V|U)/.test(id); const isI=/KA|AMP|\bA\b/.test(unit)||/^I/.test(id);
+    if(/DIF|DIFF|^ID|\bID[ABC]?\b/.test(id)) role='Differential/Id'; else if(/REST|BIAS|IRST|IRES/.test(id)) role='Restraint/Bias'; else if(/R1|REM1|REMOTE.?1/.test(id)) role='Remote-1'; else if(/R2|REM2|REMOTE.?2/.test(id)) role='Remote-2'; else if(/LOCAL|(^|[^A-Z])L($|[^A-Z])|-L\b/.test(id)) role='Local'; else if(isV) role='Voltage'; else if(isI) role='Current';
+    let rms=NaN, peak=NaN; try{ const arr=data&&data.analog&&data.analog[idx]; if(arr){ let s2=0,c=0,pk=0; const step=Math.max(1,Math.floor(arr.length/2000)); for(let i=0;i<arr.length;i+=step){ const v=arr[i]; if(Number.isFinite(v)){s2+=v*v;c++; pk=Math.max(pk,Math.abs(v));} } rms=c?Math.sqrt(s2/c):NaN; peak=pk; } }catch(_){}
+    return {idx:idx+1,name:(ch&&ch.id)||('A'+(idx+1)),phase:ph,role,unit:(ch&&ch.unit)||'',rms,peak};
+  }
+  function buildChannelMap(){ const st=G(), cfg=st&&st.cfg, data=st&&st.data; if(!cfg) return []; const rows=[]; for(let i=0;i<(cfg.analogCount||0);i++) rows.push(classifyAnalog(cfg.analog[i],i,data)); return rows; }
+  function applyGenericToAnalysis(r){
+    const st=G(); if(!r||!st) return r; const packs=parseAllGenericSidecars(); st.sidecarsV9928=packs; r.v9928Sidecars=packs; r.v9928ChannelMap=buildChannelMap();
+    const allEvents=[]; packs.forEach(p=>{ (p.events||[]).forEach(ev=>allEvents.push(ev)); }); mergeEventsIntoR(r,allEvents);
+    const firstFault=packs.find(p=>p.faultPhase||p.tripPhase||(p.locators&&p.locators.length));
+    if(firstFault){
+      if(!r.relayFaultPhase && firstFault.faultPhase){ r.relayFaultPhase=firstFault.faultPhase; r.relayFaultPhases=phaseArray(firstFault.faultPhase); if(r.relayFaultPhases.length) r.phases=r.relayFaultPhases.slice(); }
+      if(!r.relayTripPhase && firstFault.tripPhase){ r.relayTripPhase=firstFault.tripPhase; r.relayTripPhases=phaseArray(firstFault.tripPhase); }
+    }
+    const loc=[]; packs.forEach(p=>(p.locators||[]).forEach(x=>loc.push(x))); if(loc.length && !r.vendorFaultLocation) r.vendorFaultLocation=loc;
+    r.v9928RelevantAnalogIndices=(r.v9928ChannelMap||[]).filter(x=>/Current|Voltage|Differential|Local|Remote|Restraint/.test(x.role)).sort((a,b)=>(b.peak||0)-(a.peak||0)).slice(0,24).map(x=>x.idx-1);
+    r.notes=r.notes||[]; r.notes.push('V9.9.28: đã chạy parser sidecar chung cho '+(st.logs||[]).length+' file LOG/HDR/INF/TXT/CSV/ROA; trích được '+allEvents.length+' sự kiện phụ trợ và '+loc.length+' dòng định vị/locator chung.');
+    return r;
+  }
+  try{ if(typeof analyzeFaultCore==='function'){ const prev=analyzeFaultCore; analyzeFaultCore=function(){ const r=prev.apply(this,arguments); try{ return applyGenericToAnalysis(r); }catch(e){ console.warn('[V9.9.28] apply generic failed',e); return r; } }; } }catch(_e){}
+  try{ if(typeof faultRelevantAnalogIndices==='function'){ const prevRel=faultRelevantAnalogIndices; faultRelevantAnalogIndices=function(r){ if(r&&Array.isArray(r.v9928RelevantAnalogIndices)&&r.v9928RelevantAnalogIndices.length) return r.v9928RelevantAnalogIndices.slice(0,32); return prevRel.apply(this,arguments); }; } }catch(_e){}
+
+  function diagnosticsRows(r){ const st=G(); const rows=[]; const data=st&&st.data; if(data&&data.v9928Quality){ const q=data.v9928Quality.timeIssues||{}; rows.push(['DAT','Trục thời gian',(data.v9928TimeRepaired?'Đã sửa':'Ổn định'),'bad='+F(q.bad,0)+', zero='+F(q.zero,0)+', huge='+F(q.huge,0)+', dtMed='+F(q.dtMed,9)]); }
+    const packs=(r&&r.v9928Sidecars)||(st&&st.sidecarsV9928)||[]; packs.forEach(p=>{ rows.push(['Sidecar',E(p.source),E((p.faultPhase?'FaultPhase '+p.faultPhase+'; ':'')+(p.tripPhase?'TripPhase '+p.tripPhase+'; ':'')+(p.error?'Lỗi '+p.error:'')),(p.events?p.events.length:0)+' event; '+(p.locators?p.locators.length:0)+' locator']); });
+    if(!rows.length) rows.push(['Chẩn đoán','Chưa có dữ liệu V9.9.28','', 'Bấm Phân tích sự cố sau khi nạp bản ghi.']); return rows; }
+  function channelRows(r){ const rows=(r&&r.v9928ChannelMap)||buildChannelMap(); return rows.slice(0,28).map(x=>[x.idx,E(x.name),E(x.role),E(x.phase||''),F(x.rms,5),F(x.peak,5),E(x.unit)]); }
+  function renderCard(r){
+    const anchor=byId('v9926ProfileCard')||byId('v9919SidecarCard')||byId('faultSummary'); if(!anchor) return; let card=byId('v9928DecoderCard');
+    if(!card){ card=document.createElement('div'); card.className='card'; card.id='v9928DecoderCard'; card.innerHTML='<h2>Chẩn đoán đọc bản ghi V9.9.28</h2><div id="v9928DiagBox" class="table-wrap"></div><h3>Bản đồ kênh tự động</h3><div id="v9928ChanBox" class="table-wrap"></div><div class="tiny" id="v9928Note" style="margin-top:8px"></div>'; anchor.insertAdjacentElement('afterend',card); }
+    const d=byId('v9928DiagBox'); if(d) d.innerHTML=tableSafe(['Nguồn','Mục','Trạng thái','Chi tiết'],diagnosticsRows(r));
+    const c=byId('v9928ChanBox'); if(c) c.innerHTML=tableSafe(['#','Kênh','Vai trò','Pha','RMS toàn bản ghi','Peak','Đơn vị'],channelRows(r));
+    const n=byId('v9928Note'); if(n) n.textContent='V9.9.28 tăng độ bền đọc file: decode UTF-16/ANSI, đọc ASCII DAT bằng bộ decode mới, tự sửa trục thời gian lỗi, parser sidecar chung cho nhiều hãng, và dựng bản đồ kênh để chọn đúng nhóm dòng/áp khi phân tích.';
+  }
+  try{ if(typeof renderFaultAnalysis==='function'){ const prevRender=renderFaultAnalysis; renderFaultAnalysis=function(){ const ret=prevRender.apply(this,arguments); try{ renderCard((G()||{}).faultAnalysis||null); }catch(e){ console.warn('[V9.9.28] render card failed',e); } return ret; }; } }catch(_e){}
+  try{ if(typeof faultSummaryRows==='function'){ const prevRows=faultSummaryRows; faultSummaryRows=function(r){ const rows=prevRows.apply(this,arguments)||[]; if(r&&r.v9928Sidecars&&r.v9928Sidecars.length){ const p=r.v9928Sidecars.find(x=>x.faultPhase||x.tripPhase||x.locators&&x.locators.length); if(p) rows.push(['Parser sidecar chung V9.9.28', (p.source||'')+' · '+(p.faultPhase?'FaultPhase='+p.faultPhase+' ':'')+(p.tripPhase?'TripPhase='+p.tripPhase+' ':'')+((p.locators||[]).map(x=>x.text).join(' | '))]); } return rows; }; } }catch(_e){}
+
+  function init(){ addNote('V9.9.28: Record Decoder Plus đã bật - decode mạnh hơn, sửa trục thời gian, parser sidecar chung, bản đồ kênh tự động.'); try{ const h=document.querySelector('h1'); if(h&&/V9\.9\./.test(h.textContent)) h.textContent=h.textContent.replace(/V9\.9\.\d+/, 'V9.9.28'); }catch(_){} try{ renderCard((G()||{}).faultAnalysis||null); }catch(_){} }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
 </body>
 </html>
