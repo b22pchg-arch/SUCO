@@ -1,4 +1,6 @@
-COMTRADE Offline Reader Pro V9.9.29 - Record Decoder Plus
+COMTRADE Offline Reader Pro V9.9.31 - Stable Open Core Guard
+
+COMTRADE Offline Reader Pro V9.9.31 - Record Decoder Plus
 
 COMTRADE Offline Reader Pro V9.9.27
 Bản sửa: khôi phục bảng Giá trị các phần tử sự cố theo đúng dạng sự cố trong giao diện và báo cáo HTML.
@@ -63,4 +65,7 @@ V9.9.27: bổ sung hồ sơ rơ le/loại bản ghi, thư viện nhận dạng c
 V9.9.27: sửa lỗi mở HTML do patch V9.9.25/V9.9.26 bị chèn nhầm vào template báo cáo; giữ RAR CSV/ROA và Hồ sơ rơ le.
 
 
-V9.9.29: Core Consolidation & UniversalFaultRecord - ổn định kiến trúc, dữ liệu trung gian, mapping kênh thủ công, guard kiểm tra render/template.
+V9.9.31: Core Consolidation & UniversalFaultRecord - ổn định kiến trúc, dữ liệu trung gian, mapping kênh thủ công, guard kiểm tra render/template.
+
+
+V9.9.31: ổn định lõi dữ liệu trung gian, core pipeline guard, overlay UniversalFaultRecord 2.0 và định vị hai đầu có điều kiện.

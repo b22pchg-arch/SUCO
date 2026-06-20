@@ -1,7 +1,7 @@
 {
-  "name": "COMTRADE Offline Reader Pro V9.9.29",
+  "name": "COMTRADE Offline Reader Pro V9.9.38-RC4",
   "short_name": "COMTRADE Reader",
-  "description": "Đọc COMTRADE offline, mở ZIP/RAR, phân tích sự cố, nhận dạng hãng/rơ le/chức năng bảo vệ và bảng theo dạng sự cố.",
+  "description": "Đọc COMTRADE offline, mở ZIP/RAR, phân tích sự cố, nhận dạng hãng/rơ le/chức năng bảo vệ, lõi dữ liệu trung gian ổn định và định vị hai đầu.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
