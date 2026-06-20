@@ -1,4 +1,4 @@
-COMTRADE Offline Reader Pro V9.9.25
+COMTRADE Offline Reader Pro V9.9.27
 Bản sửa: khôi phục bảng Giá trị các phần tử sự cố theo đúng dạng sự cố trong giao diện và báo cáo HTML.
 
 COMTRADE Offline Reader Pro V4 PWA - Phân tích sự cố
@@ -52,4 +52,10 @@ BỔ SUNG V4 - PHÂN TÍCH SỰ CỐ
 - Xếp hạng kênh L/R1/R2/Id theo biến động sự cố để tránh chỉ dùng nhầm Ia/Ib/Ic đầu tiên.
 
 
-V9.9.25: sửa RAR đọc thiếu Fault/Event CSV và ROA; sidecar trong RAR được ghép cùng bộ CFG/DAT như ZIP/thư mục.
+V9.9.27: Sửa đọc RAR để lấy cả Fault/Event CSV và ROA trong RAR, gắn cùng nguồn RAR để ghép với CFG/DAT như ZIP/thư mục.
+
+
+V9.9.27: bổ sung hồ sơ rơ le/loại bản ghi, thư viện nhận dạng chức năng bảo vệ 50/51/67/21/87L/87T/87B/81/27/59/50BF/79, cảnh báo thiếu dữ liệu và xuất profile JSON.
+
+
+V9.9.27: sửa lỗi mở HTML do patch V9.9.25/V9.9.26 bị chèn nhầm vào template báo cáo; giữ RAR CSV/ROA và Hồ sơ rơ le.
