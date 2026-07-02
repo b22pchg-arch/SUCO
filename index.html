@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="vi">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COMTRADE Offline Reader Pro V9.9.39-RC5 Parser hãng an toàn</title>
+<title>SUCO IEC61850 Gateway V1 FixSessionIEDCache - COMTRADE Offline Reader</title>
 <meta name="theme-color" content="#0b1020">
 <meta name="application-name" content="COMTRADE Reader Pro">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,10 +13,6 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<!-- V9.9.7: PWA offline đầy đủ cho ZIP/RAR.
-     Để PWA đọc RAR offline, 3 file runtime phải nằm cùng thư mục và được cache bởi sw.js:
-     unarchiver.min.js, worker-bundle.js, libarchive.wasm. -->
-<script src="unarchiver.min.js"></script>
 <style>
 :root{
   --bg:#0b1020;--panel:#111a2f;--panel2:#17223b;--ink:#edf3ff;--muted:#a9b8d6;--line:#2d3d62;
@@ -288,6 +284,11 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
             <div class="tab-group-title">📘 Hướng dẫn</div>
             <div class="tab" data-tab="guide">Hướng dẫn vận hành</div>
           </div>
+          <div class="tab-group">
+            <div class="tab-group-title">🌐 IEC 61850</div>
+            <div class="tab" data-tab="iecgw">Gateway / Rơ le</div>
+          </div>
+
           <div class="tab-group">
             <div class="tab-group-title">⚙️ Thao tác nhanh</div>
             <button id="btnToggleSidebar" class="menu-action" type="button" title="Ẩn/hiện thanh bên để mở rộng vùng xem sự cố">Ẩn thanh bên</button>
@@ -868,6 +869,125 @@ body.sidebar-collapsed.view-mobile .split{grid-template-columns:1fr}
         </div>
       </section>
 
+      <section id="page-iecgw" class="page">
+        <div class="card">
+          <h2>IEC 61850 Gateway / Đọc hồ sơ rơ le, tải file phục vụ thống kê và phân tích <span class="pill">FixSessionIEDCache</span></h2>
+          <p class="tiny">Bản <b>FixSessionIEDCache</b>: danh mục hồ sơ rơ le dùng chung, cache có TTL, chỉ hiện bản ghi mới và lưu lịch sử cache theo từng phiên/IP IED với thời gian realtime. Người dùng chỉ cần chọn hồ sơ hoặc nhập IP rơ le và bấm <b>Quét toàn bộ hồ sơ rơ le</b>. Gateway tự thử root rỗng, /, LD, /LD, Logical Device đọc được từ rơ le và cả các biến thể GE/NES H00-H99_F50F650. Gateway chỉ đọc danh sách/tải file, không ghi, xóa hoặc điều khiển rơ le.</p>
+          
+          <div class="card gw-catalog-card" id="gwRelayCatalogCard" style="margin-top:12px">
+            <h3>📒 Danh mục rơ le / IED dạng JSON</h3>
+            <div class="tiny">Lưu hồ sơ rơ le ngay trong trình duyệt để người dùng chỉ cần chọn tên trạm/ngăn lộ, không phải nhớ IP hoặc thư mục MMS. Có thể xuất/nhập JSON hoặc đồng bộ lên Gateway cache để mọi máy trong LAN dùng chung.</div>
+            <div class="grid four" style="margin-top:10px">
+              <div><label>Chọn hồ sơ rơ le</label><select id="gwRelayCatalogSelect"></select></div>
+              <div><label>Tên hồ sơ</label><input id="gwCatName" type="text" placeholder="VD: Sông Chảy - H13 F50F650"></div>
+              <div><label>Trạm</label><input id="gwCatStation" type="text" placeholder="VD: Sông Chảy"></div>
+              <div><label>Ngăn lộ / Bay</label><input id="gwCatBay" type="text" placeholder="VD: 379, 377..."></div>
+            </div>
+            <div class="grid four" style="margin-top:10px">
+              <div><label>Hãng</label><input id="gwCatManufacturer" type="text" placeholder="VD: GE, SEL, ABB..."></div>
+              <div><label>Model</label><input id="gwCatModel" type="text" placeholder="VD: F650"></div>
+              <div><label>Logical Device</label><input id="gwCatLogicalDevice" type="text" placeholder="VD: H13_F50F650"></div>
+              <div><label>Từ khóa / nhóm</label><input id="gwCatTags" type="text" placeholder="VD: GE,F650,110kV"></div>
+            </div>
+            <div class="grid two" style="margin-top:10px">
+              <div><label>Gợi ý thư mục MMS</label><input id="gwCatRootHints" type="text" placeholder="/LD/H13_F50F650;/LD/H13_F50F650/COMTRADE"></div>
+              <div><label>Ghi chú</label><input id="gwCatNotes" type="text" placeholder="Ghi chú vận hành, vị trí cài đặt, đặc điểm thư mục..."></div>
+            </div>
+            <div class="toolbar" style="margin-top:12px">
+              <button id="btnGwCatApply" type="button">Áp dụng hồ sơ</button>
+              <button id="btnGwCatFromCurrent" type="button">Lấy từ ô hiện tại</button>
+              <button id="btnGwCatSave" type="button">Thêm / cập nhật</button>
+              <button id="btnGwCatDelete" type="button">Xóa hồ sơ</button>
+              <button id="btnGwCatExport" type="button">Xuất JSON</button>
+              <button id="btnGwCatImport" type="button">Nhập JSON</button>
+              <button id="btnGwCatLoadShared" type="button">Tải danh mục chung</button>
+              <button id="btnGwCatSaveShared" type="button">Lưu lên Gateway cache</button>
+              <button id="btnGwCatSyncShared" type="button">Đồng bộ hai chiều</button>
+            </div>
+            <input id="gwRelayCatalogImportInput" type="file" accept=".json,application/json">
+            <div class="tiny" id="gwRelayCatalogSharedNote" style="margin-top:8px">Danh mục cục bộ lưu trong trình duyệt. Danh mục chung lưu tại Gateway cache: <span class="mono">09_CACHE/shared_relay_catalog.json</span>. Khi dùng HTML ở máy khác, bấm “Tải danh mục chung” hoặc “Đồng bộ hai chiều”.</div>
+            <div id="gwRelayCatalogPreview" class="table-wrap compact-table" style="margin-top:10px;max-height:220px"></div>
+          </div>
+
+          <div class="grid four">
+            <div><label>Gateway API URL</label><input id="gwApiUrl" type="text" value="http://127.0.0.1:8787"></div>
+            <div><label>IP rơ le / IED</label><input id="gwRelayHost" type="text" value="192.168.10.101" placeholder="VD: 192.168.10.101"></div>
+            <div><label>Port MMS</label><input id="gwRelayPort" type="number" value="102"></div>
+            <div><label>Thư mục trên rơ le</label><input id="gwRootPath" type="text" value="/" placeholder="/, /COMTRADE, /DR..."></div>
+          </div>
+          <div class="grid four" style="margin-top:10px">
+            <div><label>Đuôi file cần lấy</label><input id="gwPatterns" type="text" value="*.cfg,*.dat,*.hdr,*.inf,*.cff,*.zip,*.rar,*.7z,*.C,*.D,*.H,*.I,*.txt,*.log,*.csv,*.roa,*.xml,*.cid,*.icd,*.iid,*.scd,*.ssd,*.sed,*.set,*.ini,*.json,*.db,*.bin,*.*"></div>
+            <div><label>Quét sâu</label><select id="gwRecursive"><option value="true" selected>Có, tối đa 3 cấp</option><option value="false">Không</option></select></div>
+            <div><label>Tự nạp sau khi tải</label><select id="gwAutoLoad"><option value="true" selected>Có</option><option value="false">Không</option></select></div>
+            <div><label>Nhóm file</label><select id="gwLoadMode"><option value="samebase" selected>Theo cùng tên CFG/DAT</option><option value="selected">Chỉ file được chọn</option></select></div>
+          </div>
+          <div class="grid four" style="margin-top:10px">
+            <div><label>Function / Logical Device kiểu NES-GE</label><input id="gwNESFunction" type="text" value="" placeholder="Không cần nhập; chỉ dùng nếu biết rõ, VD: H11F50"></div>
+            <div><label>Đường dẫn gợi ý NES-GE</label><input id="gwNESRootPreview" type="text" value="" placeholder="Không cần nhập; Gateway sẽ tự dò"></div>
+            <div><label>Ghi chú đuôi file GE/NES</label><div class="tiny" style="padding-top:9px">Nhiều rơ le GE/NES hiển thị OSCxxx.C / .D / .H; khi nạp SUCO sẽ tự đổi thành .CFG / .DAT / .HDR.</div></div>
+            <div><label>Khuyến nghị theo ảnh</label><div class="tiny" style="padding-top:9px">IP phần mềm NES đang chọn có thể khác IP trong ô HTML; cần nhập đúng IP và đúng thư mục COMTRADE.</div></div>
+          </div>
+          <div class="grid four" style="margin-top:10px">
+            <div><label><input id="gwForceRefresh" type="checkbox"> Luôn đọc mới từ rơ le</label><div class="tiny">Tích mục này khi nghi có bản ghi mới hoặc rơ le dùng lại tên file cũ; Gateway sẽ bỏ qua cache cho lần quét/tải hiện tại.</div></div>
+            <div><label><input id="gwOnlyNew" type="checkbox"> Chỉ hiện bản ghi mới</label><div class="tiny">Khi tích, Gateway đọc trực tiếp từ IED, so với danh sách đã lưu trong cache và chỉ trả các file mới/có thay đổi. Các file đã có trong cache sẽ bị ẩn.</div></div>
+            <div><label><input id="gwSessionCache" type="checkbox" checked disabled> Lưu phiên cache theo từng IP IED</label><div class="tiny">Gateway tự lưu mỗi lần đọc/quét thành một phiên realtime trong <span class="mono">09_CACHE\IED_SESSIONS\IP_P102</span>, tên file có thời gian + IP + loại thao tác + hash nội dung để không trùng.</div></div>
+            <div><label><input id="gwUserSessionCache" type="checkbox" checked disabled> Lưu phiên cache theo IP người dùng</label><div class="tiny">Gateway tự nhận IP máy đang gọi HTML và lưu tại <span class="mono">09_CACHE\USER_SESSIONS\USER_IP\IED_IP_P102</span>.</div></div>
+            <div><label>Trạng thái cache</label><div id="gwCacheInfo" class="tiny" style="padding-top:9px">Chưa đọc trạng thái Gateway.</div></div>
+            <div><label>Thao tác cache</label><button id="btnGwClearCache" type="button">Xóa cache quét/tải</button></div>
+            <div><label>Phiên IED</label><button id="btnGwShowSessions" type="button">Xem phiên cache IED</button></div>
+            <div><label>Phiên người dùng</label><button id="btnGwShowUserSessions" type="button">Xem phiên cache người dùng</button></div>
+          </div>
+          <div class="toolbar" style="margin-top:12px">
+            <button id="btnGwHealth" type="button">Kiểm tra Gateway</button>
+            <button id="btnGwBrowse" type="button">Duyệt file rơ le</button>
+            <button id="btnGwFullScan" type="button">Quét toàn bộ hồ sơ rơ le</button>
+            <button id="btnGwDiscover" type="button">Tự tìm COMTRADE</button>
+            <button id="btnGwBrowseCommon" type="button">Quét thư mục thường gặp</button>
+            <button id="btnGwApplyNESGE" type="button">Áp dụng thư mục NES/GE</button>
+            <button id="btnGwBrowseNESGE" type="button">Duyệt thư mục NES/GE</button>
+            <button id="btnGwLoadSelected" type="button">Tải bộ đang chọn vào SUCO</button>
+            <button id="btnGwDownloadSelected" type="button">Tải file đang chọn</button>
+            <button id="btnGwZipSelectedGroup" type="button">Tải ZIP nhóm đang chọn</button>
+            <button id="btnGwZipAll" type="button">Tải ZIP toàn bộ file</button>
+            <button id="btnGwExportList" type="button">Xuất danh sách CSV</button>
+          </div>
+          <div id="gwStatus" class="status" style="margin-top:12px">Bản V9.9.50 UserIPCache. Chưa kiểm tra Gateway. Nếu chưa cài, chạy file 04_INSTALL\RUN_GATEWAY_VISIBLE.cmd trong gói. Nên bấm “Quét toàn bộ hồ sơ rơ le” thay vì nhập thư mục thủ công.</div>
+        </div>
+        <div class="grid four" id="gwMetrics"></div>
+        <div class="card" id="gwSessionBox" style="display:none">
+          <h2>Phiên cache IED / người dùng</h2>
+          <div class="tiny">Bảng này hiển thị lịch sử phiên đọc/tải đã được Gateway lưu theo thời gian realtime. Phiên IED dùng để giám sát từng rơ le; phiên người dùng dùng để truy vết từng máy gọi Gateway.</div>
+          <div id="gwSessionList" class="table-wrap compact-table" style="margin-top:10px;max-height:300px"></div>
+        </div>
+        <div class="card">
+          <h2>Danh sách file trên rơ le / IED</h2>
+          <div class="tiny">Bấm vào một dòng để chọn. Nếu cần phân tích waveform, chọn file .CFG hoặc .C rồi bấm “Tải bộ đang chọn vào SUCO”. Nếu cần lưu trữ/thống kê hồ sơ, bấm “Quét toàn bộ hồ sơ rơ le”, sau đó tải ZIP toàn bộ hoặc xuất CSV danh sách.</div>
+          <div class="grid four" style="margin-top:10px">
+            <div><label>Lọc loại hồ sơ</label><select id="gwCategoryFilter"><option value="all" selected>Tất cả</option><option value="COMTRADE">COMTRADE / Oscillography</option><option value="FAULT_REPORT_FL">FL / Fault Report</option><option value="EVENT_LOG_SOE">Event / SOE / Log</option><option value="SETTING_CONFIG">Setting / Config / SCL</option><option value="TEXT_TABLE">Text / CSV / ROA</option><option value="ARCHIVE">File nén</option><option value="OTHER">Khác</option><option value="DIRECTORY">Thư mục</option></select></div>
+            <div><label>Tìm nhanh theo tên/đường dẫn</label><input id="gwSearchText" type="text" placeholder="VD: OSC, FLT, COMTRADE, SETTING..."></div>
+            <div><label>Chọn nhanh</label><select id="gwBulkSelect"><option value="visible" selected>Các file đang hiển thị</option><option value="comtrade">Chỉ COMTRADE</option><option value="fl">Chỉ FL/Fault Report</option><option value="log">Chỉ Event/Log/SOE</option><option value="setting">Chỉ Setting/Config</option><option value="allfiles">Tất cả file không phải thư mục</option></select></div>
+            <div><label>Gợi ý</label><div class="tiny" style="padding-top:9px">Danh sách được phân loại tự động; nếu một hãng đặt tên lạ thì vẫn có thể tải về và xuất CSV.</div></div>
+          </div>
+          <div id="gwFileTable" class="table-wrap" style="margin-top:10px"></div>
+        </div>
+        <div class="card">
+          <h2>Hướng dẫn cài Gateway trong gói</h2>
+          <div class="guide-table table-wrap">
+            <table>
+              <thead><tr><th>Bước</th><th>Thao tác</th><th>Kết quả cần thấy</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>Giải nén gói vào D:\IEC61850_SUCO_GATEWAY_V1 hoặc thư mục nội bộ.</td><td>Có thư mục 02_GATEWAY_PS, 03_DLL, 04_INSTALL, 01_WEB.</td></tr>
+                <tr><td>2</td><td>Chạy 04_INSTALL\CHECK_RUNTIME.cmd.</td><td>PowerShell 64-bit và DLL được nhận dạng.</td></tr>
+                <tr><td>3</td><td>Chạy 04_INSTALL\RUN_GATEWAY_VISIBLE.cmd để thử.</td><td>Mở cửa sổ Gateway, http://127.0.0.1:8787/health trả ok.</td></tr>
+                <tr><td>4</td><td>Sửa 06_CONFIG\gateway_config.json, thêm IP rơ le vào allowedRelays.</td><td>Gateway chỉ cho đọc các IP đã cho phép.</td></tr>
+                <tr><td>5</td><td>Khi chạy ổn, chạy 04_INSTALL\INSTALL_GATEWAY_TASK.cmd bằng Administrator.</td><td>Gateway tự chạy khi máy khởi động.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="guide-note guide-danger"><b>Chế độ an toàn:</b> Gateway trong gói chỉ expose browse/getFile/download-text. Không có API điều khiển, ghi object, setFile hoặc deleteFile.</div>
+        </div>
+      </section>
+
       <section id="page-export" class="page">
         <div class="card"><h2>Xuất dữ liệu</h2><p class="tiny">CSV có thể mở bằng Excel. Với bản ghi rất lớn, chỉ nên xuất kênh cần thiết hoặc khoảng thời gian đã chọn.</p><div class="toolbar"><button id="btnCsvSelected">Xuất CSV kênh đang chọn</button><button id="btnCsvAllAnalog">Xuất CSV toàn bộ Analog</button><button id="btnCsvCursor">Xuất CSV mẫu tại con trỏ</button><button id="btnJsonSummary">Xuất JSON tóm tắt</button><button id="btnExportFaultHtml2">Xuất báo cáo sự cố HTML</button><button id="btnOpenFaultHtml2">Mở báo cáo sự cố</button></div></div>
         <div class="card"><h2>Ghi chú kỹ thuật</h2><ul class="tiny"><li>Hỗ trợ file rời .CFG/.DAT, file một-gói .CFF, đọc trực tiếp .ZIP và .RAR khi chạy kèm bộ RAR runtime offline đã được PWA cache: unarchiver.min.js, worker-bundle.js, libarchive.wasm. Nếu thiếu runtime, chương trình báo hướng dẫn rõ ràng và vẫn đọc ZIP/CFG/DAT bình thường.</li><li>Có lõi chuyển đổi xuất lại COMTRADE 1991/1999/2013, DAT ASCII/BINARY/BINARY32/FLOAT32 và đóng gói ZIP/CFF.</li><li>Có công cụ phân tích sự cố: nhận dạng pha/dạng/thời gian sự cố, tự phóng biểu đồ vào vùng sự cố, xuất ảnh biểu đồ tập trung kích thước lớn và giá trị RMS trước/trong/sau sự cố.</li><li>Hỗ trợ DAT: ASCII, BINARY 16-bit, BINARY32, FLOAT32; có cơ chế thử endian, byte đệm/CRLF, timestamp µs/ns/ms, digital packed word/hex.</li><li>Công thức scale analog: <span class="mono">giá trị = a × raw + b</span>. FLOAT32 được coi là giá trị thực, không nhân a/b.</li><li>Biến thể mã hóa độc quyền hoặc DAT nén của từng hãng chưa thể bảo đảm nếu không có mẫu file thật để nhận diện chữ ký.</li></ul><div id="decoderNotes" class="note"></div></div>
@@ -915,10 +1035,53 @@ function parseCfg(text){
   for(let d=0;d<cfg.digitalCount && i<lines.length;d++,i++){
     const p=csvSplit(lines[i]); cfg.digital.push({ index:parseInt(p[0],10)||d+1, id:p[1]||('D'+(d+1)), phase:p[2]||'', ccbm:p[3]||'', normal:num(p[4],0), raw:p });
   }
+
+  function isDateLine(x){
+    x=String(x||'').trim();
+    return /^\d{1,2}\/\d{1,2}\/\d{2,4}\s*,\s*\d{1,2}:\d{2}:\d{2}/.test(x) ||
+           /^\d{1,2}-[A-Za-z]{3}-\d{2,4}/.test(x) ||
+           /^\d{4}-\d{1,2}-\d{1,2}/.test(x);
+  }
+  function isRateLikeLine(x){
+    const p=csvSplit(x||'');
+    return p.length>=2 && Number.isFinite(Number(p[0])) && Number.isFinite(Number(p[1])) && !isDateLine(x);
+  }
+
   cfg.frequency=num(lines[i++],50);
-  cfg.nRates=parseInt((lines[i++]||'1').split(',')[0],10); if(!Number.isFinite(cfg.nRates)||cfg.nRates<0) cfg.nRates=1;
-  for(let r=0;r<cfg.nRates && i<lines.length;r++,i++){ const p=csvSplit(lines[i]); cfg.sampleRates.push({rate:num(p[0],0), end:parseInt(p[1],10)||0}); }
-  cfg.startTime=lines[i++]||''; cfg.triggerTime=lines[i++]||''; cfg.datType=(lines[i++]||'ASCII').trim().toUpperCase();
+  const nRateLine=lines[i++]||'1';
+  cfg.nRates=parseInt(String(nRateLine).split(',')[0],10);
+  if(!Number.isFinite(cfg.nRates)||cfg.nRates<0) cfg.nRates=1;
+
+  /*
+    Tương thích GE/NES F650:
+    Một số file CFG ghi:
+      50
+      0
+      0,5518
+      08/12/2025,...
+      08/12/2025,...
+      BINARY
+    Theo COMTRADE chuẩn, nRates=0 thường không có dòng rate. Nhưng thực tế rơ le vẫn chèn
+    dòng "0,totalSamples". Parser cũ bỏ qua dòng này, làm startTime="0,5518",
+    datType=ngày giờ và đọc nhầm DAT nhị phân thành ASCII. Khối dưới nhận diện và giữ
+    dòng này như sampleRates[0] để datType vẫn là BINARY.
+  */
+  const declaredRates=cfg.nRates;
+  if(declaredRates===0 && i<lines.length && isRateLikeLine(lines[i]) && i+1<lines.length && isDateLine(lines[i+1])){
+    const p=csvSplit(lines[i++]);
+    cfg.sampleRates.push({rate:num(p[0],0), end:parseInt(p[1],10)||0, vendorZeroRate:true});
+    cfg.warnings.push('CFG kiểu GE/NES: nRates=0 nhưng có dòng mẫu "'+p.join(',')+'"; đã nhận dạng để đọc DAT nhị phân đúng.');
+  } else {
+    for(let r=0;r<cfg.nRates && i<lines.length;r++,i++){
+      const p=csvSplit(lines[i]);
+      if(isDateLine(lines[i])){ i--; break; }
+      cfg.sampleRates.push({rate:num(p[0],0), end:parseInt(p[1],10)||0});
+    }
+  }
+
+  cfg.startTime=lines[i++]||'';
+  cfg.triggerTime=lines[i++]||'';
+  cfg.datType=(lines[i++]||'ASCII').trim().toUpperCase();
   cfg.timeMult=1;
   if(i<lines.length){ const maybe=Number(String(lines[i]).split(',')[0]); if(Number.isFinite(maybe)&&maybe!==0){ cfg.timeMult=maybe; i++; } }
   if(i<lines.length && /[+-]?\d{0,2}h?\d{0,2}|x/i.test(lines[i])){ const p=csvSplit(lines[i]); cfg.extra2013.timeCode=p[0]||''; cfg.extra2013.localCode=p[1]||''; i++; }
@@ -6017,7 +6180,12 @@ init();`+ '<\/script></body></html>';
   function renderGuard(g){return htmlTable(['Mục kiểm tra','Trạng thái','Chi tiết'],(g.checks||[]).map(function(x){return [x.name,x.status==='ok'?'OK':'Cảnh báo',x.detail||''];}));}
   function renderUFR(rec){var m=rec.modules.generator87G64G||{}; var html='<div class="v9938-pills"><span class="pill">'+esc(VERSION)+'</span><span class="pill">Guard: '+(rec.quality.guardOk?'OK':'cảnh báo')+'</span><span class="pill">87G/64G: '+(m.available?'có dấu hiệu':'chưa rõ')+'</span></div>'; html+='<h3>Chất lượng lõi</h3>'+renderGuard({checks:rec.quality.guardChecks||[]}); html+='<h3>87G/64G an toàn</h3>'; if(m.rows&&m.rows.length) html+=htmlTable(['#','Kênh','Vai trò','Đơn vị','Trước RMS','Trong RMS','Sau RMS','Peak trong'],m.rows); else html+='<div class="note">Chưa tìm thấy kênh 87G/64G rõ ràng theo tên kênh.</div>'; html+='<h3>Cảnh báo</h3><ul>'+((rec.warnings||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')||'<li>Không có cảnh báo mới.</li>')+'</ul>'; return html; }
   function download(name,text,type){ if(typeof window.downloadText==='function'){try{return window.downloadText(name,text,type||'text/plain;charset=utf-8');}catch(e){}} var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type:type||'text/plain;charset=utf-8'})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},1000); }
-  function exportReportHtml(){var rec=buildUFR(); var html='<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Báo cáo chuẩn '+esc(VERSION)+'</title><style>body{font-family:Arial,sans-serif;margin:18px;line-height:1.45}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#eef2f7}.pill{display:inline-block;padding:5px 9px;border:1px solid #bbb;border-radius:999px;margin:3px}.note{border-left:4px solid #f59e0b;background:#fff7ed;padding:8px 10px;margin:10px 0}</style></head><body><h1>Báo cáo chuẩn '+esc(VERSION)+'</h1>'+renderUFR(rec)+'<h2>JSON dữ liệu trung gian</h2><pre>'+esc(JSON.stringify(rec,null,2))+'</pre></body></html>'; download(((S().activeBase)||'comtrade')+'_report_v9938.html',html,'text/html;charset=utf-8'); }
+  function exportReportHtml(){
+    var rec=buildUFR();
+    var css='body{font-family:Arial,sans-serif;margin:18px;line-height:1.45}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#eef2f7}.pill{display:inline-block;padding:5px 9px;border:1px solid #bbb;border-radius:999px;margin:3px}.note{border-left:4px solid #f59e0b;background:#fff7ed;padding:8px 10px;margin:10px 0}';
+    var html='<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Báo cáo chuẩn '+esc(VERSION)+'</title><style>'+css+'</style></head><body><h1>Báo cáo chuẩn '+esc(VERSION)+'</h1>'+renderUFR(rec)+'<h2>JSON dữ liệu trung gian</h2><pre>'+esc(JSON.stringify(rec,null,2))+'</pre></body></html>';
+    download(((S().activeBase)||'comtrade')+'_report_v9938.html',html,'text/html;charset=utf-8');
+  }
   function exportReportTxt(){var rec=buildUFR(), lines=[]; lines.push('BAO CAO CHUAN '+VERSION); lines.push('Bo file: '+(S().activeBase||'')); lines.push('Guard: '+(rec.quality.guardOk?'OK':'CANH BAO')); lines.push('Analog: '+rec.comtrade.analogCount+', Digital: '+rec.comtrade.digitalCount+', Mau: '+rec.comtrade.samples); lines.push(''); lines.push('CANH BAO'); (rec.warnings||[]).forEach(function(x){lines.push('- '+x);}); download(((S().activeBase)||'comtrade')+'_report_v9938.txt',lines.join('\n'),'text/plain;charset=utf-8'); }
   function ensureUi(){var host=byId('page-fault')||byId('page-overview')||document.querySelector('.content')||document.body; var box=byId('v9938CoreBox'); if(!box){box=document.createElement('div'); box.id='v9938CoreBox'; box.className='card'; box.innerHTML='<h2>V9.9.39-RC5 - Lõi ổn định / Release Guard / 87G-64G an toàn</h2><div class="toolbar"><button id="v9938Build">Dựng lại lõi</button><button id="v9938Guard">Chạy Release Guard</button><button id="v9938Json">Xuất UFR JSON</button><button id="v9938Html">Xuất báo cáo chuẩn HTML</button><button id="v9938Txt">Xuất báo cáo chuẩn TXT</button></div><div id="v9938CoreContent" class="small" style="margin-top:10px"></div>'; host.appendChild(box); }
     var bind=function(id,fn){var b=byId(id); if(b&&!b.dataset.v9938){b.dataset.v9938='1'; b.addEventListener('click',fn);}};
@@ -6142,6 +6310,1456 @@ init();`+ '<\/script></body></html>';
   function patch(){if(typeof handleFiles==='function'&&!handleFiles.v9939SafePipeline){window.handleFiles=handleFiles=handleFilesSafe; handleFiles.v9939SafePipeline=true;} var fi=document.getElementById('fileInput'); if(fi&&!fi.dataset.v9939Pipeline){fi.onchange=function(e){handleFilesSafe(e.target.files);};fi.dataset.v9939Pipeline='1';} var fo=document.getElementById('folderInput'); if(fo&&!fo.dataset.v9939Pipeline){fo.onchange=function(e){handleFilesSafe(e.target.files);};fo.dataset.v9939Pipeline='1';}}
   window.v9939HandleFilesSafe=handleFilesSafe;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',patch,{once:true}); else patch();
+})();
+</script>
+
+
+<style id="iec61850GatewayPatchStyle">
+.gw-row-selected td{background:rgba(89,208,255,.14)!important}.gw-file-actions{display:flex;gap:6px;flex-wrap:wrap}.gw-file-actions button{padding:5px 8px;border-radius:8px;font-size:12px}.gw-muted{color:var(--muted);font-size:12px;white-space:normal}.gw-ok{color:var(--good);font-weight:800}.gw-warn{color:var(--warn);font-weight:800}.gw-bad{color:var(--bad);font-weight:800}.gw-cat{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:2px 7px;background:#081123;font-size:12px;font-weight:800}.gw-cat.COMTRADE{border-color:rgba(89,208,255,.55)}.gw-cat.FAULT_REPORT_FL{border-color:rgba(255,209,102,.7)}.gw-cat.EVENT_LOG_SOE{border-color:rgba(94,227,146,.55)}.gw-cat.SETTING_CONFIG{border-color:rgba(255,107,107,.55)}.gw-cat.ARCHIVE{border-color:rgba(180,160,255,.55)}.gw-path{white-space:normal;min-width:320px}.gw-table table{min-width:1250px}.gw-table th,.gw-table td{vertical-align:top}
+</style>
+<script>
+/* ===== IEC 61850 Gateway integration for SUCO V1 - full read-only scan ===== */
+(function(){
+'use strict';
+const GW={files:[],selected:null,lastHealth:null,triedDirs:[],logicalDevices:[],lastMode:'',cachePolicy:null,commonRoots:['/','/LD','/COMTRADE','/DR','/DFR','/FAULT','/FAULTS','/FL','/REPORT','/RECORDS','/OSC','/Oscillo','/EVENT','/EVENTS','/SOE','/LOG','/LOGS','/HISTORY','/SETTING','/SETTINGS','/CONFIG','/SCL','/CID','/ICD','/IEC61850']};
+function q(id){return document.getElementById(id)}
+function E(s){return String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c));}
+function status(msg,cls){const el=q('gwStatus'); if(el){el.className='status '+(cls||''); el.textContent=msg;}}
+function baseUrl(){return String(q('gwApiUrl')?.value||'http://127.0.0.1:8787').replace(/\/+$/,'');}
+function host(){return String(q('gwRelayHost')?.value||'').trim();}
+function port(){return Number(q('gwRelayPort')?.value||102)||102;}
+function root(){return String(q('gwRootPath')?.value||'/').trim()||'/';}
+function patterns(){return String(q('gwPatterns')?.value||'*.cfg,*.dat').split(',').map(x=>x.trim()).filter(Boolean);}
+function recursive(){return String(q('gwRecursive')?.value||'true')==='true';}
+function onlyNew(){return !!(q('gwOnlyNew')&&q('gwOnlyNew').checked);}
+function forceRefresh(){return !!((q('gwForceRefresh')&&q('gwForceRefresh').checked)||onlyNew());}
+function ext(name){const m=String(name||'').toLowerCase().match(/\.([^./\\]+)$/); return m?m[1]:'';}
+function normExt(name){const e=ext(name); return e==='c'?'cfg':e==='d'?'dat':e==='h'?'hdr':e==='i'?'inf':e;}
+function sucoFileNameFromRelay(f){let n=String(f&&f.name?f.name:fileName(f&&f.path)); const e=ext(n); const m={c:'cfg',d:'dat',h:'hdr',i:'inf'}; if(m[e]) n=n.replace(/\.[^.]+$/,'.'+m[e]); return n;}
+function nesGeRoot(fn){fn=String(fn||'').trim().toUpperCase().replace(/\s+/g,''); if(!fn)return '/'; if(fn[0]==='/')return fn; if(fn.indexOf('_')>=0)return '/LD/'+fn+'/COMTRADE'; const m=fn.match(/^([A-Z0-9]+)F50$/); if(m)return '/LD/'+m[1]+'_F50F650/COMTRADE'; if(/F650$/.test(fn))return '/LD/'+fn+'/COMTRADE'; return '/LD/'+fn+'/COMTRADE';}
+function base(name){return String(name||'').split(/[\\/]/).pop().replace(/\.[^.]+$/,'').toLowerCase();}
+function fileName(path){return String(path||'').split(/[\\/]/).pop();}
+function fileSize(n){n=Number(n); if(!Number.isFinite(n)||n<0)return ''; if(n<1024)return n+' B'; if(n<1048576)return (n/1024).toFixed(1)+' KB'; return (n/1048576).toFixed(1)+' MB';}
+function enc(v){return encodeURIComponent(v==null?'':String(v));}
+function csvCell(s){s=String(s==null?'':s); return /[",\n;]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function downloadBlobLocal(name, blob){ if(typeof downloadBlob==='function') return downloadBlob(name, blob); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); }
+function asFile(blob,name,type){ try{return new File([blob], name, {type:type||blob.type||'application/octet-stream'});}catch(e){ if(typeof makeVirtualFile==='function') return makeVirtualFile([blob],name,type||blob.type); blob.name=name; blob.lastModified=Date.now(); return blob; }}
+async function fetchJson(url,opts){const r=await fetch(url,opts||{}); const text=await r.text(); let j=null; try{j=JSON.parse(text);}catch(e){throw new Error('Gateway trả dữ liệu không phải JSON: '+text.slice(0,300));} if(!r.ok||j.ok===false) throw new Error(j.error||j.message||('HTTP '+r.status)); return j;}
+function newOnlyInfo(j){const cp=j&&j.cachePolicy; if(!cp||!cp.onlyNew)return ''; return ' Chế độ chỉ hiện mới: '+(cp.newCount||0)+' mới, ẩn '+(cp.hiddenCached||0)+' đã có trong cache, tổng hiện tại '+(cp.currentCount||0)+'.';}
+async function checkHealth(){ status('Đang kiểm tra Gateway...', ''); try{const j=await fetchJson(baseUrl()+'/health',{method:'GET'}); GW.lastHealth=j; const c=j.cache||{}; const ci=q('gwCacheInfo'); if(ci){const s=c.iedSessions||{}; ci.textContent='scan TTL '+(c.scanCacheSeconds||'?')+'s; file TTL '+(c.fileCacheHours||'?')+'h; cache files '+(c.files||0)+'; phiên IED '+(s.sessions||0)+'; mới nhất '+(s.latest||'chưa có');} status('Gateway OK: '+(j.service||'IEC61850 Gateway')+' · '+(j.version||'')+' · mode '+(j.mode||'')+' · cache scan '+(c.scanCacheSeconds||'?')+'s / file '+(c.fileCacheHours||'?')+'h','good'); renderMetrics(); return j;}catch(e){status('Không kết nối được Gateway: '+e.message+'\nHãy chạy 04_INSTALL\\RUN_GATEWAY_VISIBLE.cmd hoặc kiểm tra URL/cổng/firewall.','bad'); throw e;}}
+function localCategory(f){const raw=String((f&&f.category)||''); if(raw) return raw; const s=String((f?.name||'')+' '+(f?.path||'')).toUpperCase(); const e=normExt(f?.name||f?.path).toUpperCase(); if(f?.maybeDirectory&&!e) return 'DIRECTORY'; if(['CFG','DAT','HDR','INF','CFF','C','D','H','I'].includes(e)&&(s.includes('COMTRADE')||s.includes('OSC')||s.includes('DFR')||s.includes('DISTURB')||['DAT','CFF','D'].includes(e))) return 'COMTRADE'; if(/FLT|FAULT|FLOC|LOCAT|DIST|REPORT|TRIP/.test(s)) return 'FAULT_REPORT_FL'; if(/EVENT|SOE|ALARM|HISTORY|OPER|LOG/.test(s)) return 'EVENT_LOG_SOE'; if(['CID','ICD','IID','SCD','SSD','SED','SET','XML'].includes(e)||/SETTING|CONFIG|IEC61850|SCL/.test(s)) return 'SETTING_CONFIG'; if(['TXT','CSV','LOG','ROA'].includes(e)) return 'TEXT_TABLE'; if(['ZIP','RAR','7Z'].includes(e)) return 'ARCHIVE'; return e?'OTHER':'NO_EXTENSION';}
+function catLabel(c){return ({COMTRADE:'COMTRADE',FAULT_REPORT_FL:'FL/Fault',EVENT_LOG_SOE:'Event/Log',SETTING_CONFIG:'Setting/Config',TEXT_TABLE:'Text/CSV',ARCHIVE:'Nén',DIRECTORY:'Thư mục',NO_EXTENSION:'Không đuôi',OTHER:'Khác'}[c]||c||'Khác');}
+function filteredFiles(){const cat=String(q('gwCategoryFilter')?.value||'all'); const txt=String(q('gwSearchText')?.value||'').trim().toLowerCase(); return GW.files.filter(f=>{const c=localCategory(f); if(cat!=='all'&&c!==cat)return false; if(txt){const s=String((f.name||'')+' '+(f.path||'')+' '+c).toLowerCase(); if(!s.includes(txt))return false;} return true;});}
+function downloadable(arr){return arr.filter(f=>!f.maybeDirectory && (f.path||f.name));}
+function bulkFiles(){const mode=String(q('gwBulkSelect')?.value||'visible'); let arr=filteredFiles(); if(mode==='allfiles') arr=GW.files; if(mode==='comtrade') arr=GW.files.filter(f=>localCategory(f)==='COMTRADE'); if(mode==='fl') arr=GW.files.filter(f=>localCategory(f)==='FAULT_REPORT_FL'); if(mode==='log') arr=GW.files.filter(f=>localCategory(f)==='EVENT_LOG_SOE'); if(mode==='setting') arr=GW.files.filter(f=>localCategory(f)==='SETTING_CONFIG'); return downloadable(arr);}
+function renderMetrics(){const box=q('gwMetrics'); if(!box)return; const counts={}; GW.files.forEach(f=>{const c=localCategory(f); counts[c]=(counts[c]||0)+1;}); const total=GW.files.length; const files=downloadable(GW.files).length; const cfg=GW.files.filter(f=>normExt(f.name||f.path)==='cfg').length; const dat=GW.files.filter(f=>normExt(f.name||f.path)==='dat').length; const hidden=(GW.cachePolicy&&GW.cachePolicy.onlyNew)?(GW.cachePolicy.hiddenCached||0):0; box.innerHTML=[['Gateway',GW.lastHealth?'OK':'chưa kiểm tra'],['Mục đang hiển thị',total],['Ẩn do cache',hidden],['File tải được',files],['COMTRADE',counts.COMTRADE||Math.max(cfg,dat)],['FL/Fault report',counts.FAULT_REPORT_FL||0],['Event/Log/SOE',counts.EVENT_LOG_SOE||0],['Setting/Config',counts.SETTING_CONFIG||0],['Đã chọn',GW.selected?fileName(GW.selected.path||GW.selected.name):'chưa']].map(x=>'<div class="metric"><small>'+E(x[0])+'</small><b>'+E(x[1])+'</b></div>').join('');}
+function renderTable(){const box=q('gwFileTable'); if(!box)return; const arr=filteredFiles(); if(!GW.files.length){box.innerHTML='<div class="tiny" style="padding:10px">Chưa có danh sách file.</div>'; renderMetrics(); return;} if(!arr.length){box.innerHTML='<div class="tiny" style="padding:10px">Không có file phù hợp bộ lọc hiện tại.</div>'; renderMetrics(); return;} const rows=arr.map((f)=>{const i=GW.files.indexOf(f); const sel=GW.selected&&((GW.selected.path||GW.selected.name)===(f.path||f.name)); const ex=ext(f.name||f.path), nex=normExt(f.name||f.path), cat=localCategory(f); const cls=sel?' class="gw-row-selected"':''; const path=E(f.path||''); return '<tr'+cls+' onclick="window.iec61850GwSelect('+i+')"><td>'+(i+1)+'</td><td><span class="gw-cat '+E(cat)+'">'+E(catLabel(cat))+'</span></td><td>'+E(f.name||fileName(f.path))+'</td><td class="gw-path">'+path+'</td><td>'+E((ex.toUpperCase()||'')+(nex!==ex?' → '+nex.toUpperCase():''))+'</td><td>'+E(fileSize(f.size))+'</td><td>'+E(f.mtime||f.modified||f.lastModified||'')+'</td><td class="gw-file-actions"><button type="button" onclick="event.stopPropagation();window.iec61850GwSelect('+i+');window.iec61850GwLoadSelected();">Nạp SUCO</button><button type="button" onclick="event.stopPropagation();window.iec61850GwSelect('+i+');window.iec61850GwDownloadSelected();">Tải</button></td></tr>';}).join(''); box.classList.add('gw-table'); box.innerHTML='<table><thead><tr><th>STT</th><th>Loại hồ sơ</th><th>Tên file</th><th>Đường dẫn rơ le</th><th>Đuôi</th><th>Dung lượng</th><th>Thời gian</th><th>Thao tác</th></tr></thead><tbody>'+rows+'</tbody></table>'; renderMetrics();}
+async function browseOne(rootPath, append){const body={host:host(),port:port(),rootPath:rootPath||root(),recursive:recursive(),patterns:patterns(),maxDepth:12,forceRefresh:forceRefresh(),onlyNew:onlyNew()}; const j=await fetchJson(baseUrl()+'/api/iec61850/browse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); const files=Array.isArray(j.files)?j.files:[]; GW.cachePolicy=j.cachePolicy||null; if(j.logicalDevices&&j.logicalDevices.length) GW.logicalDevices=j.logicalDevices; if(j.triedDirs&&j.triedDirs.length) GW.triedDirs=j.triedDirs; if(append){ const key=new Set(GW.files.map(f=>String(f.path||f.name))); files.forEach(f=>{const k=String(f.path||f.name); if(!key.has(k)){GW.files.push(f); key.add(k);}}); } else GW.files=files; return files;}
+async function fullScan(){ if(!host()){status('Chưa nhập IP rơ le/IED.','warn'); return;} status('Đang quét toàn bộ hồ sơ rơ le '+host()+'. Gateway chỉ đọc danh sách file, không ghi/xóa. Có thể mất lâu hơn duyệt COMTRADE...', ''); try{const body={host:host(),port:port(),rootPath:root()||'/',maxDepth:12,forceRefresh:forceRefresh(),onlyNew:onlyNew()}; const j=await fetchJson(baseUrl()+'/api/iec61850/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); GW.files=Array.isArray(j.files)?j.files:[]; GW.cachePolicy=j.cachePolicy||null; GW.logicalDevices=j.logicalDevices||[]; GW.triedDirs=j.triedDirs||[]; GW.lastMode=j.mode||'FULL_SCAN'; GW.selected=GW.files.find(f=>localCategory(f)==='COMTRADE')||GW.files[0]||null; renderTable(); const dirs=(GW.triedDirs||[]).slice(0,40).join(', '); const lds=(GW.logicalDevices||[]).join(', '); status('Quét hồ sơ xong: '+GW.files.length+' mục.'+newOnlyInfo(j)+' Logical Device: '+(lds||'không đọc được')+'. Đã thử '+(GW.triedDirs||[]).length+' đường dẫn. Ví dụ: '+dirs+(GW.triedDirs&&GW.triedDirs.length>40?' ...':''), GW.files.length?'good':'warn'); }catch(e){status('Lỗi quét hồ sơ rơ le: '+e.message,'bad');}}
+async function discover(){ if(!host()){status('Chưa nhập IP rơ le/IED.','warn'); return;} status('Đang tự tìm COMTRADE trên rơ le '+host()+'. Có thể mất vài giây...',''); try{const body={host:host(),port:port(),rootPath:root()||'/',patterns:['*.cfg','*.dat','*.hdr','*.inf','*.cff','*.C','*.D','*.H','*.I'],maxDepth:12,forceRefresh:forceRefresh(),onlyNew:onlyNew()}; const j=await fetchJson(baseUrl()+'/api/iec61850/discover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); GW.files=Array.isArray(j.files)?j.files:[]; GW.cachePolicy=j.cachePolicy||null; GW.logicalDevices=j.logicalDevices||[]; GW.triedDirs=j.triedDirs||[]; GW.lastMode=j.mode||'DISCOVER'; GW.selected=GW.files[0]||null; renderTable(); status('Tự tìm COMTRADE xong: '+GW.files.length+' mục.'+newOnlyInfo(j)+' Nếu cần cả FL/Setting/Log, bấm “Quét toàn bộ hồ sơ rơ le”.', GW.files.length?'good':'warn'); }catch(e){status('Lỗi tự tìm COMTRADE: '+e.message,'bad');}}
+async function browse(){ if(!host()){status('Chưa nhập IP rơ le/IED.','warn'); return;} status('Đang duyệt file trên rơ le '+host()+':'+port()+' ...',''); try{await browseOne(root(),false); if(!GW.files.length){ renderTable(); status('Thư mục '+root()+' chưa thấy file. Đang chuyển sang quét hồ sơ toàn bộ...', 'warn'); await fullScan(); return; } GW.selected=GW.files[0]||null; renderTable(); status('Đã nhận '+GW.files.length+' mục.'+newOnlyInfo({cachePolicy:GW.cachePolicy})+' Có thể lọc theo loại hồ sơ hoặc tải ZIP toàn bộ.', 'good');}catch(e){status('Lỗi duyệt file: '+e.message,'bad');}}
+async function browseCommon(){ if(!host()){status('Chưa nhập IP rơ le/IED.','warn'); return;} GW.files=[]; GW.selected=null; renderTable(); let ok=0,err=0; for(const r of GW.commonRoots){ try{status('Đang thử thư mục '+r+' ...',''); const got=await browseOne(r,true); if(got.length) ok++; renderTable(); await new Promise(res=>setTimeout(res,20));}catch(e){err++;} } GW.selected=GW.files.find(f=>localCategory(f)==='COMTRADE')||GW.files[0]||null; renderTable(); status('Quét xong thư mục thường gặp: '+GW.files.length+' mục, '+ok+' thư mục có dữ liệu, '+err+' thư mục lỗi/không hỗ trợ.', GW.files.length?'good':'warn');}
+function relatedFiles(selected){ if(!selected)return []; const mode=String(q('gwLoadMode')?.value||'samebase'); if(mode==='selected') return [selected]; const b=base(selected.name||selected.path); const wanted=new Set(['cfg','dat','hdr','inf','log','txt','csv','roa','cff','zip']); let arr=GW.files.filter(f=>base(f.name||f.path)===b && wanted.has(normExt(f.name||f.path))); if(!arr.length) arr=[selected]; const priority={cff:0,zip:0,cfg:1,dat:2,hdr:3,inf:4,log:5,csv:6,roa:7,txt:8}; arr.sort((a,b)=>(priority[normExt(a.name||a.path)]||99)-(priority[normExt(b.name||b.path)]||99)); return arr;}
+async function downloadRemoteFile(f){const url=baseUrl()+'/api/iec61850/download?host='+enc(host())+'&port='+enc(port())+'&path='+enc(f.path||f.name)+'&forceRefresh='+(forceRefresh()?'1':'0'); const r=await fetch(url); if(!r.ok){let t=''; try{t=await r.text();}catch(e){} throw new Error('Không tải được '+(f.path||f.name)+': HTTP '+r.status+' '+t.slice(0,200));} const blob=await r.blob(); return asFile(blob, sucoFileNameFromRelay(f), blob.type||'application/octet-stream');}
+async function loadSelected(){ if(!GW.selected){status('Chưa chọn file.','warn'); return;} const arr=relatedFiles(GW.selected); status('Đang tải '+arr.length+' file từ rơ le để đưa vào SUCO...',''); try{const files=[]; for(const f of arr){files.push(await downloadRemoteFile(f));} if(String(q('gwAutoLoad')?.value||'true')==='true'){ if(typeof handleFiles!=='function') throw new Error('Không tìm thấy hàm handleFiles của SUCO.'); await handleFiles(files); status('Đã tải và nạp vào SUCO: '+files.map(f=>f.name).join(', '),'good'); if(typeof activateTab==='function') activateTab('overview'); } else { status('Đã tải xong '+files.length+' file vào bộ nhớ trình duyệt, nhưng chưa tự nạp vì tùy chọn đang tắt.','good'); } }catch(e){status('Lỗi tải/nạp bộ file: '+e.message,'bad');}}
+async function downloadSelected(){ if(!GW.selected){status('Chưa chọn file.','warn'); return;} try{status('Đang tải file '+(GW.selected.path||GW.selected.name)+' ...',''); const f=await downloadRemoteFile(GW.selected); downloadBlobLocal(f.name||'relay_file.bin', f); status('Đã tải file '+(f.name||'relay_file.bin'),'good');}catch(e){status('Lỗi tải file: '+e.message,'bad');}}
+async function downloadZip(paths, label){ if(!paths.length){status('Không có file để tải ZIP theo lựa chọn hiện tại.','warn'); return;} status('Đang tải ZIP '+paths.length+' file từ rơ le. Không tắt Gateway trong quá trình này...',''); const body={host:host(),port:port(),paths:paths,forceRefresh:forceRefresh()}; const r=await fetch(baseUrl()+'/api/iec61850/download-batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok){let t=''; try{t=await r.text();}catch(e){} throw new Error('HTTP '+r.status+' '+t.slice(0,300));} const blob=await r.blob(); const name='IEC61850_'+host().replace(/\W+/g,'_')+'_'+label+'_'+new Date().toISOString().replace(/[-:T.Z]/g,'').slice(0,14)+'.zip'; downloadBlobLocal(name, blob); status('Đã tạo ZIP: '+name+' ('+paths.length+' file).','good');}
+async function zipAll(){try{const arr=bulkFiles(); await downloadZip(arr.map(f=>f.path||f.name), 'ALL');}catch(e){status('Lỗi tải ZIP toàn bộ: '+e.message,'bad');}}
+async function zipSelectedGroup(){try{if(!GW.selected){status('Chưa chọn file.','warn');return;} const arr=downloadable(relatedFiles(GW.selected)); await downloadZip(arr.map(f=>f.path||f.name), 'GROUP_'+base(GW.selected.name||GW.selected.path));}catch(e){status('Lỗi tải ZIP nhóm: '+e.message,'bad');}}
+async function showIedSessions(){
+  try{
+    const u=baseUrl()+'/api/gateway/ied-sessions?host='+encodeURIComponent(host()||'')+'&port='+encodeURIComponent(port()||102)+'&limit=80';
+    const j=await fetchJson(u,{method:'GET'});
+    const box=q('gwSessionBox'), list=q('gwSessionList');
+    if(box)box.style.display='block';
+    const rows=Array.isArray(j.sessions)?j.sessions:[];
+    if(list){
+      if(!rows.length){ list.innerHTML='<div class="note">Chưa có phiên cache cho IED này. Hãy quét/tải file một lần.</div>'; }
+      else{
+        list.innerHTML='<table><thead><tr><th>STT</th><th>Thời gian realtime</th><th>IP</th><th>Thao tác</th><th>Root/File</th><th>Số mục/Size</th><th>Mã phiên</th></tr></thead><tbody>'+rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+E(r.createdAtLocal||'')+'</td><td>'+E((r.host||'')+':'+(r.port||''))+'</td><td>'+E(r.operation||'download')+'</td><td>'+E(r.rootPath||r.remotePath||'')+'</td><td>'+E((r.fileCount!=null?r.fileCount:'')||(r.size!=null?r.size:''))+'</td><td class="mono">'+E(r.sessionId||'')+'</td></tr>').join('')+'</tbody></table>';
+      }
+    }
+    status('Đã đọc '+rows.length+' phiên cache IED từ Gateway. Mỗi phiên được lưu theo IP/port và thời gian realtime.', rows.length?'good':'warn');
+  }catch(e){status('Lỗi đọc phiên cache IED: '+e.message,'bad');}
+}
+async function showUserSessions(){
+  try{
+    const u=baseUrl()+'/api/gateway/user-sessions?clientIp=me&host='+encodeURIComponent(host()||'')+'&port='+encodeURIComponent(port()||102)+'&limit=100';
+    const j=await fetchJson(u,{method:'GET'});
+    const box=q('gwSessionBox'), list=q('gwSessionList');
+    if(box)box.style.display='block';
+    const rows=Array.isArray(j.sessions)?j.sessions:[];
+    if(list){
+      if(!rows.length){ list.innerHTML='<div class="note">Chưa có phiên cache theo IP người dùng cho máy này. Hãy quét/tải file một lần.</div>'; }
+      else{
+        list.innerHTML='<table><thead><tr><th>STT</th><th>Thời gian realtime</th><th>IP người dùng</th><th>IED</th><th>Thao tác</th><th>Root/File</th><th>Số mục/Size</th><th>Mã phiên</th></tr></thead><tbody>'+rows.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+E(r.createdAtLocal||'')+'</td><td>'+E(r.clientIp||'')+'</td><td>'+E((r.host||'')+':'+(r.port||''))+'</td><td>'+E(r.operation||'download')+'</td><td>'+E(r.rootPath||r.remotePath||'')+'</td><td>'+E((r.fileCount!=null?r.fileCount:'')||(r.size!=null?r.size:r.zipBytes!=null?r.zipBytes:''))+'</td><td class="mono">'+E(r.sessionId||'')+'</td></tr>').join('')+'</tbody></table>';
+      }
+    }
+    status('Đã đọc '+rows.length+' phiên cache theo IP người dùng từ Gateway. Các phiên này tách theo IP máy người dùng và IP IED.', rows.length?'good':'warn');
+  }catch(e){status('Lỗi đọc phiên cache người dùng: '+e.message,'bad');}
+}
+async function clearGatewayCache(){ try{status('Đang xóa cache quét/tải file trên Gateway...', ''); const j=await fetchJson(baseUrl()+'/api/gateway/cache-clear',{method:'POST'}); status('Đã xóa cache quét/tải file. Danh mục rơ le dùng chung và lịch sử phiên IED vẫn được giữ lại.', 'good'); await checkHealth(); }catch(e){status('Lỗi xóa cache: '+e.message,'bad');}}
+function exportList(){ if(!GW.files.length){status('Chưa có danh sách file để xuất.','warn'); return;} const csv=['STT,Category,Name,Path,Ext,Size,Modified,MaybeDirectory'].concat(GW.files.map((f,i)=>[i+1,catLabel(localCategory(f)),f.name||fileName(f.path),f.path||'',normExt(f.name||f.path),f.size||'',f.mtime||f.modified||'',f.maybeDirectory?'YES':'NO'].map(csvCell).join(','))).join('\r\n'); downloadBlobLocal('IEC61850_file_list_'+host().replace(/\W+/g,'_')+'.csv', new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));}
+window.iec61850GwSelect=function(i){GW.selected=GW.files[i]||null; renderTable(); if(GW.selected) status('Đã chọn: '+(GW.selected.path||GW.selected.name)+' · '+catLabel(localCategory(GW.selected)),'');};
+window.iec61850GwLoadSelected=loadSelected; window.iec61850GwDownloadSelected=downloadSelected;
+function applyNESGE(){const fn=q('gwNESFunction')?.value||''; const prev=q('gwNESRootPreview'); const rootBox=q('gwRootPath'); const r=(prev&&prev.value&&prev.value.trim().startsWith('/'))?prev.value.trim():nesGeRoot(fn); if(prev)prev.value=r; if(rootBox)rootBox.value=r; const pat=q('gwPatterns'); if(pat&&!/\*\.C/i.test(pat.value)) pat.value=(pat.value?pat.value+',':'')+'*.C,*.D,*.H,*.I,*.*'; status('Đã đặt thư mục NES/GE: '+r+' . Nếu vẫn không thấy file, bấm “Quét toàn bộ hồ sơ rơ le”.','');}
+async function browseNESGE(){applyNESGE(); await browse();}
+function bind(){ const map={btnGwHealth:checkHealth,btnGwBrowse:browse,btnGwFullScan:fullScan,btnGwDiscover:discover,btnGwBrowseCommon:browseCommon,btnGwApplyNESGE:applyNESGE,btnGwBrowseNESGE:browseNESGE,btnGwLoadSelected:loadSelected,btnGwDownloadSelected:downloadSelected,btnGwZipSelectedGroup:zipSelectedGroup,btnGwZipAll:zipAll,btnGwExportList:exportList,btnGwClearCache:clearGatewayCache,btnGwShowSessions:showIedSessions,btnGwShowUserSessions:showUserSessions}; Object.keys(map).forEach(id=>{const el=q(id); if(el) el.onclick=map[id];}); const fn=q('gwNESFunction'), prev=q('gwNESRootPreview'); if(fn&&prev){fn.oninput=()=>{prev.value=nesGeRoot(fn.value);};} const cf=q('gwCategoryFilter'), st=q('gwSearchText'), bs=q('gwBulkSelect'); if(cf)cf.onchange=renderTable; if(st)st.oninput=()=>{clearTimeout(st._t); st._t=setTimeout(renderTable,120);}; if(bs)bs.onchange=renderMetrics; renderTable(); renderMetrics(); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
+})();
+</script>
+
+
+<script>
+/* ===== Relay catalog JSON manager - FixParseCatalog ===== */
+(function(){
+'use strict';
+const KEY='iec61850_relay_catalog_v2';
+const DEFAULT_CATALOG={
+  version:2,
+  schema:'iec61850-relay-catalog',
+  updatedAt:new Date().toISOString(),
+  relays:[
+    {
+      id:'song-chay-h13-f50f650',
+      name:'Sông Chảy - H13 F50F650',
+      station:'Sông Chảy',
+      bay:'H13 / F50',
+      functionName:'H13F50',
+      host:'172.17.59.21',
+      port:102,
+      manufacturer:'GE',
+      model:'F650',
+      logicalDevice:'H13_F50F650',
+      rootPath:'/',
+      rootHints:['/LD/H13_F50F650','/LD/H13_F50F650/COMTRADE','H13_F50F650/COMTRADE'],
+      patterns:'*.cfg,*.dat,*.hdr,*.inf,*.cff,*.zip,*.rar,*.7z,*.C,*.D,*.H,*.I,*.txt,*.log,*.csv,*.roa,*.xml,*.cid,*.icd,*.iid,*.scd,*.ssd,*.sed,*.set,*.ini,*.json,*.db,*.bin,*.*',
+      tags:['GE','F650','NES','COMTRADE','FL'],
+      notes:'Mẫu GE/NES F650; nên dùng Quét toàn bộ hồ sơ rơ le để tự dò thư mục.'
+    }
+  ]
+};
+function q(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c))}
+function slug(s){return String(s||'relay').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || ('relay-'+Date.now());}
+function csvList(s){return String(s||'').split(/[;,]/).map(x=>x.trim()).filter(Boolean);}
+function loadCatalog(){try{const raw=localStorage.getItem(KEY); if(raw){const j=JSON.parse(raw); if(j&&Array.isArray(j.relays))return j;}}catch(e){} return JSON.parse(JSON.stringify(DEFAULT_CATALOG));}
+function saveCatalog(cat){cat.version=2; cat.schema='iec61850-relay-catalog'; cat.updatedAt=new Date().toISOString(); localStorage.setItem(KEY,JSON.stringify(cat));}
+function cat(){return loadCatalog();}
+function selectedRelay(catObj){const id=q('gwRelayCatalogSelect')?.value||''; return (catObj||cat()).relays.find(r=>r.id===id)||null;}
+function writeMainForm(r){
+  if(!r)return;
+  if(q('gwRelayHost'))q('gwRelayHost').value=r.host||'';
+  if(q('gwRelayPort'))q('gwRelayPort').value=r.port||102;
+  if(q('gwRootPath'))q('gwRootPath').value=r.rootPath||'/';
+  if(q('gwPatterns')&&r.patterns)q('gwPatterns').value=r.patterns;
+  if(q('gwNESFunction'))q('gwNESFunction').value=r.functionName||r.logicalDevice||'';
+  const hints=Array.isArray(r.rootHints)?r.rootHints:[];
+  if(q('gwNESRootPreview'))q('gwNESRootPreview').value=hints[0]||r.rootPath||'/';
+}
+function fillEditor(r){
+  r=r||{};
+  if(q('gwCatName'))q('gwCatName').value=r.name||'';
+  if(q('gwCatStation'))q('gwCatStation').value=r.station||'';
+  if(q('gwCatBay'))q('gwCatBay').value=r.bay||'';
+  if(q('gwCatManufacturer'))q('gwCatManufacturer').value=r.manufacturer||'';
+  if(q('gwCatModel'))q('gwCatModel').value=r.model||'';
+  if(q('gwCatLogicalDevice'))q('gwCatLogicalDevice').value=r.logicalDevice||'';
+  if(q('gwCatTags'))q('gwCatTags').value=Array.isArray(r.tags)?r.tags.join(', '):(r.tags||'');
+  if(q('gwCatRootHints'))q('gwCatRootHints').value=Array.isArray(r.rootHints)?r.rootHints.join('; '):(r.rootHints||'');
+  if(q('gwCatNotes'))q('gwCatNotes').value=r.notes||'';
+}
+function relayFromEditor(existing){
+  const name=q('gwCatName')?.value.trim() || (q('gwCatStation')?.value.trim()+' - '+q('gwRelayHost')?.value.trim()).trim() || 'Rơ le mới';
+  const r=Object.assign({}, existing||{});
+  r.id=r.id||slug(name+'-'+(q('gwRelayHost')?.value||''));
+  r.name=name;
+  r.station=q('gwCatStation')?.value.trim()||'';
+  r.bay=q('gwCatBay')?.value.trim()||'';
+  r.functionName=q('gwNESFunction')?.value.trim()||'';
+  r.host=q('gwRelayHost')?.value.trim()||'';
+  r.port=Number(q('gwRelayPort')?.value||102)||102;
+  r.manufacturer=q('gwCatManufacturer')?.value.trim()||'';
+  r.model=q('gwCatModel')?.value.trim()||'';
+  r.logicalDevice=q('gwCatLogicalDevice')?.value.trim()||'';
+  r.rootPath=q('gwRootPath')?.value.trim()||'/';
+  r.rootHints=csvList(q('gwCatRootHints')?.value||q('gwNESRootPreview')?.value||'');
+  if(!r.rootHints.length && r.logicalDevice) r.rootHints=['/LD/'+r.logicalDevice,'/LD/'+r.logicalDevice+'/COMTRADE',r.logicalDevice+'/COMTRADE'];
+  r.patterns=q('gwPatterns')?.value.trim()||'*.cfg,*.dat,*.hdr,*.inf,*.*';
+  r.tags=csvList(q('gwCatTags')?.value||'');
+  r.notes=q('gwCatNotes')?.value.trim()||'';
+  r.updatedAt=new Date().toISOString();
+  return r;
+}
+function renderCatalog(){
+  const c=cat(); const sel=q('gwRelayCatalogSelect'); if(!sel)return;
+  const old=sel.value;
+  sel.innerHTML='<option value="">-- Chọn hồ sơ rơ le --</option>'+c.relays.map(r=>'<option value="'+esc(r.id)+'">'+esc((r.station? r.station+' · ':'')+(r.bay? r.bay+' · ':'')+(r.name||r.host))+'</option>').join('');
+  if(c.relays.some(r=>r.id===old))sel.value=old; else if(c.relays.length)sel.value=c.relays[0].id;
+  const r=selectedRelay(c); fillEditor(r||{});
+  const box=q('gwRelayCatalogPreview'); if(box){
+    box.innerHTML='<table><thead><tr><th>STT</th><th>Tên hồ sơ</th><th>Trạm</th><th>Ngăn lộ</th><th>IP</th><th>Port</th><th>Hãng/Model</th><th>Logical Device</th><th>Gợi ý thư mục</th><th>Ghi chú</th></tr></thead><tbody>'+
+      c.relays.map((r,i)=>'<tr class="'+(sel.value===r.id?'gw-cat-active-row':'')+'" onclick="document.getElementById(\'gwRelayCatalogSelect\').value=\''+esc(r.id)+'\'; window.iec61850RelayCatalogApply(false); window.iec61850RelayCatalogRefresh();"><td>'+(i+1)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.station)+'</td><td>'+esc(r.bay)+'</td><td>'+esc(r.host)+'</td><td>'+esc(r.port||102)+'</td><td>'+esc([r.manufacturer,r.model].filter(Boolean).join(' '))+'</td><td>'+esc(r.logicalDevice)+'</td><td>'+esc((r.rootHints||[]).join('; '))+'</td><td>'+esc(r.notes)+'</td></tr>').join('')+
+      '</tbody></table>';
+  }
+}
+window.iec61850RelayCatalogRefresh=renderCatalog;
+window.iec61850RelayCatalogApply=function(updateStatus){
+  const r=selectedRelay(); if(!r)return;
+  writeMainForm(r); fillEditor(r);
+  if(updateStatus!==false && typeof window.iec61850GwSelect==='function'){
+    const st=document.getElementById('gwStatus'); if(st){st.className='status good'; st.textContent='Đã áp dụng hồ sơ rơ le: '+(r.name||r.host)+'. Có thể bấm “Quét toàn bộ hồ sơ rơ le”.';}
+  }
+};
+function fromCurrent(){
+  const r=relayFromEditor(selectedRelay()||{});
+  fillEditor(r);
+  const st=document.getElementById('gwStatus'); if(st){st.className='status'; st.textContent='Đã lấy thông tin từ ô hiện tại vào khung danh mục. Bấm “Thêm / cập nhật” để lưu vào JSON.';}
+}
+function saveCurrent(){
+  const c=cat(); const current=selectedRelay(c); const r=relayFromEditor(current||null);
+  const idx=c.relays.findIndex(x=>x.id===r.id);
+  if(idx>=0)c.relays[idx]=r; else c.relays.push(r);
+  saveCatalog(c); renderCatalog(); const sel=q('gwRelayCatalogSelect'); if(sel)sel.value=r.id; renderCatalog(); writeMainForm(r);
+  const st=document.getElementById('gwStatus'); if(st){st.className='status good'; st.textContent='Đã lưu/cập nhật hồ sơ rơ le trong danh mục JSON nội bộ: '+r.name;}
+}
+function delCurrent(){
+  const c=cat(); const r=selectedRelay(c); if(!r)return;
+  if(!confirm('Xóa hồ sơ rơ le "'+(r.name||r.host)+'" khỏi danh mục nội bộ?'))return;
+  c.relays=c.relays.filter(x=>x.id!==r.id); saveCatalog(c); renderCatalog();
+}
+function exportJson(){
+  const c=cat(); const blob=new Blob(['\ufeff'+JSON.stringify(c,null,2)],{type:'application/json;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='iec61850_relay_catalog_'+new Date().toISOString().slice(0,10)+'.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+}
+function importJsonFile(file){
+  const rd=new FileReader(); rd.onload=function(){
+    try{
+      const j=JSON.parse(String(rd.result||'').replace(/^\uFEFF/,''));
+      const arr=Array.isArray(j)?j:(Array.isArray(j.relays)?j.relays:null);
+      if(!arr)throw new Error('JSON không có mảng relays.');
+      const c=cat(); const byId=new Map(c.relays.map(r=>[r.id,r]));
+      arr.forEach(x=>{ if(!x.id)x.id=slug((x.name||x.station||x.host||'relay')+'-'+(x.host||Date.now())); byId.set(x.id,x); });
+      c.relays=Array.from(byId.values()); saveCatalog(c); renderCatalog();
+      const st=document.getElementById('gwStatus'); if(st){st.className='status good'; st.textContent='Đã nhập/ghép '+arr.length+' hồ sơ rơ le từ JSON.';}
+    }catch(e){alert('Không nhập được JSON danh mục rơ le: '+e.message);}
+  }; rd.readAsText(file,'utf-8');
+}
+function apiBase(){return String(q('gwApiUrl')?.value||'http://127.0.0.1:8787').replace(/\/+$/,'');}
+async function catFetchJson(url, opts){
+  const r=await fetch(url,opts||{}); const text=await r.text(); let j=null;
+  try{j=JSON.parse(text.replace(/^\uFEFF/,''));}catch(e){throw new Error('Gateway trả dữ liệu không phải JSON: '+text.slice(0,250));}
+  if(!r.ok||j.ok===false) throw new Error(j.error||j.message||('HTTP '+r.status));
+  return j;
+}
+function mergeCatalogObjects(local, remote){
+  local=local&&Array.isArray(local.relays)?local:JSON.parse(JSON.stringify(DEFAULT_CATALOG));
+  const out=JSON.parse(JSON.stringify(local)); const map=new Map();
+  (out.relays||[]).forEach(r=>{ if(!r.id)r.id=slug((r.name||r.station||r.host||'relay')+'-'+(r.host||'')); map.set(r.id,r); });
+  const rr=remote?(Array.isArray(remote)?remote:(Array.isArray(remote.relays)?remote.relays:[])):[];
+  rr.forEach(r=>{ if(!r)return; if(!r.id)r.id=slug((r.name||r.station||r.host||'relay')+'-'+(r.host||'')); const old=map.get(r.id)||{}; map.set(r.id,Object.assign({},old,r)); });
+  out.relays=Array.from(map.values()).sort((a,b)=>String(a.station||a.name||'').localeCompare(String(b.station||b.name||''),'vi'));
+  out.updatedAt=new Date().toISOString(); out.sharedByGateway=!!(remote&&remote.sharedByGateway);
+  return out;
+}
+async function loadSharedCatalog(){
+  const j=await catFetchJson(apiBase()+'/api/gateway/relay-catalog',{method:'GET'});
+  const merged=mergeCatalogObjects(cat(),j); saveCatalog(merged); renderCatalog();
+  const st=document.getElementById('gwStatus'); if(st){st.className='status good'; st.textContent='Đã tải/ghép danh mục chung từ Gateway cache: '+((j.relays&&j.relays.length)||0)+' hồ sơ. Tổng cục bộ: '+merged.relays.length+' hồ sơ.';}
+  return merged;
+}
+async function saveSharedCatalog(){
+  const c=cat(); const j=await catFetchJson(apiBase()+'/api/gateway/relay-catalog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
+  const merged=mergeCatalogObjects(c,j); saveCatalog(merged); renderCatalog();
+  const st=document.getElementById('gwStatus'); if(st){st.className='status good'; st.textContent='Đã lưu/ghép danh mục lên Gateway cache. Danh mục chung hiện có '+((j.relays&&j.relays.length)||merged.relays.length)+' hồ sơ.';}
+  return merged;
+}
+async function syncSharedCatalog(){
+  const remote=await catFetchJson(apiBase()+'/api/gateway/relay-catalog',{method:'GET'}).catch(()=>null);
+  const merged=mergeCatalogObjects(cat(),remote); saveCatalog(merged);
+  const saved=await catFetchJson(apiBase()+'/api/gateway/relay-catalog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged)});
+  const finalCat=mergeCatalogObjects(merged,saved); saveCatalog(finalCat); renderCatalog();
+  const st=document.getElementById('gwStatus'); if(st){st.className='status good'; st.textContent='Đã đồng bộ hai chiều danh mục rơ le. Tổng hồ sơ dùng chung: '+finalCat.relays.length+'.';}
+  return finalCat;
+}
+function bind(){
+  if(!q('gwRelayCatalogSelect'))return;
+  const sel=q('gwRelayCatalogSelect'); sel.onchange=function(){const r=selectedRelay(); fillEditor(r||{});};
+  const m={btnGwCatApply:()=>window.iec61850RelayCatalogApply(true),btnGwCatFromCurrent:fromCurrent,btnGwCatSave:saveCurrent,btnGwCatDelete:delCurrent,btnGwCatExport:exportJson,btnGwCatImport:()=>q('gwRelayCatalogImportInput')?.click(),btnGwCatLoadShared:()=>loadSharedCatalog().catch(e=>alert('Không tải được danh mục chung từ Gateway: '+e.message)),btnGwCatSaveShared:()=>saveSharedCatalog().catch(e=>alert('Không lưu được danh mục lên Gateway: '+e.message)),btnGwCatSyncShared:()=>syncSharedCatalog().catch(e=>alert('Không đồng bộ được danh mục Gateway: '+e.message))};
+  Object.keys(m).forEach(id=>{const el=q(id); if(el)el.onclick=m[id];});
+  const imp=q('gwRelayCatalogImportInput'); if(imp)imp.onchange=function(e){const f=e.target.files&&e.target.files[0]; if(f)importJsonFile(f); e.target.value='';};
+  renderCatalog();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind); else bind();
+})();
+</script>
+
+
+<script id="suco-v9941-fault-range-catalog-patch">
+/*
+  V9.9.41 - GE/NES small-current + relay-digital fault range refinement.
+  Muc tieu:
+  - Parser CFG GE/NES da doc dung BINARY; khoi nay tinh lai khoang su co khi dong nho hoac la su kien PKP/OP ngan.
+  - Uu tien digital PKP/OP/IOC/GND/Directional cua relay de xac dinh start/end.
+  - Neu co HDR "Trigger sample", ghi chu moc trigger de doi chieu phan mem hang.
+  - Khong ghi/xoa/doi file relay; chi sua logic phan tich HTML.
+*/
+(function(){
+  const PATCH_VERSION='V9.9.41-FaultRangeCatalog';
+  function g(){ try{return state;}catch(e){return null;} }
+  function finite(x){ return Number.isFinite(Number(x)); }
+  function clamp(v,a,b){ v=Math.round(Number(v)||0); return Math.max(a,Math.min(b,v)); }
+  function nt(x){ try{return normText(x||'');}catch(e){return String(x||'').toUpperCase();} }
+  function sampleRate(){ try{return estimateSampleRate();}catch(e){ const st=g(),d=st&&st.data; if(d&&d.times&&d.times.length>1){return (d.times.length-1)/Math.max(1e-9,d.times[d.times.length-1]-d.times[0]);} return 400; } }
+  function sysFreq(){ const st=g(); return Math.max(1,(st&&st.cfg&&Number(st.cfg.frequency))||50); }
+  function cycleSamples(){ return Math.max(3,Math.round(sampleRate()/sysFreq())); }
+  function valAt(arr,i){ const v=arr&&arr[i]; return Number.isFinite(v)?v:0; }
+  function pct(vals,p){ vals=(vals||[]).filter(Number.isFinite).sort(function(a,b){return a-b;}); if(!vals.length)return NaN; const pos=(vals.length-1)*Math.max(0,Math.min(1,p)); const lo=Math.floor(pos),hi=Math.ceil(pos); return lo===hi?vals[lo]:vals[lo]+(vals[hi]-vals[lo])*(pos-lo); }
+  function avg(vals){ vals=(vals||[]).filter(Number.isFinite); return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:NaN; }
+  function maxAbs(arr,a,b){ let m=0,idx=a; for(let i=a;i<=b;i++){ const v=Math.abs(valAt(arr,i)); if(v>m){m=v;idx=i;} } return {value:m,index:idx}; }
+  function values(arr,a,b){ const out=[]; a=Math.max(0,a); b=Math.min((arr&&arr.length||1)-1,b); for(let i=a;i<=b;i++){ const v=arr[i]; if(Number.isFinite(v))out.push(v); } return out; }
+  function parseHdrInfo(){
+    const st=g(), logs=(st&&st.logs)||[]; const info={};
+    logs.forEach(function(l){
+      const txt=String(l&&l.text||'');
+      let m=txt.match(/Trigger\s+sample\s*=\s*(\d+)/i); if(m)info.triggerSample=parseInt(m[1],10);
+      m=txt.match(/Total\s+samples\s*=\s*(\d+)/i); if(m)info.totalSamples=parseInt(m[1],10);
+      m=txt.match(/Samples\s+per\s+cycle\s*=\s*(\d+)/i); if(m)info.samplesPerCycle=parseInt(m[1],10);
+      m=txt.match(/Trigger\s+position\s*=\s*([0-9.]+)\s*%/i); if(m)info.triggerPositionPct=Number(m[1]);
+    });
+    const d=st&&st.data; if(info.triggerSample && d&&d.samples){ info.triggerIndex=clamp(info.triggerSample-1,0,d.samples-1); info.triggerTime=d.times?d.times[info.triggerIndex]:null; }
+    return info;
+  }
+  function parseRelayFaultSidecar(){
+    const st=g(), logs=(st&&st.logs)||[]; const out={};
+    logs.forEach(function(l){
+      const txt=String(l&&l.text||''), name=String(l&&l.name||'');
+      if(!/FLT|FAULT|REPORT|HDR|INF|TXT/i.test(name+txt.slice(0,120)))return;
+      let m=txt.match(/Fault\s+type\s*=\s*([^\r\n]+)/i); if(m)out.faultType=m[1].trim();
+      m=txt.match(/Distance\s*=\s*([^\r\n]+)/i); if(m)out.distance=m[1].trim();
+      m=txt.match(/Time\s*=\s*([^\r\n]+)/i); if(m)out.time=m[1].trim();
+      m=txt.match(/Date\s*=\s*([^\r\n]+)/i); if(m)out.date=m[1].trim();
+    });
+    return out;
+  }
+  function isProtName(name){ const n=nt(name); return /(PKP|PICKUP|START|TRIP|OPERATE|\bOP\b|IOC|OC|EF|GND|GROUND|EARTH|NEUTRAL|DIRECTIONAL|FAULT|F81|F50|F51|F67|F21|OV|UV)/.test(n); }
+  function isBreakerName(name){ const n=nt(name); return /(CB|BREAKER|MAY CAT|MÁY CẮT|52A|52B|CLOSED|OPENED|OPEN|CLOSE)/.test(n); }
+  function digitalEventsAll(){
+    const st=g(), cfg=st&&st.cfg, data=st&&st.data, out=[]; if(!cfg||!data||!cfg.digitalCount)return out;
+    for(let d=0;d<cfg.digitalCount;d++){
+      const ch=cfg.digital[d], name=ch&&ch.id||('D'+(d+1)), arr=data.digital[d]; if(!arr)continue;
+      const prot=isProtName(name), br=isBreakerName(name); if(!prot && !br)continue;
+      for(let i=1;i<data.samples;i++){
+        const a=arr[i-1]?1:0,b=arr[i]?1:0; if(a===b)continue;
+        let type='Digital doi trang thai';
+        const n=nt(name);
+        if(br) type='May cat/CB doi trang thai';
+        else if(/(TRIP|OPERATE|\bOP\b)/.test(n) && b===1) type='Relay Operate/Trip';
+        else if(/(PKP|PICKUP|START)/.test(n) && b===1) type='Pickup/Start';
+        else if(b===0) type='Reset/Dropout';
+        out.push({index:i,time:data.times?data.times[i]:i/sampleRate(),channel:name,type:type,from:a,to:b,protection:prot,breaker:br});
+      }
+    }
+    out.sort(function(a,b){return a.index-b.index;}); return out;
+  }
+  function digitalRange(){
+    const ev=digitalEventsAll().filter(function(e){return e.protection && !e.breaker;});
+    const rises=ev.filter(function(e){return e.to===1;}); if(!rises.length)return null;
+    const first=rises[0].index;
+    const lastFall=ev.filter(function(e){return e.index>=first && e.to===0;}).map(function(e){return e.index;}).pop();
+    const lastProt=ev.filter(function(e){return e.index>=first;}).map(function(e){return e.index;}).pop();
+    const cyc=cycleSamples(), st=g(), n=st&&st.data&&st.data.samples||0;
+    let s=first, e=lastFall||lastProt||Math.min(n-1,first+Math.round(cyc*3));
+    if(e<s)e=s+cyc;
+    return {s:clamp(s,0,n-1), e:clamp(e,0,n-1), source:'digital PKP/OP relay', events:ev, confidence:'Cao'};
+  }
+  function analogRange(){
+    const st=g(), cfg=st&&st.cfg, data=st&&st.data; if(!cfg||!data||!data.samples)return null;
+    const n=data.samples, cyc=cycleSamples(), hdr=parseHdrInfo();
+    let preEnd=hdr.triggerIndex!=null?Math.max(1,hdr.triggerIndex-1):Math.max(1,Math.round(n*0.10));
+    preEnd=Math.min(preEnd,n-1);
+    const mask=new Uint8Array(n), score=new Float64Array(n); let used=0;
+    for(let c=0;c<cfg.analogCount;c++){
+      const ch=cfg.analog[c]; let cur=false; try{cur=isCurrentChannel(ch);}catch(e){cur=/^(A|KA)$/i.test(ch.unit||'')||/^I/i.test(ch.id||'');}
+      if(!cur)continue; used++;
+      let rms; try{rms=slidingRms(data.analog[c],cyc);}catch(e){rms=data.analog[c];}
+      const preVals=values(rms,0,preEnd); const med=pct(preVals,0.50)||0; const p95=pct(preVals,0.95)||med; const all95=pct(values(rms,0,n-1),0.95)||med; const mx=maxAbs(rms,0,n-1).value;
+      const noise=Math.max(Math.abs(p95-med),Math.abs(med)*0.15,Math.abs(mx)*0.025,1e-9);
+      const th=med+Math.max(noise*4, Math.abs(mx)*0.055, Math.abs(med)*0.65, 0.001);
+      for(let i=0;i<n;i++){
+        const v=rms[i]; if(!Number.isFinite(v))continue; const sc=(v-th)/Math.max(noise,Math.abs(th)*0.10,1e-9);
+        if(v>th || sc>1){ mask[i]=1; score[i]=Math.max(score[i],sc); }
+      }
+    }
+    if(!used)return null;
+    const minLen=Math.max(2,Math.round(cyc*0.35)), gap=Math.max(1,Math.round(cyc*0.75));
+    const segs=[]; let s=-1;
+    for(let i=0;i<n;i++){ if(mask[i]&&s<0)s=i; if((!mask[i]||i===n-1)&&s>=0){segs.push({s:s,e:mask[i]?i:i-1});s=-1;} }
+    if(!segs.length)return null;
+    const merged=[segs[0]]; for(let i=1;i<segs.length;i++){ const last=merged[merged.length-1]; if(segs[i].s-last.e<=gap)last.e=segs[i].e; else merged.push(segs[i]); }
+    const good=merged.filter(function(x){return x.e-x.s+1>=minLen;}).map(function(x){ let pk=0,pi=x.s; for(let i=x.s;i<=x.e;i++){ if(score[i]>pk){pk=score[i];pi=i;} } return {s:x.s,e:x.e,peak:pk,peakIndex:pi,len:x.e-x.s+1};});
+    if(!good.length)return null; good.sort(function(a,b){return (b.peak*1000+b.len)-(a.peak*1000+a.len);});
+    const best=good[0]; return {s:best.s,e:best.e,peakIndex:best.peakIndex,source:'analog current adaptive RMS',confidence:'Trung bình'};
+  }
+  function combineRanges(r){
+    const st=g(), data=st&&st.data; if(!data)return null; const n=data.samples, cyc=cycleSamples(); const dig=digitalRange(), ana=analogRange();
+    if(dig && ana){
+      const near=Math.abs(dig.s-ana.s)<=Math.max(cyc*5,Math.round(sampleRate()*0.20));
+      return {s:clamp(Math.min(dig.s,near?ana.s:dig.s),0,n-1), e:clamp(Math.max(dig.e,near?ana.e:dig.e),0,n-1), peakIndex:ana.peakIndex||dig.s, source:'digital PKP/OP + analog adaptive RMS', confidence:'Cao', digital:dig, analog:ana};
+    }
+    if(dig)return Object.assign({peakIndex:dig.s},dig);
+    if(ana)return ana;
+    return null;
+  }
+  function rmsOf(arr,a,b){ const vals=[]; for(let i=a;i<=b;i++){ const v=arr&&arr[i]; if(Number.isFinite(v))vals.push(v*v); } return vals.length?Math.sqrt(vals.reduce((x,y)=>x+y,0)/vals.length):NaN; }
+  function classifyRefined(range){
+    const st=g(), cfg=st&&st.cfg, data=st&&st.data; const out={}; if(!cfg||!data||!range)return out;
+    const s=range.s,e=range.e,cyc=cycleSamples(); const pre0=Math.max(0,s-Math.max(cyc*4,Math.round(sampleRate()*0.20))), pre1=Math.max(0,s-1);
+    const phaseIdx={}, groundIdx=[];
+    for(let i=0;i<cfg.analogCount;i++){
+      const ch=cfg.analog[i]; let cur=false, ph=''; try{cur=isCurrentChannel(ch); ph=phaseFromChannel(ch,'I');}catch(_){cur=/^(A|KA)$/i.test(ch.unit||'')||/^I/i.test(ch.id||''); ph=String(ch.phase||'').toUpperCase();}
+      if(!cur)continue; if(['A','B','C'].includes(ph) && phaseIdx[ph]==null)phaseIdx[ph]=i; else if(ph==='N' || /G|N|0|SG|RES|GROUND|EARTH/i.test((ch.id||'')+' '+(ch.phase||'')))groundIdx.push(i);
+    }
+    const phaseRows=[]; ['A','B','C'].forEach(function(p){ const idx=phaseIdx[p]; if(idx==null)return; const arr=data.analog[idx]; const pre=rmsOf(arr,pre0,pre1), during=rmsOf(arr,s,e); phaseRows.push({p:p,idx:idx,pre:pre,during:during,ratio:during/Math.max(pre,1e-9)}); });
+    const gRows=groundIdx.map(function(idx){ const arr=data.analog[idx]; return {idx:idx,name:cfg.analog[idx].id,pre:rmsOf(arr,pre0,pre1),during:rmsOf(arr,s,e)}; }).filter(function(x){return Number.isFinite(x.during);});
+    const maxP=phaseRows.length?Math.max.apply(null,phaseRows.map(x=>x.during)):NaN; const maxG=gRows.length?Math.max.apply(null,gRows.map(x=>x.during)):NaN;
+    const digNames=(range.digital&&range.digital.events||digitalEventsAll()).filter(function(x){return x.index>=s-cycleSamples() && x.index<=e+cycleSamples() && x.to===1;}).map(function(x){return nt(x.channel);}).join(' | ');
+    const side=parseRelayFaultSidecar();
+    const groundDigital=/(GND|GROUND|EARTH|NEUTRAL|S\.GND|SENS)/.test(digNames);
+    if((Number.isFinite(maxG)&&Number.isFinite(maxP)&&maxG>maxP*1.35) || groundDigital){
+      out.type='Sự kiện dòng đất/dòng dư nhạy'+(groundDigital?' theo tín hiệu GND/NEUTRAL/Directional':'')+(side.faultType?' · FL='+side.faultType:'');
+      out.phases=['G/N']; out.ground=true;
+    } else if(phaseRows.length){
+      const mx=phaseRows.length?Math.max.apply(null,phaseRows.map(x=>x.during)):0;
+      const active=phaseRows.filter(x=>x.during>=Math.max(mx*0.35,x.pre*2.0)).map(x=>x.p);
+      if(active.length){ out.phases=active; out.ground=!!groundDigital; try{out.type=classifyFault(active,out.ground,false);}catch(e){out.type='Sự cố pha '+active.join('-')+(out.ground?' chạm đất':'');} }
+    }
+    if(side.faultType && /^NAF$/i.test(side.faultType) && out.type){ out.type=out.type+'; rơ le ghi NAF trong FLT'; out.confidence='Trung bình'; }
+    out.sidecar=side; out.phaseRows=phaseRows; out.groundRows=gRows; return out;
+  }
+  function rebuildValueRows(r,range,cls){
+    const st=g(), cfg=st&&st.cfg, data=st&&st.data; if(!cfg||!data||!range)return r.valueRows||[];
+    const rows=[], s=range.s,e=range.e,cyc=cycleSamples(), pre0=Math.max(0,s-Math.max(cyc*4,Math.round(sampleRate()*0.20))), pre1=Math.max(0,s-1), post0=Math.min(data.samples-1,e+1), post1=Math.min(data.samples-1,e+Math.max(cyc*4,Math.round(sampleRate()*0.20)));
+    for(let i=0;i<cfg.analogCount;i++){
+      const ch=cfg.analog[i]; let cur=false, vol=false; try{cur=isCurrentChannel(ch); vol=isVoltageChannel(ch);}catch(_){cur=/^(A|KA)$/i.test(ch.unit||'')||/^I/i.test(ch.id||''); vol=/^(V|KV)$/i.test(ch.unit||'')||/^[UV]/i.test(ch.id||'');}
+      if(!cur && !vol)continue; const arr=data.analog[i]; if(!arr)continue; let rms; try{rms=slidingRms(arr,cyc);}catch(_){rms=arr;}
+      const pre=rmsOf(rms,pre0,pre1), during=rmsOf(rms,s,e), post=rmsOf(rms,post0,post1); const pk=maxAbs(arr,s,e);
+      const label=(cur?'Dòng':'Áp')+' '+(ch.id||('#'+(i+1)));
+      const ratio=cur?(during/Math.max(pre,1e-9)):(during/Math.max(pre,1e-9)*100);
+      rows.push([label, ch.phase||'', fmt(pre,6), fmt(during,6)+' / peak '+fmt(pk.value,6)+' @ '+fmt(data.times[pk.index],6)+'s', fmt(post,6), cur?fmt(ratio,3)+' ×':fmt(ratio,2)+' %', ch.unit||'']);
+    }
+    return rows;
+  }
+  function refine(r){
+    try{
+      const st=g(), data=st&&st.data; if(!r||!data||!data.samples)return r;
+      const range=combineRanges(r); if(!range)return r;
+      const hdr=parseHdrInfo(); const cls=classifyRefined(range); const cyc=cycleSamples();
+      let s=clamp(range.s,0,data.samples-1), e=clamp(range.e,0,data.samples-1); if(e<s){const t=s;s=e;e=t;} if(e-s<Math.max(2,Math.round(cyc*0.25)))e=Math.min(data.samples-1,s+Math.max(2,Math.round(cyc*0.5)));
+      r.v9941OriginalRange={startIndex:r.startIndex,endIndex:r.endIndex,startTime:r.startTime,endTime:r.endTime,type:r.type,phases:r.phases};
+      r.startIndex=s; r.endIndex=e; r.startTime=data.times[s]; r.endTime=data.times[e]; r.duration=r.endTime-r.startTime; r.sampleDuration=e-s+1;
+      if(range.peakIndex!=null)r.peakIndex=clamp(range.peakIndex,s,e); else r.peakIndex=Math.round((s+e)/2);
+      r.peakTime=data.times[r.peakIndex]; r.source=range.source||r.source; r.detected=true; r.confidence=cls.confidence||range.confidence||r.confidence||'Cao';
+      if(cls.type)r.type=cls.type; if(cls.phases)r.phases=cls.phases; if(cls.ground!==undefined)r.ground=cls.ground;
+      const ev=digitalEventsAll().filter(function(x){return x.index>=Math.max(1,s-cycleSamples()*2)&&x.index<=Math.min(data.samples-1,e+cycleSamples()*2);});
+      r.digitalEvents=ev.map(function(x){return {index:x.index,time:x.time,channel:x.channel,type:x.type,from:x.from,to:x.to};});
+      r.firstPickup=r.digitalEvents.find(function(x){return /Pickup|Start/i.test(x.type);})||r.digitalEvents.find(function(x){return /Relay Operate/i.test(x.type);})||null;
+      r.firstTrip=r.digitalEvents.find(function(x){return /Trip|Operate/i.test(x.type);})||null;
+      r.firstBreaker=r.digitalEvents.find(function(x){return /May cat|CB|breaker/i.test(x.type);})||null;
+      r.timeline=[{time:r.startTime,event:'Bắt đầu vùng sự cố/sự kiện đã hiệu chỉnh',channel:'',detail:range.source||''},{time:r.peakTime,event:'Điểm nặng nhất/đỉnh chỉ báo',channel:'',detail:'Mẫu #'+(r.peakIndex+1)}].concat(r.digitalEvents.map(function(x){return {time:x.time,event:x.type,channel:x.channel,detail:x.from+' → '+x.to};}),[{time:r.endTime,event:'Kết thúc vùng sự cố/sự kiện đã hiệu chỉnh',channel:'',detail:''}]).sort(function(a,b){return a.time-b.time;});
+      r.valueRows=rebuildValueRows(r,range,cls);
+      r.v9941Trigger=hdr; r.v9941Sidecar=cls.sidecar||{}; r.notes=r.notes||[];
+      r.notes.push(PATCH_VERSION+': khoảng sự cố được hiệu chỉnh bằng digital PKP/OP và RMS thích nghi cho dòng nhỏ/ground-sensitive; không còn chỉ phụ thuộc ngưỡng 30% đỉnh pha.');
+      if(hdr.triggerIndex!=null) r.notes.push(PATCH_VERSION+': HDR cho Trigger sample='+(hdr.triggerIndex+1)+', tương ứng t='+fmt(hdr.triggerTime,9)+'s trong trục thời gian COMTRADE; phần mềm hãng thường đặt mốc này là 0s.');
+      if(cls.sidecar&&cls.sidecar.faultType) r.notes.push(PATCH_VERSION+': file FLT kèm theo ghi Fault type='+cls.sidecar.faultType+(cls.sidecar.distance?(', Distance='+cls.sidecar.distance):'')+'.');
+      return r;
+    }catch(e){ try{console.warn('[V9.9.41] refine fault range failed',e);}catch(_){} return r; }
+  }
+  if(typeof getFaultOptions==='function'){
+    const oldGetFaultOptions=getFaultOptions;
+    getFaultOptions=function(){ const o=oldGetFaultOptions.apply(this,arguments)||{}; const add=function(arr,items){ arr=arr||[]; items.forEach(function(x){ if(arr.indexOf(x)<0)arr.push(x);}); return arr;}; o.pickupKw=add(o.pickupKw,['PKP','PICKUP','START','IOC','OC','EF','GND','NEUTRAL']); o.tripKw=add(o.tripKw,['TRIP','OPERATE']); o.breakerKw=add(o.breakerKw,['CB','BREAKER','52A','52B','OPENED','CLOSED']); return o; };
+  }
+  if(typeof analyzeFaultCore==='function'){
+    const oldAnalyzeFaultCore=analyzeFaultCore;
+    analyzeFaultCore=function(){ const r=oldAnalyzeFaultCore.apply(this,arguments); return refine(r); };
+  }
+  window.SUCO_V9941_refineFaultRange=refine;
+  function initUiNote(){
+    const st=document.getElementById('faultResultStatus');
+    const inp=document.getElementById('faultDigitalPickup'); if(inp && !/PKP/i.test(inp.value)) inp.value=inp.value+',PKP,IOC,GND,NEUTRAL,DIRECTIONAL';
+    if(st && !document.getElementById('v9941FaultPatchNote')){
+      const div=document.createElement('div'); div.id='v9941FaultPatchNote'; div.className='note'; div.style.marginTop='10px'; div.textContent='V9.9.41: đã bổ sung nhận dạng khoảng sự cố bằng digital PKP/OP + RMS thích nghi cho bản ghi dòng nhỏ/GE-NES. Khi báo cáo HTML tĩnh, vùng chụp sẽ dùng khoảng đã hiệu chỉnh.'; st.parentNode.insertBefore(div,st.nextSibling);
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initUiNote); else initUiNote();
+})();
+</script>
+
+<script>
+/* ===== V9.9.43 PATCH: sửa báo cáo Isg/SG và giữ HTML không vỡ template ===== */
+(function(){
+  'use strict';
+  var VERSION='V9.9.43-ISG-REPORT-LAN-FIX';
+  window.SUCO_ISG_REPORT_FIX_VERSION=VERSION;
+  function st(){ try{return (typeof state!=='undefined')?state:(window.state||null);}catch(e){return window.state||null;} }
+  function byId(x){return document.getElementById(x);}
+  function escLocal(s){return String(s==null?'':s).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c;});}
+  function stripHtml(x){return String(x==null?'':x).replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim();}
+  function fmtLocal(v,d){ if(typeof fmt==='function')return fmt(v,d==null?6:d); v=Number(v); return Number.isFinite(v)?v.toFixed(d==null?6:d):''; }
+  function norm(s){
+    return String(s==null?'':s).toUpperCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^A-Z0-9]+/g,' ')
+      .trim();
+  }
+  function compact(s){return norm(s).replace(/\s+/g,'');}
+  function isIsgName(ch){
+    var name=norm((ch&&ch.id)||'');
+    var c=compact((ch&&ch.id)||'');
+    var unit=String((ch&&ch.unit)||'').toUpperCase();
+    if(!/^(A|KA)$/.test(unit) && !/\bA\b/.test(unit)){
+      // nhiều CFG ghi đơn vị hơi khác, không loại ngay nếu tên rất rõ.
+    }
+    if(/\bISG\b|\bI\s*SG\b|\bS\s*GND\b|\bSENS\s*GND\b|\bSENSITIVE\s*GROUND\b|\bSEF\b|\bSGF\b/.test(name)) return true;
+    if(/^(ISG|I0SG|IGSG|ISEF|IEF|IGS|SG|SENSIG|SENSITIVEGROUND)$/.test(c)) return true;
+    if(/SENS.*GND.*(I|CURRENT)|SENSITIVE.*GROUND.*(I|CURRENT)|GND.*SENS.*(I|CURRENT)/.test(name)) return true;
+    return false;
+  }
+  function isIgName(ch){
+    var name=norm((ch&&ch.id)||''); var c=compact((ch&&ch.id)||'');
+    if(isIsgName(ch)) return false;
+    return /\bIG\b|\bIE\b|\bIN\b|\bI0\b|\b3I0\b|\bGROUND\s*CURRENT\b|\bRESIDUAL\b|\bNEUTRAL\b/.test(name) || /^(IG|IE|IN|I0|3I0|IRES|RESIDUAL|NEUTRAL)$/.test(c);
+  }
+  function isgIndices(){
+    var s=st(), cfg=s&&s.cfg; if(!cfg||!cfg.analog)return [];
+    var out=[];
+    for(var i=0;i<cfg.analog.length;i++) if(isIsgName(cfg.analog[i])) out.push(i);
+    return out;
+  }
+  function igIndices(){
+    var s=st(), cfg=s&&s.cfg; if(!cfg||!cfg.analog)return [];
+    var out=[];
+    for(var i=0;i<cfg.analog.length;i++) if(isIgName(cfg.analog[i])) out.push(i);
+    return out;
+  }
+  function clampIndex(i,n){i=Math.round(Number(i)||0); return Math.max(0,Math.min(Math.max(0,n-1),i));}
+  function rmsOf(arr,a,b){
+    if(!arr||!arr.length)return NaN; a=clampIndex(a,arr.length); b=clampIndex(b,arr.length); if(b<a){var t=a;a=b;b=t;}
+    var sum=0,cnt=0; for(var i=a;i<=b;i++){var v=Number(arr[i]); if(Number.isFinite(v)){sum+=v*v;cnt++;}}
+    return cnt?Math.sqrt(sum/cnt):NaN;
+  }
+  function peakAbs(arr,a,b,times){
+    if(!arr||!arr.length)return {value:NaN,index:0,time:NaN}; a=clampIndex(a,arr.length); b=clampIndex(b,arr.length); if(b<a){var t=a;a=b;b=t;}
+    var best=-Infinity,idx=a,val=NaN; for(var i=a;i<=b;i++){var v=Number(arr[i]); if(Number.isFinite(v)&&Math.abs(v)>best){best=Math.abs(v);idx=i;val=v;}}
+    return {value:Number.isFinite(best)?best:NaN,index:idx,time:times&&times[idx]};
+  }
+  function rangeFromAnalysis(r,n){
+    r=r||{}; var s=Number.isInteger(r.startIndex)?r.startIndex:null, e=Number.isInteger(r.endIndex)?r.endIndex:null;
+    var data=(st()||{}).data, times=data&&data.times;
+    function idxAt(t){ if(!times||!times.length||t==null)return null; t=Number(t); if(!Number.isFinite(t))return null; var best=0,bd=Infinity; for(var i=0;i<times.length;i++){var d=Math.abs(Number(times[i])-t); if(d<bd){bd=d;best=i;}} return best; }
+    if(s==null)s=idxAt(r.startTime); if(e==null)e=idxAt(r.endTime);
+    if(s==null||e==null){s=0;e=Math.max(0,n-1);} s=clampIndex(s,n); e=clampIndex(e,n); if(e<s){var t=s;s=e;e=t;} return {s:s,e:e};
+  }
+  function prepareCore(r){
+    var s=st(), cfg=s&&s.cfg, data=s&&s.data; if(!cfg||!data||!data.samples||!data.analog)return null;
+    var idxs=isgIndices();
+    if(!idxs.length)return null;
+    var n=data.samples, range=rangeFromAnalysis(r,n);
+    var rate=50; try{ if(typeof estimateSampleRate==='function')rate=estimateSampleRate()||50; }catch(_){ }
+    var pad=Math.max(8,Math.round(rate*0.20));
+    var pre0=Math.max(0,range.s-pad), pre1=Math.max(0,range.s-1);
+    var post0=Math.min(n-1,range.e+1), post1=Math.min(n-1,range.e+pad);
+    var rows=[], channels=[];
+    idxs.forEach(function(i){
+      var ch=cfg.analog[i]||{}, arr=data.analog[i]||[], p=peakAbs(arr,range.s,range.e,data.times||[]);
+      var pre=rmsOf(arr,pre0,pre1), dur=rmsOf(arr,range.s,range.e), post=rmsOf(arr,post0,post1);
+      var ratio=dur/Math.max(Math.abs(pre),1e-9);
+      var label='Isg/SG - dòng đất nhạy quyết định rơ le tác động';
+      rows.push([label,ch.id||('A'+(i+1)),fmtLocal(pre,6),fmtLocal(dur,6)+' / peak '+fmtLocal(p.value,6)+' @ '+fmtLocal(p.time,9)+' s',fmtLocal(post,6),fmtLocal(ratio,3)+' ×',ch.unit||'']);
+      channels.push({index:i,name:ch.id||('A'+(i+1)),unit:ch.unit||'',pre:pre,during:dur,post:post,peak:p.value,peakIndex:p.index,peakTime:p.time,ratio:ratio});
+    });
+    return {rows:rows,channels:channels,range:range,version:VERSION};
+  }
+  function rowLooksIsg(row){
+    var txt=norm((row||[]).map(stripHtml).join(' '));
+    return /\bISG\b|\bI\s*SG\b|\bSENS\s*GND\b|\bSENSITIVE\s*GROUND\b|\bSEF\b|\bSGF\b/.test(txt);
+  }
+  function injectIsg(r){
+    try{
+      if(!r)return r;
+      var core=prepareCore(r); if(!core)return r;
+      r.v9943IsgCore=core;
+      var existing=Array.isArray(r.valueRows)?r.valueRows:[];
+      r.valueRows=core.rows.concat(existing.filter(function(row){return !rowLooksIsg(row);}));
+      r.notes=r.notes||[];
+      var note=VERSION+': Isg/SG được đưa vào giá trị cốt lõi, báo cáo tĩnh và báo cáo động; không loại bỏ dù dòng pha nhỏ.';
+      if(!r.notes.some(function(x){return String(x).indexOf(VERSION)>=0;})) r.notes.push(note);
+      if(!/ISG|SG|DÒNG ĐẤT NHẠY|DONG DAT NHAY|SENS/i.test(String(r.type||''))){
+        var igs=igIndices();
+        if(core.channels.length && igs.length) r.type='Sự kiện dòng đất nhạy Isg/SG quyết định rơ le tác động · '+(r.type||'');
+      }
+      return r;
+    }catch(e){try{console.warn('[ISG PATCH] inject failed',e);}catch(_){} return r;}
+  }
+  if(typeof analyzeFaultCore==='function' && !analyzeFaultCore.__isgReportFix){
+    var oldAnalyze=analyzeFaultCore;
+    analyzeFaultCore=function(){return injectIsg(oldAnalyze.apply(this,arguments));};
+    analyzeFaultCore.__isgReportFix=true;
+  }
+  if(typeof ensureFaultAnalysis==='function' && !ensureFaultAnalysis.__isgReportFix){
+    var oldEnsure=ensureFaultAnalysis;
+    ensureFaultAnalysis=function(){return injectIsg(oldEnsure.apply(this,arguments));};
+    ensureFaultAnalysis.__isgReportFix=true;
+  }
+  function coreTableHtml(core){
+    if(!core||!core.rows||!core.rows.length)return '<div class="tiny">Không nhận dạng được kênh Isg/SG trong bản ghi này.</div>';
+    var head=['Vai trò','Kênh','Trước sự cố RMS','Trong vùng tác động RMS / peak','Sau sự cố RMS','Tỷ lệ','Đơn vị'];
+    return '<table><thead><tr>'+head.map(function(h){return '<th>'+escLocal(h)+'</th>';}).join('')+'</tr></thead><tbody>'+core.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+escLocal(stripHtml(c))+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>';
+  }
+  function renderIsgPanel(){
+    try{
+      var r=(st()||{}).faultAnalysis; r=injectIsg(r); if(!r)return;
+      var target=byId('faultValueTable'); if(!target)return;
+      var card=byId('faultIsgCoreCard');
+      if(!card){
+        card=document.createElement('div'); card.id='faultIsgCoreCard'; card.className='card';
+        card.innerHTML='<h2>Isg/SG - dòng đất nhạy quyết định rơ le tác động</h2><div id="faultIsgCoreTable" class="table-wrap compact-table"></div><div class="tiny" style="margin-top:8px">V9.9.43: bảng này được ưu tiên cho các bảo vệ ground-sensitive/SEF. Giá trị này cũng được đưa vào báo cáo HTML tĩnh và động.</div>';
+        var parent=target.closest('.card')||target.parentNode; parent.parentNode.insertBefore(card,parent.nextSibling);
+      }
+      var box=byId('faultIsgCoreTable'); if(box)box.innerHTML=coreTableHtml(r.v9943IsgCore);
+    }catch(e){try{console.warn('[ISG PATCH] render panel failed',e);}catch(_){}}
+  }
+  if(typeof renderFaultAnalysis==='function' && !renderFaultAnalysis.__isgReportFix){
+    var oldRender=renderFaultAnalysis;
+    renderFaultAnalysis=function(){var ret=oldRender.apply(this,arguments); renderIsgPanel(); return ret;};
+    renderFaultAnalysis.__isgReportFix=true;
+  }
+  if(typeof seriesForInteractiveReport==='function' && !seriesForInteractiveReport.__isgReportFix){
+    var oldSeries=seriesForInteractiveReport;
+    seriesForInteractiveReport=function(r){
+      r=injectIsg(r);
+      var pack=oldSeries.apply(this,arguments)||{times:[],analog:[],digital:[]};
+      try{
+        var s=st(), cfg=s&&s.cfg, data=s&&s.data; if(!cfg||!data||!data.analog)return pack;
+        var exists=function(name){name=String(name||'').toUpperCase(); return (pack.analog||[]).some(function(x){return String(x.name||'').toUpperCase()===name;});};
+        isgIndices().forEach(function(i){
+          var ch=cfg.analog[i]||{}; if(exists(ch.id))return;
+          pack.analog=pack.analog||[];
+          pack.analog.unshift({name:ch.id||('A'+(i+1)), unit:ch.unit||'', role:'ISG/SG', values:Array.from(data.analog[i]||[],function(x){return Number(x);})});
+        });
+      }catch(e){try{console.warn('[ISG PATCH] series failed',e);}catch(_){}}
+      return pack;
+    };
+    seriesForInteractiveReport.__isgReportFix=true;
+  }
+  function isgSectionHtml(r){ r=injectIsg(r); var core=r&&r.v9943IsgCore; return '<h2>Isg/SG - dòng đất nhạy quyết định rơ le tác động</h2>'+coreTableHtml(core); }
+  if(typeof makeFaultReportHtml==='function' && !makeFaultReportHtml.__isgReportFix){
+    var oldHtml=makeFaultReportHtml;
+    makeFaultReportHtml=function(){ var r=(typeof ensureFaultAnalysis==='function')?ensureFaultAnalysis():((st()||{}).faultAnalysis); r=injectIsg(r); var html=oldHtml.apply(this,arguments)||''; var sec=isgSectionHtml(r); if(html.indexOf('Isg/SG - dòng đất nhạy quyết định')<0){ html=html.replace(/<h2>Dòng thời gian tác động<\/h2>/,sec+'<h2>Dòng thời gian tác động</h2>'); } return html; };
+    makeFaultReportHtml.__isgReportFix=true;
+  }
+  if(typeof makeFaultInteractiveReportHtml==='function' && !makeFaultInteractiveReportHtml.__isgReportFix){
+    var oldDyn=makeFaultInteractiveReportHtml;
+    makeFaultInteractiveReportHtml=function(){ var r=(typeof ensureFaultAnalysis==='function')?ensureFaultAnalysis():((st()||{}).faultAnalysis); injectIsg(r); return oldDyn.apply(this,arguments); };
+    makeFaultInteractiveReportHtml.__isgReportFix=true;
+  }
+  if(typeof makeFaultReportText==='function' && !makeFaultReportText.__isgReportFix){
+    var oldTxt=makeFaultReportText;
+    makeFaultReportText=function(){ var r=(typeof ensureFaultAnalysis==='function')?ensureFaultAnalysis():((st()||{}).faultAnalysis); r=injectIsg(r); var txt=oldTxt.apply(this,arguments)||''; var core=r&&r.v9943IsgCore; if(core&&txt.indexOf('ISG/SG - DONG DAT NHAY')<0){ txt+='\n\nISG/SG - DONG DAT NHAY QUYET DINH RO LE\n'; txt+='Vai tro\tKenh\tTruoc RMS\tTrong vung tac dong RMS / peak\tSau RMS\tTy le\tDon vi\n'; core.rows.forEach(function(row){txt+=row.map(stripHtml).join('\t')+'\n';}); } return txt; };
+    makeFaultReportText.__isgReportFix=true;
+  }
+  function initNote(){
+    var stt=byId('faultResultStatus'); if(stt && !byId('v9943IsgNote')){ var div=document.createElement('div'); div.id='v9943IsgNote'; div.className='note'; div.style.marginTop='10px'; div.textContent='V9.9.44: đã sửa báo cáo Isg/SG, ngày giờ sự cố và tải ZIP từng bộ. Nếu bản ghi có kênh Isg/Sensitive Ground/SEF, giá trị RMS/peak của kênh này sẽ được đưa vào bảng chính, HTML tĩnh và HTML động.'; stt.parentNode.insertBefore(div,stt.nextSibling); }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initNote); else initNote();
+})();
+</script>
+
+
+<script>
+/* V9.9.44 - ZIP từng bộ + ngày giờ tuyệt đối + bỏ ghi chú trong HTML tĩnh/động
+   Chỉ xử lý phía HTML: không ghi/xóa rơ le, không thay đổi Gateway. */
+(function(){
+'use strict';
+const VERSION='V9.9.44-FixSharedCatalogCache';
+function G(){return (typeof state!=='undefined')?state:null;}
+function byId(id){return document.getElementById(id);}
+function E(s){try{if(typeof esc==='function')return esc(s);}catch(e){} return String(s??'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function T(s){try{if(typeof plainCell==='function')return plainCell(s);}catch(e){} return String(s??'').replace(/<[^>]*>/g,'').trim();}
+function F(v,d){try{if(typeof fmt==='function')return fmt(v,d==null?6:d);}catch(e){} v=Number(v); return Number.isFinite(v)?v.toLocaleString('vi-VN',{maximumFractionDigits:d==null?6:d}):'';}
+function safeName(s){return String(s||'comtrade').replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_').slice(0,120)||'comtrade';}
+function parseCfgDate(s){
+  s=String(s||'').trim();
+  let m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s*,?\s*(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?/);
+  if(m){let y=+m[3]; if(y<100)y+=2000; const ms=Math.floor(Number((m[7]||'0').padEnd(3,'0').slice(0,3))); return new Date(y,+m[2]-1,+m[1],+m[4],+m[5],+m[6],ms);}
+  m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?/);
+  if(m){const ms=Math.floor(Number((m[7]||'0').padEnd(3,'0').slice(0,3))); return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6],ms);}
+  return null;
+}
+function dateAddSec(d,sec){if(!(d instanceof Date)||isNaN(d))return null; sec=Number(sec); if(!Number.isFinite(sec))return null; return new Date(d.getTime()+sec*1000);}
+function fmtDate(d){ if(!(d instanceof Date)||isNaN(d))return ''; try{return d.toLocaleString('vi-VN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',fractionalSecondDigits:3});}catch(e){return d.toLocaleString('vi-VN');} }
+function faultDateInfo(r){
+  const st=G()||{}, cfg=st.cfg||{}, data=st.data||{};
+  const start=parseCfgDate(cfg.startTime), trig=parseCfgDate(cfg.triggerTime);
+  function abs(rel){return dateAddSec(start,rel);} // trục DAT trong công cụ được xem là giây tính từ Start time COMTRADE.
+  const rows=[];
+  rows.push(['Start time CFG', cfg.startTime||'', start?fmtDate(start):'']);
+  rows.push(['Trigger time CFG', cfg.triggerTime||'', trig?fmtDate(trig):'']);
+  if(r){
+    rows.push(['Bắt đầu vùng sự cố', F(r.startTime,9)+' s', fmtDate(abs(r.startTime))]);
+    rows.push(['Điểm nặng nhất / peak', F(r.peakTime,9)+' s', fmtDate(abs(r.peakTime))]);
+    rows.push(['Kết thúc vùng sự cố', F(r.endTime,9)+' s', fmtDate(abs(r.endTime))]);
+    if(r.firstPickup) rows.push(['Pickup đầu tiên', F(r.firstPickup.time,9)+' s · '+(r.firstPickup.channel||''), fmtDate(abs(r.firstPickup.time))]);
+    if(r.firstTrip) rows.push(['Trip đầu tiên', F(r.firstTrip.time,9)+' s · '+(r.firstTrip.channel||''), fmtDate(abs(r.firstTrip.time))]);
+    if(r.firstBreaker) rows.push(['Máy cắt đổi trạng thái', F(r.firstBreaker.time,9)+' s · '+(r.firstBreaker.channel||''), fmtDate(abs(r.firstBreaker.time))]);
+  }
+  return {start:start,trigger:trig,rows:rows};
+}
+function htmlTable(head,rows){return '<table><thead><tr>'+head.map(h=>'<th>'+E(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+E(T(c))+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
+function eventTimeBlock(r,cls){const info=faultDateInfo(r); return '<div class="'+(cls||'card')+'"><h2>Ngày giờ sự cố</h2>'+htmlTable(['Mốc','Thời gian tương đối','Năm/tháng/ngày giờ'],info.rows)+'</div>';}
+function addStatus(msg,kind){try{if(typeof setStatus==='function')setStatus(msg,kind||'');}catch(e){}}
+function ensureAnalysis(){try{return (typeof ensureFaultAnalysis==='function')?ensureFaultAnalysis():((G()||{}).faultAnalysis||null);}catch(e){return null;}}
+
+// 1) Bổ sung ngày giờ tuyệt đối vào bảng kết luận phân tích.
+try{
+  if(typeof faultSummaryRows==='function' && !faultSummaryRows.__v9944DateWrapped){
+    const old=faultSummaryRows;
+    faultSummaryRows=function(r){
+      let rows=old.apply(this,arguments)||[];
+      try{
+        if(!rows.some(x=>String(x&&x[0]||'').indexOf('Bắt đầu sự cố tuyệt đối')>=0)){
+          const info=faultDateInfo(r);
+          const extra=[
+            ['Start time CFG', (G()&&G().cfg&&G().cfg.startTime)||''],
+            ['Trigger time CFG', (G()&&G().cfg&&G().cfg.triggerTime)||''],
+            ['Bắt đầu sự cố tuyệt đối', info.rows.find(x=>x[0]==='Bắt đầu vùng sự cố')?.[2]||''],
+            ['Peak tuyệt đối', info.rows.find(x=>x[0]==='Điểm nặng nhất / peak')?.[2]||''],
+            ['Kết thúc sự cố tuyệt đối', info.rows.find(x=>x[0]==='Kết thúc vùng sự cố')?.[2]||'']
+          ];
+          let pos=rows.findIndex(x=>String(x&&x[0]||'').indexOf('Kiểu DAT')>=0); if(pos<0)pos=3;
+          rows=rows.slice(0,pos+1).concat(extra).concat(rows.slice(pos+1));
+        }
+      }catch(e){}
+      return rows;
+    };
+    faultSummaryRows.__v9944DateWrapped=true;
+  }
+}catch(e){}
+
+// 2) Hiển thị khối ngày giờ trong tab phân tích sự cố và cập nhật thông tin biểu đồ.
+try{
+  if(typeof renderFaultAnalysis==='function' && !renderFaultAnalysis.__v9944DateWrapped){
+    const old=renderFaultAnalysis;
+    renderFaultAnalysis=function(){
+      const ret=old.apply(this,arguments);
+      try{
+        const st=G(), r=st&&st.faultAnalysis; const anchor=byId('faultSummary');
+        let box=byId('faultAbsoluteTimeCard');
+        if(r && anchor){
+          if(!box){box=document.createElement('div'); box.id='faultAbsoluteTimeCard'; box.className='card'; const parent=anchor.closest('.card')||anchor.parentNode; parent.parentNode.insertBefore(box,parent);}
+          box.innerHTML='<h2>Ngày giờ sự cố</h2><div class="table-wrap">'+htmlTable(['Mốc','Thời gian tương đối','Năm/tháng/ngày giờ'],faultDateInfo(r).rows)+'</div><div class="tiny" style="margin-top:8px">V9.9.44: thời gian tuyệt đối được tính từ Start time CFG cộng trục thời gian của DAT; Trigger time CFG được giữ riêng để đối chiếu phần mềm hãng.</div>';
+        } else if(box) box.remove();
+        const hint=byId('plotHint');
+        if(r && hint){const info=faultDateInfo(r); const a=info.rows.find(x=>x[0]==='Bắt đầu vùng sự cố')?.[2]||''; const b=info.rows.find(x=>x[0]==='Kết thúc vùng sự cố')?.[2]||''; if(a||b) hint.textContent='Vùng sự cố: '+F(r.startTime,6)+' s → '+F(r.endTime,6)+' s; thời gian tuyệt đối: '+a+' → '+b+'.';}
+      }catch(e){}
+      return ret;
+    };
+    renderFaultAnalysis.__v9944DateWrapped=true;
+  }
+}catch(e){}
+
+// 3) Báo cáo HTML tĩnh sạch: có ngày giờ sự cố, có Isg/SG nếu có, bỏ hẳn phần ghi chú phân tích.
+try{
+  window.makeFaultReportHtml=function(){
+    const r=ensureAnalysis(); if(!r)return '';
+    try{ if(typeof window.v99DynamicPrepareFaultReport==='function') window.v99DynamicPrepareFaultReport(r); }catch(e){}
+    const analogImg=(typeof renderFaultAnalogReportImage==='function')?renderFaultAnalogReportImage(r):'';
+    const digitalImg=(typeof renderFaultDigitalReportImage==='function')?renderFaultDigitalReportImage(r):'';
+    const title='Báo cáo phân tích sự cố COMTRADE - '+((G()&&G().activeBase)||'comtrade');
+    const now=new Date().toLocaleString('vi-VN');
+    const summary=htmlTable(['Mục','Giá trị'], (typeof faultSummaryRows==='function'?faultSummaryRows(r):[]));
+    const headers=(r.v10ValueHeaders||r.v9915ValueHeaders||r.v9924ValueHeaders||['Thông số','Kênh','Trước sự cố RMS','Trong sự cố RMS/Min-Max','Sau sự cố RMS','Tỷ lệ','Đơn vị']).map(T);
+    const rows=(r.v10ValueRows||r.v9915ValueRows||r.v9924ValueRows||r.valueRows||[]).map(row=>row.map(T));
+    const values=rows.length?htmlTable(headers,rows):'<p>Chưa có bảng giá trị.</p>';
+    const timeline=htmlTable(['t (s)','Sự kiện','Kênh','Chi tiết'],(r.timeline||[]).map(x=>[F(x.time,9),x.event,x.channel||'',x.detail||'']));
+    const decode=((G()&&G().data&&G().data.parserNotes)||[]).concat((G()&&G().decoderNotes)||[]).join('\n')||'Không có ghi chú giải mã.';
+    let isg='';
+    if(r.v9943IsgCore&&r.v9943IsgCore.rows&&r.v9943IsgCore.rows.length){isg='<h2>Isg/SG - dòng đất nhạy quyết định rơ le tác động</h2>'+htmlTable(['Vai trò','Kênh','Trước RMS','Trong vùng tác động RMS / peak','Sau RMS','Tỷ lệ','Đơn vị'],r.v9943IsgCore.rows);}
+    const fr=(typeof faultFocusRange==='function')?faultFocusRange(r,'report'):null;
+    const focusText=fr?(F(fr.t0,6)+' s → '+F(fr.t1,6)+' s'):'vùng sự cố';
+    return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+E(title)+'</title><style>body{font-family:Arial,system-ui,sans-serif;margin:18px;color:#111;line-height:1.45}h1{font-size:23px;margin:0 0 6px}h2{font-size:18px;margin:22px 0 8px;border-bottom:2px solid #ddd;padding-bottom:4px}.muted{color:#666;font-size:13px}.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eaf6ff;border:1px solid #b5def7;font-weight:700;margin:4px 6px 4px 0}table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0 12px}th,td{border:1px solid #ccc;padding:7px 8px;text-align:left;vertical-align:top}th{background:#f0f3f7}.imgbox{border:1px solid #bbb;border-radius:10px;padding:10px;margin:10px 0 18px;background:#fff;break-inside:avoid;overflow:auto}.imgbox b{display:block;margin-bottom:8px}.imgbox img{width:100%;min-width:980px;max-width:none;display:block;border:1px solid #e5e7eb;border-radius:6px}.note{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 10px;margin:10px 0;font-size:13px}pre{white-space:pre-wrap;background:#f7f7f7;border:1px solid #ddd;padding:10px;border-radius:8px}@media screen{body{max-width:1400px;margin:18px auto}}@media print{button{display:none}body{margin:8mm;max-width:none}.imgbox{page-break-inside:avoid;break-inside:avoid}.imgbox img{width:100%}}</style></head><body><button onclick="window.print()">In / lưu PDF</button><h1>'+E(title)+'</h1><div class="muted">Tạo lúc: '+E(now)+' · Báo cáo HTML offline.</div><p><span class="badge">'+E(r.type)+'</span><span class="badge">Pha: '+E((r.phases||[]).join('-')||'chưa rõ')+'</span><span class="badge">Thời gian: '+E(F((r.duration||0)*1000,6))+' ms</span><span class="badge">Độ tin cậy: '+E(r.confidence||'')+'</span></p>'+eventTimeBlock(r,'section')+'<h2>Kết luận nhanh</h2>'+summary+'<h2>Giá trị các phần tử sự cố</h2>'+values+isg+'<h2>Dòng thời gian tác động</h2>'+timeline+'<h2>Biểu đồ sóng tập trung vùng sự cố</h2><div class="note">Ảnh biểu đồ dùng vùng '+E(focusText)+'; ngày giờ tuyệt đối của các mốc nằm trong bảng Ngày giờ sự cố phía trên.</div>'+(analogImg?'<div class="imgbox"><b>Analog waveform - vùng sự cố</b><a href="'+analogImg+'" target="_blank"><img src="'+analogImg+'"></a></div>':'')+(digitalImg?'<div class="imgbox"><b>Digital/status - vùng sự cố</b><a href="'+digitalImg+'" target="_blank"><img src="'+digitalImg+'"></a></div>':'')+'<h2>Thông tin giải mã</h2><pre>'+E(decode)+'</pre></body></html>';
+  };
+}catch(e){}
+
+// 4) Báo cáo HTML động: bỏ card Ghi chú phân tích khỏi giao diện và thêm bảng ngày giờ sự cố.
+try{
+  if(typeof makeFaultInteractiveReportHtml==='function' && !makeFaultInteractiveReportHtml.__v9944Wrapped){
+    const oldDyn=makeFaultInteractiveReportHtml;
+    window.makeFaultInteractiveReportHtml=function(){
+      const r=ensureAnalysis(); if(!r)return '';
+      const oldNotes=Array.isArray(r.notes)?r.notes.slice():r.notes;
+      try{r.notes=[];}catch(e){}
+      let html=oldDyn.apply(this,arguments)||'';
+      try{ if(Array.isArray(oldNotes))r.notes=oldNotes; }catch(e){}
+      const card=eventTimeBlock(r,'card');
+      html=html.replace(/<div class="card"><h2>Ghi chú phân tích<\/h2><div id="notes"><\/div><\/div>/,'<div id="notes" style="display:none"></div>');
+      html=html.replace(/(<\/div>\s*)<div class="card">\s*<h2>Kết luận và thông số sự cố<\/h2>/, '$1'+card+'<div class="card"><h2>Kết luận và thông số sự cố</h2>');
+      html=html.replace(/(Bộ file:\s*<b>[^<]*<\/b>\s*·\s*Tạo lúc:[^<]*<\/div>)/, '$1<div class="muted" style="margin-top:6px">Ngày giờ sự cố được tính từ Start time CFG và trục thời gian DAT; Trigger time CFG được giữ để đối chiếu.</div>');
+      return html;
+    };
+    makeFaultInteractiveReportHtml.__v9944Wrapped=true;
+  }
+}catch(e){}
+
+// 5) ZIP từng bộ file trong khối "Bộ file đã nhận".
+const crcTable=(function(){const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(bytes){let c=0xffffffff;for(let i=0;i<bytes.length;i++)c=crcTable[(c^bytes[i])&255]^(c>>>8);return (c^0xffffffff)>>>0;}
+function u16(v){return [v&255,(v>>>8)&255];} function u32(v){return [v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];}
+function dosDateTime(d){d=d||new Date(); let year=Math.max(1980,d.getFullYear()); const date=((year-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(); const time=(d.getHours()<<11)|(d.getMinutes()<<5)|Math.floor(d.getSeconds()/2); return {date:date,time:time};}
+function concatArrays(arrs){let n=arrs.reduce((s,a)=>s+a.length,0), out=new Uint8Array(n), off=0; for(const a of arrs){out.set(a,off);off+=a.length;} return out;}
+async function bytesOf(x){ if(x instanceof Uint8Array)return x; if(x instanceof Blob)return new Uint8Array(await x.arrayBuffer()); return new TextEncoder().encode(String(x??'')); }
+function zipName(s){return String(s||'file').replace(/^\/+/, '').replace(/\\/g,'/').replace(/\.\./g,'_');}
+async function buildZip(files){
+  const local=[], central=[]; let offset=0;
+  for(const f of files){
+    const nameBytes=new TextEncoder().encode(zipName(f.name)); const data=await bytesOf(f.data); const crc=crc32(data); const dt=dosDateTime(f.date||new Date());
+    const lh=concatArrays([new Uint8Array([0x50,0x4b,0x03,0x04]),new Uint8Array(u16(20)),new Uint8Array(u16(0x0800)),new Uint8Array(u16(0)),new Uint8Array(u16(dt.time)),new Uint8Array(u16(dt.date)),new Uint8Array(u32(crc)),new Uint8Array(u32(data.length)),new Uint8Array(u32(data.length)),new Uint8Array(u16(nameBytes.length)),new Uint8Array(u16(0)),nameBytes]);
+    local.push(lh,data);
+    const ch=concatArrays([new Uint8Array([0x50,0x4b,0x01,0x02]),new Uint8Array(u16(20)),new Uint8Array(u16(20)),new Uint8Array(u16(0x0800)),new Uint8Array(u16(0)),new Uint8Array(u16(dt.time)),new Uint8Array(u16(dt.date)),new Uint8Array(u32(crc)),new Uint8Array(u32(data.length)),new Uint8Array(u32(data.length)),new Uint8Array(u16(nameBytes.length)),new Uint8Array(u16(0)),new Uint8Array(u16(0)),new Uint8Array(u16(0)),new Uint8Array(u16(0)),new Uint8Array(u32(0)),new Uint8Array(u32(offset)),nameBytes]);
+    central.push(ch); offset += lh.length + data.length;
+  }
+  const cdSize=central.reduce((s,a)=>s+a.length,0), cdOffset=offset;
+  const end=concatArrays([new Uint8Array([0x50,0x4b,0x05,0x06]),new Uint8Array(u16(0)),new Uint8Array(u16(0)),new Uint8Array(u16(files.length)),new Uint8Array(u16(files.length)),new Uint8Array(u32(cdSize)),new Uint8Array(u32(cdOffset)),new Uint8Array(u16(0))]);
+  return new Blob([concatArrays(local.concat(central).concat([end]))],{type:'application/zip'});
+}
+async function groupFilesForZip(base,g,includeReports){
+  const files=[], used={}; function addName(n){n=safeName(n); if(!used[n]){used[n]=1;return n;} const p=n.replace(/(\.[^.]*)?$/,function(m){return '_'+(used[n]++)+(m||'');}); return p;}
+  async function addBlob(prefix,file){ if(!file)return; const name=addName(prefix+'/'+(file.name||'file')); files.push({name:name,data:file,date:new Date(file.lastModified||Date.now())}); }
+  await addBlob('source',g.cfg); await addBlob('source',g.dat); if(g.cff)await addBlob('source',g.cff); for(const f of (g.logs||[])) await addBlob('source',f);
+  if(includeReports){
+    try{
+      const r=ensureAnalysis();
+      const staticHtml=window.makeFaultReportHtml?window.makeFaultReportHtml():'';
+      const dynHtml=window.makeFaultInteractiveReportHtml?window.makeFaultInteractiveReportHtml():'';
+      if(staticHtml)files.push({name:'bao_cao/'+safeName(base)+'_fault_report_tinh.html',data:staticHtml});
+      if(dynHtml)files.push({name:'bao_cao/'+safeName(base)+'_fault_report_dong.html',data:dynHtml});
+      const info={version:VERSION,createdAt:new Date().toISOString(),base:base,station:(G()&&G().cfg&&G().cfg.station)||'',device:(G()&&G().cfg&&G().cfg.device)||'',dateInfo:faultDateInfo(r).rows.map(x=>({moc:x[0],relative:x[1],absolute:x[2]})),fault:{type:r&&r.type,phases:r&&r.phases,confidence:r&&r.confidence,durationMs:r&&r.duration*1000}};
+      files.push({name:'bao_cao/'+safeName(base)+'_summary.json',data:JSON.stringify(info,null,2)});
+    }catch(e){ files.push({name:'bao_cao/'+safeName(base)+'_REPORT_ERROR.txt',data:'Không tạo được báo cáo HTML: '+(e&&e.message||e)}); }
+  }
+  files.push({name:'README.txt',data:'Gói ZIP được tạo bởi '+VERSION+'\nBao gồm file nguồn COMTRADE/sidecar.'+(includeReports?'\nCó kèm báo cáo HTML tĩnh + động vì người dùng đã chọn checkbox “Kèm báo cáo HTML”.':'\nKhông kèm báo cáo HTML vì người dùng đã bỏ chọn checkbox “Kèm báo cáo HTML”.')+'\nBáo cáo HTML đã bỏ phần Ghi chú phân tích theo yêu cầu; thông tin giải mã kỹ thuật vẫn giữ để kiểm tra parser khi có xuất báo cáo.\n'});
+  return files;
+}
+window.downloadGroupPackageZip=async function(base,includeReports){
+  const st=G(); if(!st||!st.groups||!st.groups.has(base)){alert('Không tìm thấy bộ file: '+base);return;}
+  includeReports=includeReports!==false;
+  try{
+    addStatus('Đang chuẩn bị ZIP bộ '+base+(includeReports?' kèm báo cáo...':' chỉ gồm file nguồn...'), '');
+    if(st.activeBase!==base || !st.cfg || !st.data){ if(typeof loadGroup==='function') await loadGroup(base); }
+    if(includeReports){
+      const r=ensureAnalysis(); if(!r){addStatus('Không tạo được phân tích sự cố cho bộ '+base+'. Vẫn tải file nguồn nếu có.','warn');}
+    }
+    const g=st.groups.get(base); const files=await groupFilesForZip(base,g,includeReports); const blob=await buildZip(files);
+    const suffix=includeReports?'_bo_file_va_bao_cao.zip':'_bo_file_nguon.zip';
+    if(typeof downloadBlob==='function') downloadBlob(safeName(base)+suffix,blob); else {const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safeName(base)+suffix;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+    addStatus('Đã tạo ZIP bộ '+base+(includeReports?' gồm file nguồn và báo cáo HTML tĩnh/động.':' chỉ gồm file nguồn.'), 'good');
+  }catch(e){console.error(e); addStatus('Lỗi tạo ZIP bộ '+base+': '+(e&&e.message||e),'bad'); alert('Lỗi tạo ZIP: '+(e&&e.message||e));}
+};
+try{
+  if(typeof renderGroups==='function' && !renderGroups.__v9944ZipWrapped){
+    window.renderGroups=function(){
+      const st=G(), box=byId('groups'); if(!box||!st)return;
+      if(!st.groups||!st.groups.size){box.innerHTML='<div class="tiny">Chưa có file.</div>';return;}
+      let html='';
+      for(const [base,g] of st.groups){
+        const active=base===st.activeBase?'active':'';
+        html+='<div class="file-group '+active+'"><b>'+E(base)+'</b>';
+        html+='<div class="file-row"><span>Nguồn</span><span>'+(g.cff?'<b>CFF một-file</b>':'file rời')+'</span></div>';
+        html+='<div class="file-row"><span>CFG</span><span>'+(g.cfg?E(g.cfg.name)+' · '+(typeof fileSize==='function'?fileSize(g.cfg.size):g.cfg.size):'<span class="bad-text">thiếu</span>')+'</span></div>';
+        html+='<div class="file-row"><span>DAT</span><span>'+(g.dat?E(g.dat.name)+' · '+(typeof fileSize==='function'?fileSize(g.dat.size):g.dat.size):'<span class="bad-text">thiếu</span>')+'</span></div>';
+        html+='<div class="file-row"><span>LOG/HDR/INF/CSV/ROA</span><span>'+((g.logs&&g.logs.length)?g.logs.map(f=>E(f.name)).join('<br>'):'không có')+'</span></div>';
+        if(g.cffMeta) html+='<div class="file-row"><span>CFF</span><span>'+E((g.cffMeta.sections||[]).join(' | '))+'</span></div>';
+        html+='<div class="toolbar" style="margin-top:8px"><button class="v9944LoadGroup" data-base="'+encodeURIComponent(base)+'">Đọc bộ này</button><label class="checkrow" style="border-bottom:0;padding:6px 8px;margin:0;background:#081123;border:1px solid var(--line);border-radius:10px"><input class="v9946ZipIncludeReport" data-base="'+encodeURIComponent(base)+'" type="checkbox" checked> <span>Kèm báo cáo HTML</span></label><button class="v9944ZipGroup" data-base="'+encodeURIComponent(base)+'">Tải ZIP bộ</button></div>';
+        html+='</div>';
+      }
+      box.innerHTML=html;
+      box.querySelectorAll('.v9944LoadGroup').forEach(btn=>btn.addEventListener('click',()=>{const b=decodeURIComponent(btn.getAttribute('data-base')||''); if(typeof loadGroup==='function')loadGroup(b);}));
+      box.querySelectorAll('.v9944ZipGroup').forEach(btn=>btn.addEventListener('click',()=>{const b=decodeURIComponent(btn.getAttribute('data-base')||''); let checked=true; box.querySelectorAll('.v9946ZipIncludeReport').forEach(cb=>{if(decodeURIComponent(cb.getAttribute('data-base')||'')===b)checked=!!cb.checked;}); window.downloadGroupPackageZip(b,checked);}));
+    };
+    renderGroups.__v9944ZipWrapped=true;
+  }
+}catch(e){}
+function addHint(){try{const h=document.querySelector('.side-head h1'); if(h && !/V9\.9\.50/.test(h.textContent)) h.textContent=h.textContent+' · V9.9.50'; const stt=byId('status'); if(stt && !byId('v9944ZipDateNote')){const div=document.createElement('div');div.id='v9944ZipDateNote';div.className='note';div.style.marginTop='10px';div.innerHTML='<b>V9.9.50:</b> bổ sung cache theo IP người dùng; trong “Bộ file đã nhận” vẫn có checkbox <b>Kèm báo cáo HTML</b>. Bỏ chọn để tải ZIP chỉ gồm file nguồn; chọn để kèm báo cáo HTML tĩnh/động có ngày giờ sự cố và không hiển thị mục Ghi chú phân tích.';stt.parentNode.insertBefore(div,stt.nextSibling);}}catch(e){}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addHint); else addHint();
+})();
+</script>
+
+<style id="suco-v9952-all-menu-fullscreen-css">
+/* V9.9.52: fullscreen ổn định cho tất cả khu vực chức năng */
+.suco-area-fullbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:rgba(6,16,32,.78)}
+.suco-area-fullbar b{color:#fff}.suco-area-fullbar .tiny{margin:0}.suco-area-fullbar button{box-shadow:none;min-width:160px}.suco-area-exit{display:none!important}
+body.suco-area-fullscreen{overflow:hidden!important;background:#071020!important}
+body.suco-area-fullscreen .app{display:block!important;padding:0!important;min-height:100vh!important;height:100vh!important}
+body.suco-area-fullscreen .side,body.suco-area-fullscreen .topbar,body.suco-area-fullscreen .floating-sidebar-toggle{display:none!important}
+body.suco-area-fullscreen .main{border:0!important;border-radius:0!important;box-shadow:none!important;min-height:100vh!important;height:100vh!important;overflow:auto!important;background:rgba(17,26,47,.98)!important}
+body.suco-area-fullscreen .content{padding:10px!important;min-height:100vh!important}
+body.suco-area-fullscreen .page{display:none!important}
+body.suco-area-fullscreen .page.suco-fullscreen-active{display:block!important;min-height:calc(100vh - 20px)!important}
+body.suco-area-fullscreen .page.suco-fullscreen-active>.suco-area-fullbar{position:sticky;top:0;z-index:10000;border-radius:0 0 14px 14px;margin:-10px -10px 12px;background:rgba(8,17,35,.96);backdrop-filter:blur(8px)}
+body.suco-area-fullscreen .page.suco-fullscreen-active .suco-area-enter{display:none!important}
+body.suco-area-fullscreen .page.suco-fullscreen-active .suco-area-exit{display:inline-flex!important}
+body.suco-area-fullscreen .card{margin-bottom:10px!important}
+body.suco-area-fullscreen .table-wrap{max-height:calc(100vh - 230px)!important}
+body.suco-area-fullscreen #page-plot canvas,body.suco-area-fullscreen #page-fault canvas,body.suco-area-fullscreen #page-multi canvas{height:560px!important}
+body.suco-area-fullscreen #page-plot .digital-canvas{height:390px!important}
+body.suco-area-fullscreen #page-iecgw .table-wrap{max-height:calc(100vh - 360px)!important}
+body.suco-area-fullscreen #page-iecgw .card{overflow:visible!important}
+body.suco-area-fullscreen .split{grid-template-columns:minmax(0,1.5fr) minmax(340px,.75fr)!important}
+body.suco-area-fullscreen .grid.two{grid-template-columns:1fr 1fr!important}
+body.suco-area-fullscreen .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+body.suco-area-fullscreen .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+@media(max-width:900px){body.suco-area-fullscreen .grid.two,body.suco-area-fullscreen .grid.three,body.suco-area-fullscreen .grid.four,body.suco-area-fullscreen .split{grid-template-columns:1fr!important}body.suco-area-fullscreen #page-plot canvas,body.suco-area-fullscreen #page-fault canvas,body.suco-area-fullscreen #page-multi canvas{height:430px!important}}
+.iecgw-extra-tools{border:1px solid var(--line);background:#071427;border-radius:14px;padding:12px;margin-top:12px}.iecgw-extra-tools h4{margin:0 0 8px;color:#fff}.iecgw-extra-log{white-space:pre-wrap;background:#061020;border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;max-height:260px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;color:var(--muted)}
+</style>
+
+
+<script id="suco-v9952-all-menu-fullscreen-safe">
+/* V9.9.52 - Safe fullscreen for every menu page + CSV/TXT relay import + allowedRelays sync.
+   Chèn độc lập cuối body để không phá template báo cáo HTML động/tĩnh. */
+(function(){
+'use strict';
+const CAT_KEY='iec61850_relay_catalog_v2';
+function q(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','"':'&quot;'}[c]||c));}
+function apiBase(){return String(q('gwApiUrl')?.value||'http://127.0.0.1:8787').replace(/\/+$/,'');}
+function setGwStatus(msg,cls){const st=q('gwStatus')||q('status'); if(st){st.className='status '+(cls||''); st.textContent=msg;}}
+function stripVN(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
+function slug(s){return stripVN(s).replace(/\s+/g,'-').replace(/^-+|-+$/g,'')||('relay-'+Date.now());}
+function csvSplit(line,delim){const out=[];let cur='',qt=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(qt&&line[i+1]==='"'){cur+='"';i++;}else qt=!qt;}else if(ch===delim&&!qt){out.push(cur.trim());cur='';}else cur+=ch;}out.push(cur.trim());return out;}
+function detectDelim(line){const t=(line.match(/\t/g)||[]).length,s=(line.match(/;/g)||[]).length,c=(line.match(/,/g)||[]).length;if(t>=s&&t>=c&&t>0)return '\t';if(s>=c&&s>0)return ';';return ',';}
+function ipFromText(s){const m=String(s||'').match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);return m?m[0]:'';}
+function splitList(s){return String(s||'').split(/[;,|]/).map(x=>x.trim()).filter(Boolean);}
+function loadCat(){try{const raw=localStorage.getItem(CAT_KEY);if(raw){const j=JSON.parse(raw);if(j&&Array.isArray(j.relays))return j;}}catch(e){}return {schema:'iec61850-relay-catalog',version:5,updatedAt:new Date().toISOString(),relays:[]};}
+function saveCat(c){c.schema='iec61850-relay-catalog';c.version=Math.max(Number(c.version)||0,5);c.updatedAt=new Date().toISOString();localStorage.setItem(CAT_KEY,JSON.stringify(c));}
+function defaultPatterns(){return q('gwPatterns')?.value||'*.cfg,*.dat,*.hdr,*.inf,*.cff,*.zip,*.rar,*.7z,*.C,*.D,*.H,*.I,*.txt,*.log,*.csv,*.roa,*.xml,*.cid,*.icd,*.iid,*.scd,*.ssd,*.sed,*.set,*.ini,*.json,*.db,*.bin,*.*';}
+function headerIndex(headers,names){for(let i=0;i<headers.length;i++){const h=stripVN(headers[i]).replace(/\s+/g,'');if(names.some(n=>h===n||h.includes(n)))return i;}return -1;}
+function rowGet(row,headers,names){const i=headerIndex(headers,names);return i>=0?String(row[i]||'').trim():'';}
+function relayFromObj(o){const host=String(o.host||o.ip||'').trim();if(!host)return null;const logical=String(o.logicalDevice||o.logicaldevice||o.ld||'').trim();let hints=Array.isArray(o.rootHints)?o.rootHints:splitList(o.rootHints||o.roothints||o.rootHint||'');if(!hints.length&&logical)hints=['/LD/'+logical,'/LD/'+logical+'/COMTRADE',logical+'/COMTRADE'];const station=String(o.station||o.substation||o.tram||'').trim();const bay=String(o.bay||o.feeder||o.nganlo||o.nganLo||'').trim();const fn=String(o.functionName||o.function||o.func||'').trim();const name=String(o.name||[station,bay,fn||logical,host].filter(Boolean).join(' - ')||host).trim();return {id:slug(name+'-'+host+'-'+logical),name,station,bay,functionName:fn,host,port:Number(o.port||102)||102,manufacturer:String(o.manufacturer||o.hang||'').trim(),model:String(o.model||'').trim(),logicalDevice:logical,rootPath:String(o.rootPath||o.root||'/').trim()||'/',rootHints:hints,patterns:String(o.patterns||o.pattern||defaultPatterns()).trim(),tags:Array.isArray(o.tags)?o.tags:splitList(o.tags||''),notes:String(o.notes||o.note||'').trim(),updatedAt:new Date().toISOString()};}
+function parseCatalogText(text){const lines=String(text||'').replace(/^\uFEFF/,'').split(/\r?\n/).map(x=>x.trim()).filter(x=>x&&!/^#/.test(x));if(!lines.length)return[];const delim=detectDelim(lines[0]);const first=csvSplit(lines[0],delim);const headerLike=first.some(x=>/^(ip|host|station|substation|tram|bay|name|logical|ld|port|model|manufacturer)$/i.test(stripVN(x).replace(/\s+/g,'')))||!ipFromText(lines[0]);let headers=[];let start=0;if(headerLike){headers=first;start=1;}const relays=[];for(let i=start;i<lines.length;i++){const row=csvSplit(lines[i],delim);let obj={};if(headers.length){headers.forEach((h,idx)=>obj[h]=row[idx]||'');obj.host=rowGet(row,headers,['host','ip','diachiip','iprole','ipied']);obj.station=rowGet(row,headers,['station','substation','tram']);obj.bay=rowGet(row,headers,['bay','nganlo','feeder']);obj.name=rowGet(row,headers,['name','ten','tenhoso']);obj.port=rowGet(row,headers,['port','mmsport']);obj.manufacturer=rowGet(row,headers,['manufacturer','hang','vendor']);obj.model=rowGet(row,headers,['model']);obj.logicalDevice=rowGet(row,headers,['logicaldevice','ld','functionlogicaldevice']);obj.functionName=rowGet(row,headers,['function','functionname','chucnang']);obj.rootPath=rowGet(row,headers,['rootpath','root']);obj.rootHints=rowGet(row,headers,['roothints','hint','duongdan']);obj.patterns=rowGet(row,headers,['patterns','pattern','duoifile']);obj.tags=rowGet(row,headers,['tags','tag']);obj.notes=rowGet(row,headers,['notes','note','ghichu']);}else{const ip=ipFromText(lines[i]);if(!ip)continue;obj={host:ip,station:row[1]||'',bay:row[2]||'',functionName:row[3]||'',logicalDevice:row[4]||'',manufacturer:row[5]||'',model:row[6]||'',notes:row.slice(7).join(' ')};}const r=relayFromObj(obj);if(r)relays.push(r);}return relays;}
+function mergeRelays(relays){const c=loadCat();const map=new Map();(c.relays||[]).forEach(r=>map.set(r.id||slug((r.name||'relay')+'-'+(r.host||'')),r));relays.forEach(r=>{const existing=[...map.values()].find(x=>x.host===r.host&&String(x.logicalDevice||'')===String(r.logicalDevice||''));if(existing)r.id=existing.id;map.set(r.id,Object.assign({},existing||{},r));});c.relays=[...map.values()].sort((a,b)=>String(a.station||a.name||'').localeCompare(String(b.station||b.name||''),'vi'));saveCat(c);if(window.iec61850RelayCatalogRefresh)window.iec61850RelayCatalogRefresh();return c;}
+async function fetchJson(url,opts){const resp=await fetch(url,opts||{});const txt=await resp.text();let j;try{j=JSON.parse(txt.replace(/^\uFEFF/,''));}catch(e){throw new Error('Gateway trả về không phải JSON: '+txt.slice(0,220));}if(!resp.ok||j.ok===false)throw new Error(j.error||j.message||('HTTP '+resp.status));return j;}
+async function syncAllowedRelays(hosts){hosts=[...new Set((hosts||[]).filter(Boolean))];if(!hosts.length)return {allowedRelays:[]};return fetchJson(apiBase()+'/api/gateway/allowed-relays',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hosts})});}
+function addBulkImportTools(){const card=q('gwRelayCatalogCard');if(!card||q('gwBulkRelayImportBoxV9952'))return;const box=document.createElement('div');box.id='gwBulkRelayImportBoxV9952';box.className='iecgw-extra-tools';box.innerHTML='<h4>📥 Nhập nhanh nhiều hồ sơ rơ le từ CSV/TXT</h4><div class="tiny">CSV có tiêu đề: station,bay,name,host/ip,port,manufacturer,model,logicalDevice,rootPath,rootHints,patterns,tags,notes. TXT không tiêu đề: IP;Trạm;Ngăn lộ;Function;LogicalDevice.</div><div class="toolbar" style="margin-top:8px"><button id="btnGwImportCsvTxtV9952" type="button">Nhập CSV/TXT nhiều rơ le</button><button id="btnGwAllowedFromCatalogV9952" type="button">Thêm IP danh mục vào allowedRelays</button><button id="btnGwShowAllowedRelaysV9952" type="button">Xem allowedRelays</button></div><input id="gwRelayBulkImportInputV9952" type="file" accept=".csv,.txt,text/csv,text/plain" multiple style="display:none"><div id="gwBulkImportLogV9952" class="iecgw-extra-log" style="display:none"></div>';card.appendChild(box);q('btnGwImportCsvTxtV9952').onclick=()=>q('gwRelayBulkImportInputV9952').click();q('gwRelayBulkImportInputV9952').onchange=function(e){const files=[...(e.target.files||[])];e.target.value='';if(!files.length)return;const log=q('gwBulkImportLogV9952');log.style.display='block';log.textContent='Đang đọc '+files.length+' file...';Promise.all(files.map(f=>f.text().then(text=>({name:f.name,text})))).then(async arr=>{let relays=[];arr.forEach(x=>parseCatalogText(x.text).forEach(r=>{r.importFile=x.name;relays.push(r);}));const c=mergeRelays(relays);const hosts=relays.map(r=>r.host).filter(Boolean);let msg='Đã nhập/ghép '+relays.length+' hồ sơ. Tổng danh mục cục bộ: '+c.relays.length+'.';try{const j=await syncAllowedRelays(hosts);msg+='\nĐã thêm '+[...new Set(hosts)].length+' IP vào allowedRelays. Tổng allowedRelays: '+((j.allowedRelays&&j.allowedRelays.length)||'?')+'.';setGwStatus(msg,'good');}catch(err){msg+='\nChưa cập nhật được allowedRelays: '+err.message+'\nCần Gateway bản có endpoint /api/gateway/allowed-relays.';setGwStatus(msg,'warn');}log.textContent=msg+'\n\nIP đã nhập: '+[...new Set(hosts)].join(', ');}).catch(err=>{log.style.display='block';log.textContent='Lỗi nhập CSV/TXT: '+err.message;setGwStatus('Lỗi nhập CSV/TXT: '+err.message,'bad');});};q('btnGwAllowedFromCatalogV9952').onclick=async()=>{const log=q('gwBulkImportLogV9952');log.style.display='block';const c=loadCat();const hosts=(c.relays||[]).map(r=>r.host).filter(Boolean);try{const j=await syncAllowedRelays(hosts);const msg='Đã đồng bộ '+[...new Set(hosts)].length+' IP từ danh mục vào allowedRelays. Tổng allowedRelays: '+((j.allowedRelays&&j.allowedRelays.length)||'?');log.textContent=msg;setGwStatus(msg,'good');}catch(err){log.textContent='Lỗi cập nhật allowedRelays: '+err.message;setGwStatus('Lỗi cập nhật allowedRelays: '+err.message,'bad');}};q('btnGwShowAllowedRelaysV9952').onclick=async()=>{const log=q('gwBulkImportLogV9952');log.style.display='block';try{const j=await fetchJson(apiBase()+'/api/gateway/allowed-relays',{method:'GET'});log.textContent='allowedRelays hiện tại ('+((j.allowedRelays||[]).length)+'):\n'+(j.allowedRelays||[]).join('\n');setGwStatus('Đã đọc allowedRelays từ Gateway.','good');}catch(err){log.textContent='Lỗi đọc allowedRelays: '+err.message;setGwStatus('Lỗi đọc allowedRelays: '+err.message,'bad');}};}
+function pageTitle(page){const tab=document.querySelector('.tab[data-tab="'+page.id.replace(/^page-/,'')+'"]');const h=page.querySelector('h2,h1,h3');return (tab&&tab.textContent.trim())||(h&&h.textContent.trim())||page.id.replace(/^page-/,'');}
+let activePage=null;
+function addFullscreenBars(){document.querySelectorAll('.page').forEach(page=>{if(page.querySelector(':scope > .suco-area-fullbar'))return;const bar=document.createElement('div');bar.className='suco-area-fullbar';bar.innerHTML='<div><b>⛶ '+esc(pageTitle(page))+'</b><div class="tiny">Mở rộng riêng khu vực làm việc của chức năng này.</div></div><div class="toolbar" style="margin:0"><button class="suco-area-enter" type="button">Toàn màn hình khu vực</button><button class="suco-area-exit" type="button">Thoát toàn màn hình</button></div>';page.insertBefore(bar,page.firstChild);bar.querySelector('.suco-area-enter').onclick=()=>enterArea(page);bar.querySelector('.suco-area-exit').onclick=exitArea;});}
+function enterArea(page){activePage=page;document.querySelectorAll('.page').forEach(p=>p.classList.toggle('suco-fullscreen-active',p===page));document.body.classList.add('suco-area-fullscreen');try{if(page.requestFullscreen)page.requestFullscreen().catch(()=>{});else if(page.webkitRequestFullscreen)page.webkitRequestFullscreen();}catch(e){}setTimeout(()=>{try{if(typeof drawAll==='function')drawAll();}catch(e){}},150);}
+function exitArea(){document.body.classList.remove('suco-area-fullscreen');document.querySelectorAll('.page').forEach(p=>p.classList.remove('suco-fullscreen-active'));activePage=null;try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});else if(document.webkitFullscreenElement&&document.webkitExitFullscreen)document.webkitExitFullscreen();}catch(e){}setTimeout(()=>{try{if(typeof drawAll==='function')drawAll();}catch(e){}},120);}
+function bindFullscreenEvents(){document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)exitArea();});document.addEventListener('webkitfullscreenchange',()=>{if(!document.webkitFullscreenElement)exitArea();});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('suco-area-fullscreen'))exitArea();});}
+function markVersion(){try{const h=document.querySelector('.side-head h1');if(h&&!/V9\.9\.52/.test(h.textContent))h.textContent=h.textContent+' · V9.9.52';}catch(e){}}
+function init(){addFullscreenBars();addBulkImportTools();bindFullscreenEvents();markVersion();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+<!-- V9.9.54 fullscreen scroll safe: chỉ chèn trước thẻ body cuối, không chèn vào template báo cáo -->
+<style id="suco-v9954-fullscreen-scrollsafe-css">
+html.suco-area-fullscreen-root,
+html.suco-area-fullscreen-root body{
+  height:100%!important;
+  overflow:hidden!important;
+}
+body.suco-area-fullscreen{overflow:hidden!important}
+body.suco-area-fullscreen .app{
+  display:block!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-height:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+body.suco-area-fullscreen .side,
+body.suco-area-fullscreen .topbar{
+  display:none!important;
+}
+body.suco-area-fullscreen .main{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:rgba(17,26,47,.98)!important;
+  scroll-behavior:auto!important;
+}
+body.suco-area-fullscreen .content{
+  height:auto!important;
+  min-height:0!important;
+  overflow:visible!important;
+  padding:10px 12px 90px!important;
+}
+body.suco-area-fullscreen .page{
+  display:none!important;
+}
+body.suco-area-fullscreen .page.suco-fullscreen-active{
+  display:block!important;
+  position:relative!important;
+  height:auto!important;
+  min-height:calc(100dvh - 20px)!important;
+  max-height:none!important;
+  overflow:visible!important;
+  padding-bottom:100px!important;
+}
+body.suco-area-fullscreen .page.suco-fullscreen-active>.suco-area-fullbar{
+  position:sticky!important;
+  top:0!important;
+  z-index:10000!important;
+  border-radius:0 0 14px 14px!important;
+  margin:-10px -12px 12px!important;
+  background:rgba(8,17,35,.97)!important;
+  backdrop-filter:blur(8px)!important;
+}
+body.suco-area-fullscreen .page.suco-fullscreen-active .suco-area-enter{display:none!important}
+body.suco-area-fullscreen .page.suco-fullscreen-active .suco-area-exit{display:inline-flex!important}
+body.suco-area-fullscreen .table-wrap{
+  max-height:min(72dvh,760px)!important;
+  overflow:auto!important;
+}
+body.suco-area-fullscreen .logbox,
+body.suco-area-fullscreen .channel-list{
+  max-height:min(70dvh,720px)!important;
+  overflow:auto!important;
+}
+body.suco-area-fullscreen #page-plot canvas,
+body.suco-area-fullscreen #page-fault canvas,
+body.suco-area-fullscreen #page-multi canvas{
+  height:560px!important;
+}
+body.suco-area-fullscreen #page-plot .digital-canvas{height:390px!important}
+body.suco-area-fullscreen .split{grid-template-columns:minmax(0,1.5fr) minmax(340px,.75fr)!important}
+@media(max-width:900px){
+  body.suco-area-fullscreen .grid.two,
+  body.suco-area-fullscreen .grid.three,
+  body.suco-area-fullscreen .grid.four,
+  body.suco-area-fullscreen .split{grid-template-columns:1fr!important}
+  body.suco-area-fullscreen #page-plot canvas,
+  body.suco-area-fullscreen #page-fault canvas,
+  body.suco-area-fullscreen #page-multi canvas{height:430px!important}
+  body.suco-area-fullscreen #page-plot .digital-canvas{height:310px!important}
+}
+</style>
+<script id="suco-v9954-fullscreen-scrollsafe-js">
+(function(){
+  'use strict';
+  function qs(s,r){return (r||document).querySelector(s);}
+  function qsa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+  function mainEl(){return qs('.main');}
+  function currentVisiblePage(){
+    return qs('.page.active') || qsa('.page').find(function(p){return getComputedStyle(p).display!=='none';}) || qs('.page');
+  }
+  function redrawSoon(){
+    setTimeout(function(){
+      try{ if(typeof window.drawAll==='function') window.drawAll(); }catch(e){}
+      try{ if(typeof window.renderGwTable==='function') window.renderGwTable(); }catch(e){}
+    },150);
+  }
+  function enter(page){
+    page = page || currentVisiblePage();
+    if(!page) return;
+    qsa('.page').forEach(function(p){p.classList.toggle('suco-fullscreen-active', p===page);});
+    document.documentElement.classList.add('suco-area-fullscreen-root');
+    document.body.classList.add('suco-area-fullscreen');
+    var m=mainEl();
+    if(m) m.scrollTop=0;
+    redrawSoon();
+  }
+  function exit(){
+    document.documentElement.classList.remove('suco-area-fullscreen-root');
+    document.body.classList.remove('suco-area-fullscreen');
+    qsa('.page').forEach(function(p){p.classList.remove('suco-fullscreen-active');});
+    redrawSoon();
+  }
+  function ensureBars(){
+    qsa('.page').forEach(function(page){
+      if(page.querySelector(':scope > .suco-area-fullbar')) return;
+      var title = page.querySelector('h1,h2,h3');
+      var label = title ? title.textContent.trim() : (page.id || 'Khu vực làm việc');
+      var bar = document.createElement('div');
+      bar.className = 'suco-area-fullbar toolbar';
+      bar.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--line);border-radius:14px;background:#081123;margin-bottom:12px;position:relative;z-index:2';
+      bar.innerHTML = '<b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">⛶ '+ label.replace(/[<>&"]/g,function(c){return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]);}) +'</b><span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="suco-area-enter">Toàn màn hình khu vực</button><button type="button" class="suco-area-exit" style="display:none">Thoát toàn màn hình</button></span>';
+      page.insertBefore(bar,page.firstChild);
+    });
+  }
+  function bind(){
+    ensureBars();
+    qsa('.suco-area-enter').forEach(function(btn){
+      btn.onclick = function(ev){
+        if(ev){ev.preventDefault();ev.stopPropagation();}
+        enter(btn.closest('.page') || currentVisiblePage());
+        return false;
+      };
+    });
+    qsa('.suco-area-exit').forEach(function(btn){
+      btn.onclick = function(ev){
+        if(ev){ev.preventDefault();ev.stopPropagation();}
+        exit();
+        return false;
+      };
+    });
+  }
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape' && document.body.classList.contains('suco-area-fullscreen')) exit();
+  },true);
+  document.addEventListener('wheel',function(e){
+    if(!document.body.classList.contains('suco-area-fullscreen')) return;
+    var target = e.target;
+    var nested = target && target.closest && target.closest('.table-wrap,.logbox,.channel-list,textarea,select,input,[contenteditable="true"]');
+    if(nested) return;
+    var m=mainEl();
+    if(m){
+      m.scrollTop += e.deltaY;
+      e.preventDefault();
+    }
+  },{passive:false,capture:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(bind,80);});
+  else setTimeout(bind,80);
+  window.sucoAreaFullscreen = {enter:enter,exit:exit,bind:bind};
+})();
+</script>
+
+
+<!-- V9.9.56 Catalog large-list stable filter: đọc trực tiếp localStorage, không phụ thuộc nút Đồng bộ hai chiều -->
+<style id="suco-v9956-catalog-filter-css">
+.gw-cat-filter-tools{
+  border:1px solid var(--line);
+  background:#071427;
+  border-radius:14px;
+  padding:10px;
+  margin:10px 0;
+}
+.gw-cat-filter-tools .gw-cat-filter-grid{
+  display:grid;
+  grid-template-columns:minmax(260px,1.25fr) minmax(260px,.75fr);
+  gap:10px;
+  align-items:end;
+}
+.gw-cat-filter-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.gw-cat-filter-actions label{
+  margin:0;
+  display:inline-flex;
+  gap:7px;
+  align-items:center;
+  color:var(--muted);
+  font-size:13px;
+}
+.gw-cat-filter-actions input[type="checkbox"]{width:auto}
+#gwRelayCatalogFilterInfoV9956{
+  margin-top:7px;
+  color:var(--muted);
+  font-size:12px;
+  white-space:pre-wrap;
+}
+#gwRelayCatalogPreview.gw-cat-preview-hidden{
+  display:none!important;
+}
+#gwRelayCatalogSelect.gw-cat-select-limited{
+  border-color:rgba(255,207,92,.45)!important;
+}
+.gw-cat-active-row td{
+  background:rgba(89,208,255,.10)!important;
+}
+@media(max-width:900px){
+  .gw-cat-filter-tools .gw-cat-filter-grid{grid-template-columns:1fr}
+}
+</style>
+<script id="suco-v9956-catalog-filter-js">
+(function(){
+'use strict';
+var CAT_KEY='iec61850_relay_catalog_v2';
+var SHOW_KEY='gwRelayCatalogShowTableV9956';
+var TIMER=null;
+var RENDERING=false;
+var MAX_SELECT=350;
+var MAX_TABLE=650;
+var DEFAULT_CATALOG={
+  version:2,
+  schema:'iec61850-relay-catalog',
+  relays:[{
+    id:'song-chay-h13-f50f650',
+    name:'Sông Chảy - H13 F50F650',
+    station:'Sông Chảy',
+    bay:'H13 / F50',
+    functionName:'H13F50',
+    host:'172.17.59.21',
+    port:102,
+    manufacturer:'GE',
+    model:'F650',
+    logicalDevice:'H13_F50F650',
+    rootPath:'/',
+    rootHints:['/LD/H13_F50F650','/LD/H13_F50F650/COMTRADE','H13_F50F650/COMTRADE'],
+    patterns:'*.cfg,*.dat,*.hdr,*.inf,*.cff,*.zip,*.rar,*.7z,*.C,*.D,*.H,*.I,*.txt,*.log,*.csv,*.roa,*.xml,*.cid,*.icd,*.iid,*.scd,*.ssd,*.sed,*.set,*.ini,*.json,*.db,*.bin,*.*',
+    tags:['GE','F650','NES','COMTRADE','FL'],
+    notes:'Mẫu GE/NES F650; nên dùng Quét toàn bộ hồ sơ rơ le để tự dò thư mục.'
+  }]
+};
+function byId(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c;});}
+function noVN(s){
+  try{
+    return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'d');
+  }catch(e){
+    return String(s||'').toLowerCase();
+  }
+}
+function splitList(s){return String(s||'').split(/[;,]/).map(function(x){return x.trim();}).filter(Boolean);}
+function readCatalog(){
+  try{
+    var raw=localStorage.getItem(CAT_KEY);
+    if(raw){
+      var j=JSON.parse(String(raw).replace(/^\uFEFF/,''));
+      if(j && Array.isArray(j.relays)) return j;
+      if(Array.isArray(j)) return {version:2,schema:'iec61850-relay-catalog',relays:j};
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_CATALOG));
+}
+function writeCatalog(c){
+  try{
+    c.version=2;
+    c.schema='iec61850-relay-catalog';
+    c.updatedAt=new Date().toISOString();
+    localStorage.setItem(CAT_KEY, JSON.stringify(c));
+  }catch(e){}
+}
+function labelOf(r){
+  return [r.station,r.bay,r.name,r.functionName,r.host,r.port||102,r.manufacturer,r.model,r.logicalDevice]
+    .filter(Boolean).join(' · ');
+}
+function rowText(r){
+  return noVN([
+    r.station,r.bay,r.name,r.functionName,r.host,r.port||102,r.manufacturer,r.model,r.logicalDevice,
+    (Array.isArray(r.rootHints)?r.rootHints:[]).join(' '),
+    Array.isArray(r.tags)?r.tags.join(' '):r.tags,
+    r.notes
+  ].filter(Boolean).join(' '));
+}
+function currentTerms(){
+  var inp=byId('gwRelayCatalogSearchV9956');
+  return noVN(inp && inp.value || '').split(/\s+/).filter(Boolean);
+}
+function relayMatches(r, ts){
+  if(!ts.length) return true;
+  var txt=rowText(r);
+  return ts.every(function(t){return txt.indexOf(t)>=0;});
+}
+function setVal(id,v){
+  var el=byId(id);
+  if(el) el.value = v==null ? '' : String(v);
+}
+function fillEditorAndMain(r){
+  if(!r) return;
+  setVal('gwCatName',r.name||'');
+  setVal('gwCatStation',r.station||'');
+  setVal('gwCatBay',r.bay||'');
+  setVal('gwCatManufacturer',r.manufacturer||'');
+  setVal('gwCatModel',r.model||'');
+  setVal('gwCatLogicalDevice',r.logicalDevice||'');
+  setVal('gwCatTags',Array.isArray(r.tags)?r.tags.join(', '):(r.tags||''));
+  setVal('gwCatRootHints',Array.isArray(r.rootHints)?r.rootHints.join('; '):(r.rootHints||''));
+  setVal('gwCatNotes',r.notes||'');
+
+  setVal('gwRelayHost',r.host||'');
+  setVal('gwRelayPort',r.port||102);
+  setVal('gwRootPath',r.rootPath||'/');
+  if(r.patterns) setVal('gwPatterns',r.patterns);
+  setVal('gwNESFunction',r.functionName||r.logicalDevice||'');
+  var hints=Array.isArray(r.rootHints)?r.rootHints:[];
+  if(hints.length) setVal('gwNESRootPreview',hints.join('; '));
+}
+function ensureUI(){
+  var sel=byId('gwRelayCatalogSelect');
+  if(!sel || byId('gwCatFilterToolsV9956')) return;
+  var host=byId('gwRelayCatalogCard') || sel.closest('.card') || sel.parentNode;
+  var preview=byId('gwRelayCatalogPreview');
+  var box=document.createElement('div');
+  box.id='gwCatFilterToolsV9956';
+  box.className='gw-cat-filter-tools';
+  box.innerHTML =
+    '<div class="gw-cat-filter-grid">'+
+      '<div>'+
+        '<label>Gõ lọc/chọn hồ sơ rơ le</label>'+
+        '<input id="gwRelayCatalogSearchV9956" type="text" list="gwRelayCatalogSuggestV9956" placeholder="Gõ trạm, ngăn lộ, IP, hãng/model, Logical Device...">'+
+        '<datalist id="gwRelayCatalogSuggestV9956"></datalist>'+
+      '</div>'+
+      '<div class="gw-cat-filter-actions">'+
+        '<label><input id="gwRelayCatalogShowTableV9956" type="checkbox"> Hiện bảng chi tiết danh mục cục bộ</label>'+
+        '<button id="btnGwCatalogClearFilterV9956" type="button">Xóa lọc</button>'+
+        '<button id="btnGwCatalogReloadV9956" type="button">Tải lại danh mục</button>'+
+      '</div>'+
+    '</div>'+
+    '<div id="gwRelayCatalogFilterInfoV9956">Đang nạp danh mục cục bộ...</div>';
+  if(preview) host.insertBefore(box, preview);
+  else host.appendChild(box);
+
+  var show=byId('gwRelayCatalogShowTableV9956');
+  try{show.checked = localStorage.getItem(SHOW_KEY)==='1';}catch(e){show.checked=false;}
+
+  var inp=byId('gwRelayCatalogSearchV9956');
+  inp.addEventListener('input',scheduleRender,false);
+  inp.addEventListener('change',scheduleRender,false);
+  show.addEventListener('change',function(){
+    try{localStorage.setItem(SHOW_KEY, show.checked?'1':'0');}catch(e){}
+    renderNow();
+  },false);
+  byId('btnGwCatalogClearFilterV9956').onclick=function(){
+    inp.value='';
+    renderNow();
+  };
+  byId('btnGwCatalogReloadV9956').onclick=function(){
+    renderNow();
+  };
+
+  sel.addEventListener('change',function(){
+    var c=readCatalog();
+    var r=(c.relays||[]).find(function(x){return x.id===sel.value;});
+    if(r) fillEditorAndMain(r);
+  },false);
+
+  ['btnGwCatSave','btnGwCatDelete','btnGwCatImport','btnGwCatLoadShared','btnGwCatSaveShared','btnGwCatSyncShared','btnGwBulkImportRelaysV9952','btnGwAllowedFromCatalogV9952'].forEach(function(id){
+    var b=byId(id);
+    if(b) b.addEventListener('click',function(){setTimeout(renderNow,900); setTimeout(renderNow,2200);},false);
+  });
+  var file=byId('gwRelayCatalogImportInput');
+  if(file) file.addEventListener('change',function(){setTimeout(renderNow,900); setTimeout(renderNow,2200);},false);
+}
+function chooseSelected(filtered, oldValue){
+  var sel=byId('gwRelayCatalogSelect');
+  var inp=byId('gwRelayCatalogSearchV9956');
+  if(oldValue && filtered.some(function(r){return r.id===oldValue;})) return oldValue;
+  var raw=(inp && inp.value || '').trim();
+  if(raw){
+    var n=noVN(raw);
+    var exact=filtered.find(function(r){
+      return noVN(labelOf(r))===n || noVN(r.host)===n || noVN(r.name)===n || noVN(r.logicalDevice)===n;
+    });
+    if(exact) return exact.id;
+    if(filtered.length===1) return filtered[0].id;
+  }
+  return filtered.length ? filtered[0].id : '';
+}
+function scheduleRender(){
+  var info=byId('gwRelayCatalogFilterInfoV9956');
+  if(info) info.textContent='Đang chờ người dùng gõ xong...';
+  clearTimeout(TIMER);
+  TIMER=setTimeout(renderNow,550);
+}
+function renderTable(preview, filtered, selectedId){
+  var show=byId('gwRelayCatalogShowTableV9956');
+  var shouldShow=!!(show && show.checked);
+  preview.classList.toggle('gw-cat-preview-hidden',!shouldShow);
+  if(!shouldShow){
+    preview.innerHTML='';
+    return;
+  }
+  var rows=filtered.slice(0,MAX_TABLE);
+  preview.innerHTML =
+    '<table><thead><tr>'+
+    '<th>STT</th><th>Tên hồ sơ</th><th>Trạm</th><th>Ngăn lộ</th><th>IP</th><th>Port</th><th>Hãng/Model</th><th>Logical Device</th><th>Gợi ý thư mục</th><th>Ghi chú</th>'+
+    '</tr></thead><tbody>'+
+    rows.map(function(r,i){
+      return '<tr class="'+(selectedId===r.id?'gw-cat-active-row':'')+'" data-gw-cat-id="'+esc(r.id)+'">'+
+        '<td>'+(i+1)+'</td>'+
+        '<td>'+esc(r.name)+'</td>'+
+        '<td>'+esc(r.station)+'</td>'+
+        '<td>'+esc(r.bay)+'</td>'+
+        '<td>'+esc(r.host)+'</td>'+
+        '<td>'+esc(r.port||102)+'</td>'+
+        '<td>'+esc([r.manufacturer,r.model].filter(Boolean).join(' '))+'</td>'+
+        '<td>'+esc(r.logicalDevice)+'</td>'+
+        '<td>'+esc((Array.isArray(r.rootHints)?r.rootHints:[]).join('; '))+'</td>'+
+        '<td>'+esc(r.notes)+'</td>'+
+      '</tr>';
+    }).join('')+
+    '</tbody></table>'+
+    (filtered.length>MAX_TABLE?'<div class="tiny" style="padding:8px">Đang chỉ hiện '+MAX_TABLE+'/'+filtered.length+' hồ sơ. Hãy gõ lọc thêm để rút gọn.</div>':'');
+  Array.prototype.slice.call(preview.querySelectorAll('tr[data-gw-cat-id]')).forEach(function(tr){
+    tr.onclick=function(){
+      var id=tr.getAttribute('data-gw-cat-id')||'';
+      var sel=byId('gwRelayCatalogSelect');
+      if(sel) sel.value=id;
+      var c=readCatalog();
+      var r=(c.relays||[]).find(function(x){return x.id===id;});
+      if(r) fillEditorAndMain(r);
+      renderNow();
+    };
+  });
+}
+function renderNow(){
+  if(RENDERING) return;
+  RENDERING=true;
+  try{
+    ensureUI();
+    var sel=byId('gwRelayCatalogSelect');
+    if(!sel) return;
+    var old=sel.value;
+    var c=readCatalog();
+    var relays=Array.isArray(c.relays)?c.relays:[];
+    var ts=currentTerms();
+    var filtered=relays.filter(function(r){return relayMatches(r,ts);});
+    var selectedId=chooseSelected(filtered,old);
+    var options=filtered.slice(0,MAX_SELECT);
+    sel.classList.toggle('gw-cat-select-limited', filtered.length>MAX_SELECT);
+    sel.innerHTML='<option value="">-- Chọn hồ sơ rơ le --</option>'+
+      options.map(function(r){return '<option value="'+esc(r.id)+'">'+esc(labelOf(r))+'</option>';}).join('')+
+      (filtered.length>MAX_SELECT?'<option value="" disabled>… còn '+(filtered.length-MAX_SELECT)+' hồ sơ, hãy gõ lọc thêm …</option>':'');
+    if(selectedId) sel.value=selectedId;
+
+    var datalist=byId('gwRelayCatalogSuggestV9956');
+    if(datalist){
+      datalist.innerHTML=filtered.slice(0,1000).map(function(r){return '<option value="'+esc(labelOf(r))+'"></option>';}).join('');
+    }
+
+    var selected=relays.find(function(r){return r.id===sel.value;});
+    if(selected) fillEditorAndMain(selected);
+
+    var preview=byId('gwRelayCatalogPreview');
+    if(preview) renderTable(preview,filtered,sel.value);
+
+    var info=byId('gwRelayCatalogFilterInfoV9956');
+    if(info){
+      var show=byId('gwRelayCatalogShowTableV9956');
+      var msg='Danh mục cục bộ: '+relays.length+' hồ sơ';
+      msg += ts.length ? ' · Đang lọc còn '+filtered.length+' hồ sơ' : ' · Chưa lọc';
+      if(filtered.length>MAX_SELECT) msg += ' · Bộ chọn chỉ nạp '+MAX_SELECT+' dòng đầu để tránh treo';
+      msg += '\nBảng chi tiết: '+((show&&show.checked)?'đang hiện':'đang ẩn')+'. Bộ lọc chờ 550 ms sau khi ngừng gõ rồi mới nạp lại.';
+      info.textContent=msg;
+    }
+  }finally{
+    RENDERING=false;
+  }
+}
+function install(){
+  ensureUI();
+  renderNow();
+  setTimeout(renderNow,700);
+  setTimeout(renderNow,1800);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install,false);
+else setTimeout(install,80);
+window.iec61850RelayCatalogRefreshFilteredV9956=renderNow;
 })();
 </script>
 
